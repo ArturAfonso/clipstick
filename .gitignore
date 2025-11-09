@@ -1,0 +1,138 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ========================================
+# CONFIGURAÇÕES SENSÍVEIS - NÃO COMMITAR
+# ========================================
+
+# Arquivo de variáveis de ambiente
+.env
+
+# Chaves de assinatura Android
+*.keystore
+*.jks
+android/key.properties
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+ios/firebase_app_id_file.json
+
+# Certificados e chaves
+*.pem
+*.p12
+*.mobileprovision
+
+# Configurações locais
+local.properties
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
+# ========================================
+# ADICIONAIS DE SEGURANÇA IMPORTANTES
+# ========================================
+
+# Backup de chaves e senhas (comuns em desenvolvimento)
+*.backup
+*.bak
+secrets/
+keys/
+credentials/
+
+# Logs que podem conter dados sensíveis
+*.log.*
+crash_reports/
+error_logs/
+
+# Configurações de IDE que podem conter paths locais sensíveis
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+
+# Arquivos temporários do Windows que podem conter dados
+Thumbs.db
+Desktop.ini
+
+# Arquivos de configuração do sistema que podem vazar informações
+.htaccess
+.htpasswd
+config.ini
+database.sqlite
+*.db
+
+# Certificados SSL e arquivos de configuração de servidor
+*.crt
+*.key
+*.ssl
+server.xml
+web.config
+
+# Variáveis de ambiente alternativas (caso use nomes diferentes)
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.test
+.env.*
+
+# Arquivos de script com possíveis senhas
+deploy.sh
+release.sh
+*.sh
+*.bat
+*.ps1
+
+# Documentação interna que pode conter informações sensíveis
+INTERNAL.md
+PRIVATE.md
+CONFIDENTIAL.md
+API_KEYS.md
