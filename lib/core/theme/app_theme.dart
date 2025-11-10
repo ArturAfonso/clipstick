@@ -7,42 +7,70 @@ class AppTheme {
   AppTheme._();
   
   // ============================================
-  // 🌞 LIGHT THEME
+  // 🌞 LIGHT THEME - BASEADO NO FIGMA
   // ============================================
   
   static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     
-    // Color Scheme
+    // Color Scheme - EXATAMENTE DO FIGMA
     colorScheme: const ColorScheme.light(
-      primary: AppColors.lightPrimary,
-      onPrimary: AppColors.lightPrimaryForeground,
-      secondary: AppColors.lightSecondary,
-      onSecondary: AppColors.lightSecondaryForeground,
-      surface: AppColors.lightCard,
-      onSurface: AppColors.lightCardForeground,
-      error: AppColors.lightDestructive,
-      onError: AppColors.lightDestructiveForeground,
-      outline: AppColors.lightBorder,
-      surfaceContainerHighest: AppColors.lightMuted,
-      onSurfaceVariant: AppColors.lightMutedForeground,
+      brightness: Brightness.light,
+      
+      // 🎯 CORES PRINCIPAIS DO FIGMA
+      primary: AppColors.lightPrimary, // #2D3748 (primary)
+      onPrimary: AppColors.lightPrimaryForeground, // #FFFFFF
+      
+      secondary: AppColors.lightSecondary, // #E2E8F0 (secondary)
+      onSecondary: AppColors.lightSecondaryForeground, // #2D3748
+      
+      surface: AppColors.lightCard, // #FFFFFF (card)
+      onSurface: AppColors.lightForeground, // #2D3748
+      
+      error: AppColors.lightDestructive, // #EF4444
+      onError: AppColors.lightDestructiveForeground, // #FFFFFF
+      
+      outline: AppColors.lightBorder, // #D1D5DB
+      outlineVariant: AppColors.lightMuted, // #F1F5F9
+      
+      // 🎨 CORES ESPECIAIS
+      surfaceContainerHighest: AppColors.lightMuted, // #F1F5F9 (muted)
+      onSurfaceVariant: AppColors.lightMutedForeground, // #64748B (muted-foreground)
+      
+      tertiary: AppColors.lightAccent, // #F6D55C (accent)
+      onTertiary: AppColors.lightAccentForeground, // #2D3748
     ),
     
-    // App Bar Theme
+    // App Bar Theme - CLEAN E SIMPLES
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.lightBackground,
-      foregroundColor: AppColors.lightForeground,
+      backgroundColor: AppColors.lightCard, // #FFFFFF
+      foregroundColor: AppColors.lightForeground, // #2D3748
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 1,
       centerTitle: false,
       titleTextStyle: AppTextStyles.headingMedium.copyWith(
         color: AppColors.lightForeground,
+        fontWeight: FontWeight.w600,
+      ),
+      iconTheme: IconThemeData(
+        color: AppColors.lightMutedForeground, // #64748B (cinza)
+        size: 24,
+      ),
+      actionsIconTheme: IconThemeData(
+        color: AppColors.lightMutedForeground, // #64748B (cinza)
+        size: 24,
       ),
       systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
     ),
+    
+    // Scaffold Background
+    scaffoldBackgroundColor: AppColors.lightBackground, // #FAFBFC
     
     // Card Theme
     cardTheme: CardThemeData(
@@ -54,106 +82,80 @@ class AppTheme {
       ),
     ),
     
-    // Elevated Button Theme
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lightPrimary,
-        foregroundColor: AppColors.lightPrimaryForeground,
-        textStyle: AppTextStyles.bodyMedium,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-      ),
-    ),
-    
-    // Text Button Theme
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.lightPrimary,
-        textStyle: AppTextStyles.bodyMedium,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    ),
-    
     // FloatingActionButton Theme
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: AppColors.lightAccent,
-      foregroundColor: AppColors.lightAccentForeground,
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: AppColors.lightAccent, // #F6D55C (accent)
+      foregroundColor: AppColors.lightAccentForeground, // #2D3748
       elevation: 4,
-      shape: CircleBorder(),
-    ),
-    
-    // Input Decoration Theme
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: AppColors.lightInput,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.lightBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.lightBorder),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.lightPrimary, width: 2),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      hintStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.lightMutedForeground,
-      ),
-    ),
-    
-    // Text Theme
-    textTheme: TextTheme(
-      headlineMedium: AppTextStyles.headingMedium,
-      bodyMedium: AppTextStyles.bodyMedium,
+      shape: const CircleBorder(),
     ),
   );
   
   // ============================================
-  // 🌙 DARK THEME
+  // 🌙 DARK THEME - BASEADO NO FIGMA
   // ============================================
   
   static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
     
-    // Color Scheme
+    // Color Scheme - EXATAMENTE DO FIGMA
     colorScheme: const ColorScheme.dark(
-      primary: AppColors.darkPrimary,
-      onPrimary: AppColors.darkPrimaryForeground,
-      secondary: AppColors.darkSecondary,
-      onSecondary: AppColors.darkSecondaryForeground,
-      surface: AppColors.darkCard,
-      onSurface: AppColors.darkCardForeground,
-      error: AppColors.darkDestructive,
-      onError: AppColors.darkDestructiveForeground,
-      outline: AppColors.darkBorder,
-      surfaceContainerHighest: AppColors.darkMuted,
-      onSurfaceVariant: AppColors.darkMutedForeground,
+      brightness: Brightness.dark,
+      
+      // 🎯 CORES PRINCIPAIS DO FIGMA
+      primary: AppColors.darkPrimary, // #F1F5F9 (primary)
+      onPrimary: AppColors.darkPrimaryForeground, // #1E293B
+      
+      secondary: AppColors.darkSecondary, // #475569 (secondary)
+      onSecondary: AppColors.darkSecondaryForeground, // #F1F5F9
+      
+      surface: AppColors.darkCard, // #334155 (card)
+      onSurface: AppColors.darkForeground, // #F1F5F9
+      
+      error: AppColors.darkDestructive, // #DC2626
+      onError: AppColors.darkDestructiveForeground, // #F1F5F9
+      
+      outline: AppColors.darkBorder, // #475569
+      outlineVariant: AppColors.darkMuted, // #475569
+      
+      // 🎨 CORES ESPECIAIS
+      surfaceContainerHighest: AppColors.darkMuted, // #475569 (muted)
+      onSurfaceVariant: AppColors.darkMutedForeground, // #94A3B8 (muted-foreground)
+      
+      tertiary: AppColors.darkAccent, // #EAB308 (accent)
+      onTertiary: AppColors.darkAccentForeground, // #1E293B
     ),
     
-    // App Bar Theme
+    // App Bar Theme - CLEAN E SIMPLES
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.darkBackground,
-      foregroundColor: AppColors.darkForeground,
+      backgroundColor: AppColors.darkCard, // #334155
+      foregroundColor: AppColors.darkForeground, // #F1F5F9
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 1,
       centerTitle: false,
       titleTextStyle: AppTextStyles.headingMedium.copyWith(
         color: AppColors.darkForeground,
+        fontWeight: FontWeight.w600,
+      ),
+      iconTheme: IconThemeData(
+        color: AppColors.darkMutedForeground, // #94A3B8 (cinza claro)
+        size: 24,
+      ),
+      actionsIconTheme: IconThemeData(
+        color: AppColors.darkMutedForeground, // #94A3B8 (cinza claro)
+        size: 24,
       ),
       systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
     ),
+    
+    // Scaffold Background
+    scaffoldBackgroundColor: AppColors.darkBackground, // #1E293B
     
     // Card Theme
     cardTheme: CardThemeData(
@@ -165,66 +167,12 @@ class AppTheme {
       ),
     ),
     
-    // Elevated Button Theme
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.darkPrimary,
-        foregroundColor: AppColors.darkPrimaryForeground,
-        textStyle: AppTextStyles.bodyMedium,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-      ),
-    ),
-    
-    // Text Button Theme
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.darkPrimary,
-        textStyle: AppTextStyles.bodyMedium,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    ),
-    
     // FloatingActionButton Theme
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: AppColors.darkAccent,
-      foregroundColor: AppColors.darkAccentForeground,
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: AppColors.darkAccent, // #EAB308 (accent)
+      foregroundColor: AppColors.darkAccentForeground, // #1E293B
       elevation: 4,
-      shape: CircleBorder(),
-    ),
-    
-    // Input Decoration Theme
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: AppColors.darkInput,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.darkBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.darkBorder),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.darkPrimary, width: 2),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      hintStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.darkMutedForeground,
-      ),
-    ),
-    
-    // Text Theme
-    textTheme: TextTheme(
-      headlineMedium: AppTextStyles.headingMedium,
-      bodyMedium: AppTextStyles.bodyMedium,
+      shape: const CircleBorder(),
     ),
   );
 }
