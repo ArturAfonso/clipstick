@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
-
+import '../widgets/create_note_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -253,17 +253,12 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ), 
          floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Get.snackbar(
-            'Nova Nota',
-            'Funcionalidade de criar nota em breve! ✨',
-            snackPosition: SnackPosition.BOTTOM,
-            icon: Icon(Icons.add, color: Colors.white),
-          );
-        },
-        tooltip: 'Criar nova nota',
-        child: Icon(Icons.add),
-      ),
+  onPressed: () {
+    _showCreateNoteSheet(context); 
+  },
+  tooltip: 'Criar nova nota',
+  child: Icon(Icons.add),
+),
     );
   }
 
@@ -590,4 +585,19 @@ Widget _buildListView(BuildContext context) {
       ],
     );
   }
+
+  // 📝 FUNÇÃO PARA MOSTRAR BOTTOMSHEET DE CRIAR NOTA
+void _showCreateNoteSheet(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => CreateNoteSheet(),
+    ),
+  );
+}
 }
