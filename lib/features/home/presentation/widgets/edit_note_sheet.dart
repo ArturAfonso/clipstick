@@ -1,35 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import 'color_picker_widget.dart';
 import '../../../../core/theme/note_colors_helper.dart';
+import '../../../../data/models/note_model.dart';
+import 'color_picker_widget.dart';
 
-class CreateNoteSheet extends StatefulWidget {
-  const CreateNoteSheet({super.key});
+class EditNoteSheet extends StatefulWidget {
+  final NoteModel note; // ✅ Recebe a nota a ser editada
+
+  const EditNoteSheet({
+    super.key,
+    required this.note,
+  });
 
   @override
-  State<CreateNoteSheet> createState() => _CreateNoteSheetState();
+  State<EditNoteSheet> createState() => _EditNoteSheetState();
 }
 
-class _CreateNoteSheetState extends State<CreateNoteSheet> {
+class _EditNoteSheetState extends State<EditNoteSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
   late Color _selectedColor;
   bool _isInitialized = false;
 
- @override
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     
-    
     if (!_isInitialized) {
-      _selectedColor = NoteColorsHelper.getNeutralColor(context);
-    _isInitialized = true;
+      // ✅ Inicializa com os dados da nota existente
+      _titleController = TextEditingController(text: widget.note.title);
+      _contentController = TextEditingController(text: widget.note.content);
+      _selectedColor = widget.note.color;
+      _isInitialized = true;
     }
   }
-
 
   @override
   void dispose() {
@@ -38,26 +44,69 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
     super.dispose();
   }
 
-  void _createNote() {
+  void _saveChanges() {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implementar criação de nota com Cubit
-      Get.back(); // Fecha o BottomSheet
+      // TODO: Implementar edição de nota com Cubit
+      
+      // ✅ Criar nota atualizada
+      final updatedNote = widget.note.copyWith(
+        title: _titleController.text,
+        content: _contentController.text,
+        color: _selectedColor,
+        updatedAt: DateTime.now(),
+      );
+      
+      // ✅ Retornar nota atualizada para a tela anterior
+      Get.back(result: updatedNote);
+      
       Get.snackbar(
-        'Nota Criada',
-        '${_titleController.text} foi criada com sucesso! 📝',
+        'Nota Atualizada',
+        '${_titleController.text} foi atualizada com sucesso! ✏️',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: _selectedColor.withOpacity(0.9),
         colorText: Theme.of(context).colorScheme.onSurface,
         duration: Duration(seconds: 2),
       );
       
-      // TODO: Chamar o Cubit para adicionar a nota
-      // context.read<HomeCubit>().addNote(
-      //   title: _titleController.text,
-      //   content: _contentController.text,
-      //   color: _selectedColor,
-      // );
+      // TODO: Chamar o Cubit para atualizar a nota
+      // context.read<HomeCubit>().updateNote(updatedNote);
     }
+  }
+
+  void _deleteNote() {
+    // ✅ Confirmação antes de deletar
+    Get.dialog(
+      AlertDialog(
+        title: Text('Excluir nota?'),
+        content: Text('Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(), // Fecha o dialog
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () { 
+              Get.back(); // Fecha o dialog
+              Get.back(result: 'delete'); // Fecha o sheet e retorna 'delete'
+              
+              Get.snackbar(
+                'Nota Excluída',
+                '${widget.note.title} foi excluída! 🗑️',
+                snackPosition: SnackPosition.BOTTOM,
+                duration: Duration(seconds: 2),
+              );
+              
+              // TODO: Chamar o Cubit para deletar a nota
+              // context.read<HomeCubit>().deleteNote(widget.note.id);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: Text('Excluir'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -70,7 +119,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 🎯 HANDLE DO BOTTOMSHEET (linha pra arrastar)
+          // 🎯 HANDLE DO BOTTOMSHEET
           Container(
             margin: EdgeInsets.only(top: 12),
             width: 40,
@@ -95,20 +144,31 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🎨 HEADER
+                    // 🎨 HEADER COM BOTÃO DELETE
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Nova nota',
+                          'Editar nota',
                           style: AppTextStyles.headingMedium.copyWith(
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.close),
-                          onPressed: () => Get.back(),
-                          tooltip: 'Fechar',
+                        Row(
+                          children: [
+                            // 🗑️ BOTÃO DELETAR
+                            IconButton(
+                              icon: Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: _deleteNote,
+                              tooltip: 'Excluir nota',
+                            ),
+                            // ❌ BOTÃO FECHAR
+                            IconButton(
+                              icon: Icon(Icons.close),
+                              onPressed: () => Get.back(),
+                              tooltip: 'Fechar',
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -200,12 +260,12 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 32),
 
-                    // ✅ BOTÃO CRIAR NOTA
+                    // ✅ BOTÃO SALVAR ALTERAÇÕES
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _createNote,
+                        onPressed: _saveChanges,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.primary,
                           foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -215,7 +275,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                           elevation: 2,
                         ),
                         child: Text(
-                          'Criar nota',
+                          'Salvar alterações',
                           style: AppTextStyles.bodyMedium.copyWith(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
