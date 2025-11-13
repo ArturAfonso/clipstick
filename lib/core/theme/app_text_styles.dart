@@ -3,6 +3,11 @@
 class AppTextStyles {
   AppTextStyles._();
 
+  static TextStyle get headingSmall => const TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w300,
+    height: 1,
+  );
   static TextStyle get headingMedium => const TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w600,

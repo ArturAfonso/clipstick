@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
+import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,57 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<String> _selectedNoteIds = {};
    bool _isDragging = false;
   int? _longPressedIndex;
+
+ // 🆕 GETTERS PARA SEPARAR NOTAS FIXADAS E OUTRAS
+  List<NoteModel> get _pinnedNotes => 
+    _notes.where((note) => note.isPinned).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+  
+  List<NoteModel> get _otherNotes => 
+    _notes.where((note) => !note.isPinned).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+  
+  bool get _hasPinnedNotes => _pinnedNotes.isNotEmpty;
+
+  // 🆕 MÉTODO PARA TOGGLE PIN
+void _togglePinSelectedNotes() {
+  if (_selectedNoteIds.isEmpty) return;
+  
+  // ✅ Verifica se todos selecionados estão fixados
+  final allPinned = _selectedNoteIds.every((id) => 
+    _notes.firstWhere((n) => n.id == id).isPinned
+  );
+  
+  // ✅ Salva quantidade antes de limpar
+  final count = _selectedNoteIds.length;
+  
+  setState(() {
+    // Toggle: se todos fixados, desfixar. Senão, fixar todos
+    for (final noteId in _selectedNoteIds) {
+      final index = _notes.indexWhere((n) => n.id == noteId);
+      if (index != -1) {
+        _notes[index] = _notes[index].copyWith(isPinned: !allPinned);
+      }
+    }
+  });
+  
+  // ✅ Limpa seleção
+  _clearSelection();
+  
+  // ✅ Feedback háptico
+  HapticFeedback.mediumImpact();
+  
+  // ✅ Notificação
+  Get.snackbar(
+    count > 1 
+      ? (allPinned ? 'Notas Desfixadas' : 'Notas Fixadas')
+      : (allPinned ? 'Nota Desfixada' : 'Nota Fixada'),
+    '$count nota${count > 1 ? 's' : ''} ${allPinned ? 'desfixada' : 'fixada'}${count > 1 ? 's' : ''} 📌',
+    snackPosition: SnackPosition.BOTTOM,
+    duration: Duration(seconds: 2),
+  );
+}
+  
 
   @override
   void initState() {
@@ -361,16 +413,17 @@ Widget _buildNormalAppBar(BuildContext context) {
 }
 
 
-// 🆕 APPBAR DE SELEÇÃO
+// 🆕 APPBAR DE SELEÇÃO COM BOTÃO DE PIN (ATUALIZADO)
 Widget _buildSelectionAppBar(BuildContext context) {
+  final allPinned = _selectedNoteIds.every((id) => 
+    _notes.firstWhere((n) => n.id == id).isPinned
+  );
+  
   return AppBar(
-    key: ValueKey('selection_appbar'), // ✅ Key para AnimatedSwitcher
+    key: ValueKey('selection_appbar'),
     backgroundColor: Theme.of(context).colorScheme.primaryContainer,
     leading: IconButton(
-      icon: Icon(
-        Icons.close,
-        color: Theme.of(context).colorScheme.onPrimaryContainer,
-      ),
+      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimaryContainer),
       onPressed: _clearSelection,
       tooltip: 'Cancelar seleção',
     ),
@@ -382,6 +435,16 @@ Widget _buildSelectionAppBar(BuildContext context) {
       ),
     ),
     actions: [
+      // 📌 BOTÃO PIN
+      IconButton(
+        icon: Icon(
+          allPinned ? Icons.push_pin : Icons.push_pin_outlined,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+        onPressed: _togglePinSelectedNotes,
+        tooltip: allPinned ? 'Desfixar' : 'Fixar',
+      ),
+      
       // 🗑️ BOTÃO DELETAR
       IconButton(
         icon: Icon(Icons.delete_outline),
@@ -390,17 +453,11 @@ Widget _buildSelectionAppBar(BuildContext context) {
         tooltip: 'Excluir selecionadas',
       ),
       
-      // 🎨 BOTÃO MUDAR COR
+      // 🎨 BOTÃO MUDAR COR (ATUALIZADO!)
       IconButton(
         icon: Icon(Icons.palette_outlined),
         color: Theme.of(context).colorScheme.onPrimaryContainer,
-        onPressed: () {
-          Get.snackbar(
-            'Alterar Cor',
-            'Funcionalidade em breve! 🎨',
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        },
+        onPressed: _changeColorOfSelectedNotes, // ✅ CHAMA O MÉTODO NOVO
         tooltip: 'Alterar cor',
       ),
       
@@ -560,44 +617,49 @@ Widget _buildSelectionAppBar(BuildContext context) {
 
   // 📝 DADOS DE EXEMPLO
   List<NoteModel> _getSampleNotes() {
-    return [
-      NoteModel(
-        id: '1',
-        title: 'Lista de compras',
-        content: 'Leite, pão, ovos, frutas, café, açúcar',
-        color: AppColors.lightNoteYellow,
-        position: 0,
-      ),
-      NoteModel(
-        id: '2',
-        title: 'Ideias para o projeto',
-        content: 'Implementar dark mode, adicionar sincronização na nuvem, melhorar performance',
-        color: AppColors.lightNotePink,
-        position: 1,
-      ),
-      NoteModel(
-        id: '3',
-        title: 'Treino da semana',
-        content: 'Segunda: Peito e tríceps\nQuarta: Costas e bíceps\nSexta: Pernas',
-        color: AppColors.lightNoteGreen,
-        position: 2,
-      ),
-      NoteModel(
-        id: '4',
-        title: 'Livros para ler',
-        content: 'Clean Code, Design Patterns, Refactoring',
-        color: AppColors.lightNoteBlue,
-        position: 3,
-      ),
-      NoteModel(
-        id: '5',
-        title: 'Receita de bolo',
-        content: '3 ovos, 2 xícaras de açúcar, 2 xícaras de farinha, 1 xícara de leite',
-        color: AppColors.lightNoteOrange,
-        position: 4,
-      ),
-    ];
-  }
+  return [
+    NoteModel(
+      id: '1',
+      title: 'Lista de compras',
+      content: 'Leite, pão, ovos, frutas, café, açúcar',
+      color: AppColors.lightNoteYellow,
+      position: 0,
+      isPinned: true, // 🆕 FIXADO
+    ),
+    NoteModel(
+      id: '2',
+      title: 'Ideias para o projeto',
+      content: 'Implementar dark mode, adicionar sincronização na nuvem, melhorar performance',
+      color: AppColors.lightNotePink,
+      position: 1,
+      isPinned: false,
+    ),
+    NoteModel(
+      id: '3',
+      title: 'Treino da semana',
+      content: 'Segunda: Peito e tríceps\nQuarta: Costas e bíceps\nSexta: Pernas',
+      color: AppColors.lightNoteGreen,
+      position: 2,
+      isPinned: true, // 🆕 FIXADO
+    ),
+    NoteModel(
+      id: '4',
+      title: 'Livros para ler',
+      content: 'Clean Code, Design Patterns, Refactoring',
+      color: AppColors.lightNoteBlue,
+      position: 3,
+      isPinned: false,
+    ),
+    NoteModel(
+      id: '5',
+      title: 'Receita de bolo',
+      content: '3 ovos, 2 xícaras de açúcar, 2 xícaras de farinha, 1 xícara de leite',
+      color: AppColors.lightNoteOrange,
+      position: 4,
+      isPinned: false,
+    ),
+  ];
+}
 
   // 🌟 TELA VAZIA
   Widget _buildEmptyState(BuildContext context, ViewModeState state) {
@@ -635,118 +697,320 @@ Widget _buildSelectionAppBar(BuildContext context) {
 
   
 
-  // 📊 GRID VIEW COM REORDERABLE BUILDER (v5.5.2)
-  Widget _buildGridView(BuildContext context) {
-    final generatedChildren = List.generate(
-      _notes.length,
-      (index) => _buildGridNoteCard(context, _notes[index]),
-    );
+  // 📊 GRID VIEW COM SEÇÕES (FIXADOS + OUTROS)
+Widget _buildGridView(BuildContext context) {
+  // ✅ Se não tem notas fixadas, usa layout simples
+  if (!_hasPinnedNotes) {
+    return _buildSimpleGridView(context);
+  }
+  
+  // ✅ Se tem fixadas, usa layout com seções
+  return _buildSectionedGridView(context);
+}
 
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: ReorderableBuilder(
-        scrollController: _scrollController,
-        
-        enableLongPress: true,
-        longPressDelay: Duration(milliseconds: 500), // ✅ Aumentar para 500ms
-        enableDraggable: true,
-        enableScrollingWhileDragging: true,
-        automaticScrollExtent: 80.0,
-        
-        fadeInDuration: Duration(milliseconds: 300),
-        releasedChildDuration: Duration(milliseconds: 200),
-        positionDuration: Duration(milliseconds: 250),
-        
-        dragChildBoxDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary,
-            width: 3,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: 5,
-              offset: Offset(0, 6),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 12,
-              spreadRadius: 2,
-              offset: Offset(0, 4),
-            ),
-          ],
+
+// 📊 GRID VIEW SIMPLES (SEM FIXADOS)
+Widget _buildSimpleGridView(BuildContext context) {
+  final generatedChildren = List.generate(
+    _notes.length,
+    (index) => _buildGridNoteCard(context, _notes[index]),
+  );
+
+  return Padding(
+    padding: EdgeInsets.all(16),
+    child: ReorderableBuilder(
+      scrollController: _scrollController,
+      enableLongPress: true,
+      longPressDelay: Duration(milliseconds: 500),
+      enableDraggable: true,
+      enableScrollingWhileDragging: true,
+      automaticScrollExtent: 80.0,
+      fadeInDuration: Duration(milliseconds: 300),
+      releasedChildDuration: Duration(milliseconds: 200),
+      positionDuration: Duration(milliseconds: 250),
+      dragChildBoxDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary,
+          width: 3,
         ),
-        
-        onReorder: (ReorderedListFunction reorderedListFunction) {
-          setState(() {
-            _notes = reorderedListFunction(_notes) as List<NoteModel>;
-            
-            for (int i = 0; i < _notes.length; i++) {
-              _notes[i] = _notes[i].copyWith(position: i);
-            }
-            
-            // ✅ Marca que houve reordenação (arrastou)
-            _isDragging = true;
-          });
-        },
-        
-        // ✅ GUARDA QUAL CARD FOI PRESSIONADO
-        onDragStarted: (index) {
-          setState(() {
-            _longPressedIndex = index;
-            _isDragging = false; // Reseta flag
-          });
-          HapticFeedback.mediumImpact();
-          print('Começou long press em: ${_notes[index].title}');
-        },
-        
-        // ✅ VERIFICA SE FOI DRAG OU SELEÇÃO
-        onDragEnd: (index) {
-          HapticFeedback.lightImpact();
-          
-          // ✅ Se não houve reordenação (soltou no mesmo lugar), SELECIONA
-          Future.delayed(Duration(milliseconds: 100), () {
-            if (!_isDragging && _longPressedIndex != null) {
-              // Foi long press SEM arrastar = SELEÇÃO
-              final noteId = _notes[_longPressedIndex!].id;
-              setState(() {
-                _toggleNoteSelection(noteId);
-                _longPressedIndex = null;
-              });
-              HapticFeedback.selectionClick(); // Feedback diferente
-              print('SELECIONOU: ${_notes[index].title}');
-            } else {
-              // Foi drag and drop = REORDENAR
-              print('REORDENOU para posição: $index');
-            }
-            
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 12,
+            spreadRadius: 2,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      onReorder: (ReorderedListFunction reorderedListFunction) {
+        setState(() {
+          _notes = reorderedListFunction(_notes) as List<NoteModel>;
+          for (int i = 0; i < _notes.length; i++) {
+            _notes[i] = _notes[i].copyWith(position: i);
+          }
+          _isDragging = true;
+        });
+      },
+      onDragStarted: (index) {
+        setState(() {
+          _longPressedIndex = index;
+          _isDragging = false;
+        });
+        HapticFeedback.mediumImpact();
+      },
+      onDragEnd: (index) {
+        HapticFeedback.lightImpact();
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (!_isDragging && _longPressedIndex != null) {
+            final noteId = _notes[_longPressedIndex!].id;
             setState(() {
-              _isDragging = false;
+              _toggleNoteSelection(noteId);
               _longPressedIndex = null;
             });
+            HapticFeedback.selectionClick();
+          }
+          setState(() {
+            _isDragging = false;
+            _longPressedIndex = null;
           });
-        },
+        });
+      },
+      builder: (children) {
+        return GridView(
+          key: _gridViewKey,
+          controller: _scrollController,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.1,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+          ),
+          children: children,
+        );
+      },
+      children: generatedChildren,
+    ),
+  );
+}
+
+// 📊 GRID VIEW COM SEÇÕES (FIXADOS + OUTROS) - CORRIGIDO
+Widget _buildSectionedGridView(BuildContext context) {
+  return SingleChildScrollView(
+    controller: _scrollController,
+    padding: EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 📌 SEÇÃO DE FIXADOS
+        if (_pinnedNotes.isNotEmpty) ...[
+          _buildSectionHeader(context, '📌 FIXADOS', _pinnedNotes.length),
+          SizedBox(height: 12),
+          _buildReorderableGridSection(
+            context, 
+            _pinnedNotes,
+            isPinnedSection: true, // ✅ Flag para identificar seção
+          ),
+          SizedBox(height: 24),
+        ],
         
-        builder: (children) {
-          return GridView(
-            key: _gridViewKey,
-            controller: _scrollController,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1.1,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-            ),
-            children: children,
-          );
-        },
-        
-        children: generatedChildren,
+        // 📋 SEÇÃO DE OUTRAS NOTAS
+        if (_otherNotes.isNotEmpty) ...[
+          _buildSectionHeader(context, '📋 OUTRAS NOTAS', _otherNotes.length),
+          SizedBox(height: 12),
+          _buildReorderableGridSection(
+            context, 
+            _otherNotes,
+            isPinnedSection: false, // ✅ Flag para identificar seção
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+   // 📊 GRID REORDENÁVEL DE UMA SEÇÃO (COM DRAG & DROP)
+Widget _buildReorderableGridSection(
+  BuildContext context, 
+  List<NoteModel> notes,
+  {required bool isPinnedSection}
+) {
+  final generatedChildren = List.generate(
+    notes.length,
+    (index) => _buildGridNoteCard(context, notes[index]),
+  );
+
+  return ReorderableBuilder(
+    enableLongPress: true,
+    longPressDelay: Duration(milliseconds: 500),
+    enableDraggable: true,
+    enableScrollingWhileDragging: false, // ✅ Desabilita scroll automático (já está em SingleChildScrollView)
+    automaticScrollExtent: 0, // ✅ Desabilita scroll automático
+    
+    fadeInDuration: Duration(milliseconds: 300),
+    releasedChildDuration: Duration(milliseconds: 200),
+    positionDuration: Duration(milliseconds: 250),
+    
+    dragChildBoxDecoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary,
+        width: 3,
       ),
-    );
-  }
+      boxShadow: [
+        BoxShadow(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+          blurRadius: 20,
+          spreadRadius: 5,
+          offset: Offset(0, 6),
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 12,
+          spreadRadius: 2,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    
+    onReorder: (ReorderedListFunction reorderedListFunction) {
+      setState(() {
+        // ✅ Reordena apenas dentro da seção correspondente
+        if (isPinnedSection) {
+          // Reordena fixados
+          final reorderedPinned = reorderedListFunction(_pinnedNotes) as List<NoteModel>;
+          
+          // Atualiza posições dentro da lista completa
+          for (int i = 0; i < reorderedPinned.length; i++) {
+            final noteIndex = _notes.indexWhere((n) => n.id == reorderedPinned[i].id);
+            if (noteIndex != -1) {
+              _notes[noteIndex] = reorderedPinned[i].copyWith(position: i);
+            }
+          }
+        } else {
+          // Reordena outras notas
+          final reorderedOthers = reorderedListFunction(_otherNotes) as List<NoteModel>;
+          
+          // Atualiza posições dentro da lista completa
+          final pinnedCount = _pinnedNotes.length;
+          for (int i = 0; i < reorderedOthers.length; i++) {
+            final noteIndex = _notes.indexWhere((n) => n.id == reorderedOthers[i].id);
+            if (noteIndex != -1) {
+              _notes[noteIndex] = reorderedOthers[i].copyWith(position: pinnedCount + i);
+            }
+          }
+        }
+        
+        _isDragging = true;
+      });
+    },
+    
+    onDragStarted: (index) {
+      setState(() {
+        // ✅ Mapeia índice local para índice global
+        final noteId = notes[index].id;
+        _longPressedIndex = _notes.indexWhere((n) => n.id == noteId);
+        _isDragging = false;
+      });
+      HapticFeedback.mediumImpact();
+    },
+    
+    onDragEnd: (index) {
+      HapticFeedback.lightImpact();
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (!_isDragging && _longPressedIndex != null) {
+          final noteId = _notes[_longPressedIndex!].id;
+          setState(() {
+            _toggleNoteSelection(noteId);
+            _longPressedIndex = null;
+          });
+          HapticFeedback.selectionClick();
+        }
+        setState(() {
+          _isDragging = false;
+          _longPressedIndex = null;
+        });
+      });
+    },
+    
+    builder: (children) {
+      return GridView(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1.1,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+        ),
+        children: children,
+      );
+    },
+    
+    children: generatedChildren,
+  );
+}
+
+
+// 🏷️ HEADER DE SEÇÃO
+Widget _buildSectionHeader(BuildContext context, String title, int count) {
+  return Row(
+    children: [
+      Text(
+        title,
+        style: AppTextStyles.bodyLarge.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+      SizedBox(width: 8),
+      Container(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          '$count',
+          style: AppTextStyles.bodySmall.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+
+// 📊 GRID DE UMA SEÇÃO
+Widget _buildGridSection(BuildContext context, List<NoteModel> notes) {
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: NeverScrollableScrollPhysics(),
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      childAspectRatio: 1.1,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+    ),
+    itemCount: notes.length,
+    itemBuilder: (context, index) {
+      return _buildGridNoteCard(context, notes[index]);
+    },
+  );
+}
+
+
+
+
+
 
   // 📋 LIST VIEW COM DRAG & DROP - VERSÃO PREMIUM
   Widget _buildListView(BuildContext context) {
@@ -1097,4 +1361,56 @@ Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
       ),
     );
   }
+
+
+  void _changeColorOfSelectedNotes() async {
+  if (_selectedNoteIds.isEmpty) return;
+  
+  // ✅ Pega a cor da primeira nota selecionada como inicial
+  final firstSelectedNote = _notes.firstWhere((n) => _selectedNoteIds.contains(n.id));
+  
+  // ✅ Abre o dialog de seleção de cor
+  final Color? selectedColor = await Get.dialog<Color>(
+    ColorPickerDialog(
+      initialColor: firstSelectedNote.color,
+      isMultipleSelection: _selectedNoteIds.length > 1,
+      selectedCount: _selectedNoteIds.length,
+    ),
+  );
+  
+  // ✅ Se selecionou uma cor, aplica
+  if (selectedColor != null) {
+    final count = _selectedNoteIds.length;
+    
+    setState(() {
+      for (final noteId in _selectedNoteIds) {
+        final index = _notes.indexWhere((n) => n.id == noteId);
+        if (index != -1) {
+          _notes[index] = _notes[index].copyWith(color: selectedColor);
+        }
+      }
+    });
+    
+    _clearSelection();
+    
+    HapticFeedback.mediumImpact();
+    
+    Get.snackbar(
+      'Cor Alterada',
+      '$count nota${count > 1 ? 's' : ''} atualizada${count > 1 ? 's' : ''} 🎨',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 2),
+      backgroundColor: selectedColor,
+      colorText: _getContrastColor(selectedColor),
+    );
+  }
+}
+
+// 🎨 CALCULAR COR DE CONTRASTE (helper)
+Color _getContrastColor(Color backgroundColor) {
+  final luminance = backgroundColor.computeLuminance();
+  return luminance > 0.5 ? Colors.black : Colors.white;
+}
+
+
 }
