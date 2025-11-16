@@ -12,6 +12,7 @@ class NoteModel {
   final Color color;
   final int position;
   final bool isPinned;
+  final List<String>? tags;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -22,6 +23,7 @@ class NoteModel {
     required this.color,
     required this.position,
     this.isPinned = false,
+    this.tags,
     this.createdAt,
     this.updatedAt,
   });
@@ -33,6 +35,7 @@ class NoteModel {
     Color? color,
     int? position,
     bool? isPinned,
+    List<String>? tags, 
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -43,6 +46,7 @@ class NoteModel {
       color: color ?? this.color,
       position: position ?? this.position,
       isPinned: isPinned ?? this.isPinned,
+      tags: tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -56,6 +60,7 @@ class NoteModel {
       'color': color.value,
       'position': position,
       'isPinned': isPinned,
+      'tags': tags,
       'createdAt': createdAt?.millisecondsSinceEpoch,
       'updatedAt': updatedAt?.millisecondsSinceEpoch,
     };
@@ -69,6 +74,9 @@ class NoteModel {
       color: Color(map['color'] as int),
       position: map['position'] as int,
       isPinned: map['isPinned'] as bool? ?? false,
+      tags: map['tags'] != null 
+        ? List<String>.from(map['tags'] as List) // 🆕 Converte para List<String>
+        : null,
       createdAt: map['createdAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int) : null,
     );
@@ -80,7 +88,7 @@ class NoteModel {
 
   @override
   String toString() {
-    return 'NoteModel(id: $id, title: $title, content: $content, color: $color, position: $position, isPinned: $isPinned, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'NoteModel(id: $id, title: $title, content: $content, color: $color, position: $position, isPinned: $isPinned,tags: $tags, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -108,5 +116,41 @@ class NoteModel {
       isPinned.hashCode ^
       createdAt.hashCode ^
       updatedAt.hashCode;
+  }
+
+   // 🆕 VERIFICAR SE TEM TAG
+  bool hasTag(String tagId) {
+    return tags?.contains(tagId) ?? false;
+  }
+
+  // 🆕 ADICIONAR TAG
+  NoteModel addTag(String tagId) {
+    final currentTags = tags ?? [];
+    if (currentTags.contains(tagId)) {
+      return this; // Já tem a tag
+    }
+    return copyWith(
+      tags: [...currentTags, tagId],
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // 🆕 REMOVER TAG
+  NoteModel removeTag(String tagId) {
+    if (tags == null || !tags!.contains(tagId)) {
+      return this; // Não tem a tag
+    }
+    return copyWith(
+      tags: tags!.where((t) => t != tagId).toList(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // 🆕 LIMPAR TODAS AS TAGS
+  NoteModel clearTags() {
+    return copyWith(
+      tags: [],
+      updatedAt: DateTime.now(),
+    );
   }
 }
