@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
+import 'package:reorderables/reorderables.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -1006,6 +1007,19 @@ Widget _buildEmptyTagsState(BuildContext context) {
     return _buildSectionedGridView(context);
   }
 
+  Widget _buildListView(BuildContext context) {
+    // ✅ Se não tem notas fixadas, usa layout simples
+    if (!_hasPinnedNotes) {
+      return _buildSIMPLEListView(context);
+    }
+
+    // ✅ Se tem fixadas, usa layout com seções
+    return _buildSECTIONEDListView(context);
+  }
+
+
+
+
   // 📊 GRID VIEW SIMPLES (SEM FIXADOS)
   Widget _buildSimpleGridView(BuildContext context) {
     final generatedChildren = List.generate(_notes.length, (index) => _buildGridNoteCard(context, _notes[index]));
@@ -1120,6 +1134,206 @@ Widget _buildEmptyTagsState(BuildContext context) {
       ),
     );
   }
+  //gpt
+  Widget _buildSECTIONEDListView(BuildContext context) {
+  // Helper para criar cada item com gesture + aparência similar ao proxyDecorator
+ Widget buildDraggableItem(
+  BuildContext ctx,
+  NoteModel note,
+  int sectionIndex,
+  int indexInSection,
+) {
+  // Variáveis locais por item — recreated a cada build, correto
+  Offset? pointerDownPos;
+  bool tapLock = false;
+  bool didMove = false;
+  late DateTime pointerDownTime;
+  const double moveThreshold = 6.0; // px
+  const int longPressThresholdMs = 220; // ms (ajuste se quiser)
+
+  return Listener(
+    behavior: HitTestBehavior.opaque,
+
+    onPointerDown: (PointerDownEvent ev) {
+      pointerDownPos = ev.position;
+      didMove = false;
+      pointerDownTime = DateTime.now();
+      // marcaremos longPressedIndex quando o long press for confirmado por tempo
+      // mas NÃO chamaremos seleção aqui.
+      _longPressedIndex = indexInSection;
+    },
+
+    onPointerMove: (PointerMoveEvent ev) {
+      if (pointerDownPos != null) {
+        final distance = (ev.position - pointerDownPos!).distance;
+        if (!didMove && distance > moveThreshold) {
+          didMove = true;
+          // sinalizamos que houve movimento real (arrasto)
+          _isDragging = true;
+          _longPressedIndex = null;
+        }
+      }
+    },
+
+    onPointerUp: (PointerUpEvent ev) {
+      final pressDuration = DateTime.now().difference(pointerDownTime).inMilliseconds;
+
+      // Caso: não houve movimento e o tempo excedeu o threshold -> é long press sem mover => selecionar
+      if (!didMove && pressDuration >= longPressThresholdMs) {
+        // Toggle selection (long press sem movimento)
+        final noteId = note.id;
+        setState(() {
+          _toggleNoteSelection(noteId);
+          _longPressedIndex = null;
+        });
+        HapticFeedback.selectionClick();
+      } else {
+        // Caso: tap rápido (pressDuration < threshold) -> abrir nota
+       if (!didMove && pressDuration < longPressThresholdMs) {
+  if (_isSelectionMode) {
+    setState(() => _toggleNoteSelection(note.id));
+  } else {
+    // TAP NORMAL → ABRIR NOTA (com proteção contra duplo disparo)
+    if (!tapLock) {
+      tapLock = true;
+      _openNote(context, note);
+
+      // libera após um pequeno intervalo
+      Future.delayed(Duration(milliseconds: 120), () {
+        tapLock = false;
+      });
+    }
+  }
+}
+
+        // Reset flags
+        Future.delayed(Duration(milliseconds: 100), () {
+          _isDragging = false;
+          _longPressedIndex = null;
+        });
+      }
+
+      pointerDownPos = null;
+      didMove = false;
+    },
+
+    onPointerCancel: (ev) {
+      pointerDownPos = null;
+      didMove = false;
+      Future.delayed(Duration(milliseconds: 100), () {
+        _isDragging = false;
+        _longPressedIndex = null;
+      });
+    },
+
+    // Mantemos o visual do item por baixo do Listener
+    child: AnimatedContainer(
+      duration: Duration(milliseconds: 160),
+      curve: Curves.easeInOut,
+      child: _buildListNoteCard(context, note),
+    ),
+  );
+}
+
+
+  // Gera os children para cada seção
+  final pinnedChildren = List<Widget>.generate(
+    _pinnedNotes.length,
+    (i) => KeyedSubtree(
+      key: ValueKey(_pinnedNotes[i].id),
+      child: buildDraggableItem(context, _pinnedNotes[i], 0, i),
+    ),
+  );
+
+  final otherChildren = List<Widget>.generate(
+    _otherNotes.length,
+    (i) => KeyedSubtree(
+      key: ValueKey(_otherNotes[i].id),
+      child: buildDraggableItem(context, _otherNotes[i], 1, i),
+    ),
+  );
+
+  return SingleChildScrollView(
+  //  controller: _scrollController,
+    padding: EdgeInsets.all(16),
+    child: Column(
+      
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ---------- FIXADOS ----------
+        if (_pinnedNotes.isNotEmpty) ...[
+          _buildSectionHeader(context, '📌 FIXADOS', _pinnedNotes.length),
+          SizedBox(height: 12),
+    
+          ReorderableColumn(
+            
+            // mantém  o layout como lista vertical
+            crossAxisAlignment: CrossAxisAlignment.start,
+            needsLongPressDraggable: true, // exige long press para arrastar (comportamento do grid)
+            children: pinnedChildren,
+            onReorder: (oldIndex, newIndex) {
+              // mapear indices relativos da seção para _notes e aplicar mudança apenas dentro da seção
+              setState(() {
+                if (newIndex > oldIndex) newIndex -= 1;
+    
+                final movedNote = _pinnedNotes[oldIndex];
+                final originalOldIndex = _notes.indexWhere((n) => n.id == movedNote.id);
+                final targetNote = _pinnedNotes[newIndex];
+                final originalNewIndex = _notes.indexWhere((n) => n.id == targetNote.id);
+    
+                final item = _notes.removeAt(originalOldIndex);
+                _notes.insert(originalNewIndex, item);
+    
+                for (int i = 0; i < _notes.length; i++) {
+                  _notes[i] = _notes[i].copyWith(position: i);
+                }
+    
+                // sinaliza que foi um drag real para evitar seleção
+                _isDragging = true;
+                _longPressedIndex = null;
+              });
+            },
+          ),
+    
+          SizedBox(height: 24),
+        ],
+    
+        // ---------- OUTRAS NOTAS ----------
+        if (_otherNotes.isNotEmpty) ...[
+          _buildSectionHeader(context, '📋 OUTRAS NOTAS', _otherNotes.length),
+          SizedBox(height: 12),
+    
+          ReorderableColumn(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            needsLongPressDraggable: true,
+            children: otherChildren,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex -= 1;
+    
+                final movedNote = _otherNotes[oldIndex];
+                final originalOldIndex = _notes.indexWhere((n) => n.id == movedNote.id);
+                final targetNote = _otherNotes[newIndex];
+                final originalNewIndex = _notes.indexWhere((n) => n.id == targetNote.id);
+    
+                final item = _notes.removeAt(originalOldIndex);
+                _notes.insert(originalNewIndex, item);
+    
+                for (int i = 0; i < _notes.length; i++) {
+                  _notes[i] = _notes[i].copyWith(position: i);
+                }
+    
+                _isDragging = true;
+                _longPressedIndex = null;
+              });
+            },
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
 
   // 📊 GRID REORDENÁVEL DE UMA SEÇÃO (COM DRAG & DROP)
   Widget _buildReorderableGridSection(BuildContext context, List<NoteModel> notes, {required bool isPinnedSection}) {
@@ -1277,7 +1491,7 @@ Widget _buildEmptyTagsState(BuildContext context) {
   }
 
   // 📋 LIST VIEW COM DRAG & DROP - VERSÃO PREMIUM
-  Widget _buildListView(BuildContext context) {
+  Widget _buildSIMPLEListView(BuildContext context) {
     return ReorderableListView.builder(
       padding: EdgeInsets.all(16),
       // ✅ CUSTOMIZAR O VISUAL AO ARRASTAR - VERSÃO PREMIUM
@@ -1569,7 +1783,7 @@ Widget _buildTagsRow(BuildContext context, NoteModel note) {
           
         ),
      
-        onTap: () => _openNote(context, note),
+        //onTap: () => _openNote(context, note),
       ),
     );
   }
