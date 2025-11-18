@@ -84,6 +84,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+// 🆕 MÉTODO CENTRALIZADO PARA ORDENAR E SALVAR
+  Future<void> _sortAndSaveNotes() async {
+    setState(() {
+      // ✅ 1. Ordena fisicamente a lista
+      _notes.sort((a, b) => a.position.compareTo(b.position));
+      
+      // ✅ 2. Garante que positions estão sequenciais (0, 1, 2...)
+      for (int i = 0; i < _notes.length; i++) {
+        _notes[i] = _notes[i].copyWith(position: i);
+      }
+    });
+
+    // TODO: 🔥 SALVAR NO BANCO DE DADOS
+    // await _databaseService.updateNotesPositions(_notes);
+    
+    // ✅ Exemplo de como ficará:
+    // try {
+    //   await _databaseService.batchUpdate(
+    //     _notes.map((note) => {
+    //       'id': note.id,
+    //       'position': note.position,
+    //     }).toList(),
+    //   );
+    // } catch (e) {
+    //   Get.snackbar('Erro', 'Falha ao salvar ordem das notas');
+    // }
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -938,84 +968,109 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // 📊 GRID VIEW SIMPLES (SEM FIXADOS)
-  Widget _buildSimpleGridView(BuildContext context) {
-    final generatedChildren = List.generate(_notes.length, (index) => _buildGridNoteCard(context, _notes[index]));
+ // ✅ SUBSTITUIR O MÉTODO _buildSimpleGridView
+Widget _buildSimpleGridView(BuildContext context) {
+  final generatedChildren = List.generate(
+    _notes.length, 
+    (index) => _buildGridNoteCard(context, _notes[index])
+  );
 
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: ReorderableBuilder(
-        scrollController: _scrollController,
-        enableLongPress: true,
-        longPressDelay: Duration(milliseconds: 500),
-        enableDraggable: true,
-        enableScrollingWhileDragging: true,
-        automaticScrollExtent: 80.0,
-        fadeInDuration: Duration(milliseconds: 300),
-        releasedChildDuration: Duration(milliseconds: 200),
-        positionDuration: Duration(milliseconds: 250),
-        dragChildBoxDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: 5,
-              offset: Offset(0, 6),
-            ),
-            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, spreadRadius: 2, offset: Offset(0, 4)),
-          ],
+  return Padding(
+    padding: EdgeInsets.all(16),
+    child: ReorderableBuilder(
+      scrollController: _scrollController,
+      enableLongPress: true,
+      longPressDelay: Duration(milliseconds: 500),
+      enableDraggable: true,
+      enableScrollingWhileDragging: true,
+      automaticScrollExtent: 80.0,
+      fadeInDuration: Duration(milliseconds: 300),
+      releasedChildDuration: Duration(milliseconds: 200),
+      positionDuration: Duration(milliseconds: 250),
+      
+      dragChildBoxDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary, 
+          width: 3
         ),
-        onReorder: (ReorderedListFunction reorderedListFunction) {
-          setState(() {
-            _notes = reorderedListFunction(_notes) as List<NoteModel>;
-            for (int i = 0; i < _notes.length; i++) {
-              _notes[i] = _notes[i].copyWith(position: i);
-            }
-            _isDragging = true;
-          });
-        },
-        onDragStarted: (index) {
-          setState(() {
-            _longPressedIndex = index;
-            _isDragging = false;
-          });
-          HapticFeedback.mediumImpact();
-        },
-        onDragEnd: (index) {
-          HapticFeedback.lightImpact();
-          Future.delayed(Duration(milliseconds: 100), () {
-            if (!_isDragging && _longPressedIndex != null) {
-              final noteId = _notes[_longPressedIndex!].id;
-              setState(() {
-                _toggleNoteSelection(noteId);
-                _longPressedIndex = null;
-              });
-              HapticFeedback.selectionClick();
-            }
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2), 
+            blurRadius: 12, 
+            spreadRadius: 2, 
+            offset: Offset(0, 4)
+          ),
+        ],
+      ),
+      
+      onReorder: (ReorderedListFunction reorderedListFunction) {
+        setState(() {
+          // ✅ 1. Reordena a lista
+          _notes = reorderedListFunction(_notes) as List<NoteModel>;
+          
+          // ✅ 2. Atualiza positions
+          for (int i = 0; i < _notes.length; i++) {
+            _notes[i] = _notes[i].copyWith(position: i);
+          }
+          
+          _isDragging = true;
+        });
+
+        // ✅ 3. Salva no banco (quando implementar)
+        _sortAndSaveNotes();
+      },
+      
+      onDragStarted: (index) {
+        setState(() {
+          _longPressedIndex = index;
+          _isDragging = false;
+        });
+        HapticFeedback.mediumImpact();
+      },
+      
+      onDragEnd: (index) {
+        HapticFeedback.lightImpact();
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (!_isDragging && _longPressedIndex != null) {
+            final noteId = _notes[_longPressedIndex!].id;
             setState(() {
-              _isDragging = false;
+              _toggleNoteSelection(noteId);
               _longPressedIndex = null;
             });
+            HapticFeedback.selectionClick();
+          }
+          setState(() {
+            _isDragging = false;
+            _longPressedIndex = null;
           });
-        },
-        builder: (children) {
-          return GridView(
-            key: _gridViewKey,
-            controller: _scrollController,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1.1,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-            ),
-            children: children,
-          );
-        },
-        children: generatedChildren,
-      ),
-    );
-  }
+        });
+      },
+      
+      builder: (children) {
+        return GridView(
+          key: _gridViewKey,
+          controller: _scrollController,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.1,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+          ),
+          children: children,
+        );
+      },
+      
+      children: generatedChildren,
+    ),
+  );
+}
 
   // 📊 GRID VIEW COM SEÇÕES (FIXADOS + OUTROS) - CORRIGIDO
   Widget _buildSectionedGridView(BuildContext context) {
@@ -1198,27 +1253,39 @@ class _HomeScreenState extends State<HomeScreen> {
               needsLongPressDraggable: true, // exige long press para arrastar (comportamento do grid)
               children: pinnedChildren,
               onReorder: (oldIndex, newIndex) {
-                // mapear indices relativos da seção para _notes e aplicar mudança apenas dentro da seção
-                setState(() {
-                  if (newIndex > oldIndex) newIndex -= 1;
+  setState(() {
+    // ❌ REMOVIDO: if (newIndex > oldIndex) newIndex -= 1;
+    // ✅ ReorderableColumn NÃO precisa desse ajuste!
 
-                  final movedNote = _pinnedNotes[oldIndex];
-                  final originalOldIndex = _notes.indexWhere((n) => n.id == movedNote.id);
-                  final targetNote = _pinnedNotes[newIndex];
-                  final originalNewIndex = _notes.indexWhere((n) => n.id == targetNote.id);
+    // ✅ 1. CAPTURA A LISTA LOCAL ANTES DE MODIFICAR
+    final localPinnedNotes = List<NoteModel>.from(_pinnedNotes);
+    
+    if (oldIndex >= localPinnedNotes.length || newIndex >= localPinnedNotes.length) {
+      return; // 🛡️ PROTEÇÃO
+    }
 
-                  final item = _notes.removeAt(originalOldIndex);
-                  _notes.insert(originalNewIndex, item);
+    // ✅ 2. Reordena localmente
+    final movedNote = localPinnedNotes.removeAt(oldIndex);
+    localPinnedNotes.insert(newIndex, movedNote);
 
-                  for (int i = 0; i < _notes.length; i++) {
-                    _notes[i] = _notes[i].copyWith(position: i);
-                  }
+    // ✅ 3. Remove TODOS os fixados de _notes
+    _notes.removeWhere((n) => n.isPinned);
 
-                  // sinaliza que foi um drag real para evitar seleção
-                  _isDragging = true;
-                  _longPressedIndex = null;
-                });
-              },
+    // ✅ 4. Insere a lista reordenada no INÍCIO
+    _notes.insertAll(0, localPinnedNotes);
+
+    // ✅ 5. Atualiza positions globais
+    for (int i = 0; i < _notes.length; i++) {
+      _notes[i] = _notes[i].copyWith(position: i);
+    }
+
+    _isDragging = true;
+    _longPressedIndex = null;
+  });
+
+  HapticFeedback.lightImpact();
+  _sortAndSaveNotes();
+},
             ),
 
             SizedBox(height: 24),
@@ -1234,25 +1301,39 @@ class _HomeScreenState extends State<HomeScreen> {
               needsLongPressDraggable: true,
               children: otherChildren,
               onReorder: (oldIndex, newIndex) {
-                setState(() {
-                  if (newIndex > oldIndex) newIndex -= 1;
+  setState(() {
+    // ❌ REMOVIDO: if (newIndex > oldIndex) newIndex -= 1;
+    // ✅ ReorderableColumn NÃO precisa desse ajuste!
 
-                  final movedNote = _otherNotes[oldIndex];
-                  final originalOldIndex = _notes.indexWhere((n) => n.id == movedNote.id);
-                  final targetNote = _otherNotes[newIndex];
-                  final originalNewIndex = _notes.indexWhere((n) => n.id == targetNote.id);
+    // ✅ 1. CAPTURA A LISTA LOCAL ANTES DE MODIFICAR
+    final localOtherNotes = List<NoteModel>.from(_otherNotes);
+    
+    if (oldIndex >= localOtherNotes.length || newIndex >= localOtherNotes.length) {
+      return; // 🛡️ PROTEÇÃO
+    }
 
-                  final item = _notes.removeAt(originalOldIndex);
-                  _notes.insert(originalNewIndex, item);
+    // ✅ 2. Reordena localmente
+    final movedNote = localOtherNotes.removeAt(oldIndex);
+    localOtherNotes.insert(newIndex, movedNote);
 
-                  for (int i = 0; i < _notes.length; i++) {
-                    _notes[i] = _notes[i].copyWith(position: i);
-                  }
+    // ✅ 3. Mantém apenas os fixados em _notes
+    _notes.removeWhere((n) => !n.isPinned);
 
-                  _isDragging = true;
-                  _longPressedIndex = null;
-                });
-              },
+    // ✅ 4. Adiciona a lista reordenada APÓS fixados
+    _notes.addAll(localOtherNotes);
+
+    // ✅ 5. Atualiza positions globais
+    for (int i = 0; i < _notes.length; i++) {
+      _notes[i] = _notes[i].copyWith(position: i);
+    }
+
+    _isDragging = true;
+    _longPressedIndex = null;
+  });
+
+  HapticFeedback.lightImpact();
+  _sortAndSaveNotes();
+},
             ),
           ],
         ],
@@ -1261,111 +1342,128 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // 📊 GRID REORDENÁVEL DE UMA SEÇÃO (COM DRAG & DROP)
-  Widget _buildReorderableGridSection(BuildContext context, List<NoteModel> notes, {required bool isPinnedSection}) {
-    final generatedChildren = List.generate(notes.length, (index) => _buildGridNoteCard(context, notes[index]));
+  // ✅ SUBSTITUIR O MÉTODO _buildReorderableGridSection
+Widget _buildReorderableGridSection(
+  BuildContext context, 
+  List<NoteModel> notes, 
+  {required bool isPinnedSection}
+) {
+  final generatedChildren = List.generate(
+    notes.length, 
+    (index) => _buildGridNoteCard(context, notes[index])
+  );
 
-    return ReorderableBuilder(
-      enableLongPress: true,
-      longPressDelay: Duration(milliseconds: 500),
-      enableDraggable: true,
-      enableScrollingWhileDragging: false, // ✅ Desabilita scroll automático (já está em SingleChildScrollView)
-      automaticScrollExtent: 0, // ✅ Desabilita scroll automático
+  return ReorderableBuilder(
+    enableLongPress: true,
+    longPressDelay: Duration(milliseconds: 500),
+    enableDraggable: true,
+    enableScrollingWhileDragging: false,
+    automaticScrollExtent: 0,
+    fadeInDuration: Duration(milliseconds: 300),
+    releasedChildDuration: Duration(milliseconds: 200),
+    positionDuration: Duration(milliseconds: 250),
 
-      fadeInDuration: Duration(milliseconds: 300),
-      releasedChildDuration: Duration(milliseconds: 200),
-      positionDuration: Duration(milliseconds: 250),
-
-      dragChildBoxDecoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-            blurRadius: 20,
-            spreadRadius: 5,
-            offset: Offset(0, 6),
-          ),
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, spreadRadius: 2, offset: Offset(0, 4)),
-        ],
+    dragChildBoxDecoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary, 
+        width: 3
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+          blurRadius: 20,
+          spreadRadius: 5,
+          offset: Offset(0, 6),
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2), 
+          blurRadius: 12, 
+          spreadRadius: 2, 
+          offset: Offset(0, 4)
+        ),
+      ],
+    ),
 
-      onReorder: (ReorderedListFunction reorderedListFunction) {
-        setState(() {
-          // ✅ Reordena apenas dentro da seção correspondente
-          if (isPinnedSection) {
-            // Reordena fixados
-            final reorderedPinned = reorderedListFunction(_pinnedNotes) as List<NoteModel>;
+    onReorder: (ReorderedListFunction reorderedListFunction) {
+      setState(() {
+        if (isPinnedSection) {
+          // ✅ 1. Reordena lista local
+          final reorderedPinned = reorderedListFunction(_pinnedNotes) as List<NoteModel>;
+          
+          // ✅ 2. Remove TODOS os fixados de _notes
+          _notes.removeWhere((n) => n.isPinned);
+          
+          // ✅ 3. Insere reordenados no INÍCIO
+          _notes.insertAll(0, reorderedPinned);
+          
+        } else {
+          // ✅ MESMA LÓGICA para _otherNotes
+          final reorderedOthers = reorderedListFunction(_otherNotes) as List<NoteModel>;
+          
+          // ✅ Remove não-fixados
+          _notes.removeWhere((n) => !n.isPinned);
+          
+          // ✅ Insere após fixados
+          _notes.addAll(reorderedOthers);
+        }
+        
+        // ✅ 4. Atualiza positions globais
+        for (int i = 0; i < _notes.length; i++) {
+          _notes[i] = _notes[i].copyWith(position: i);
+        }
+        
+        _isDragging = true;
+      });
 
-            // Atualiza posições dentro da lista completa
-            for (int i = 0; i < reorderedPinned.length; i++) {
-              final noteIndex = _notes.indexWhere((n) => n.id == reorderedPinned[i].id);
-              if (noteIndex != -1) {
-                _notes[noteIndex] = reorderedPinned[i].copyWith(position: i);
-              }
-            }
-          } else {
-            // Reordena outras notas
-            final reorderedOthers = reorderedListFunction(_otherNotes) as List<NoteModel>;
+      // ✅ 5. Salva no banco
+      _sortAndSaveNotes();
+    },
 
-            // Atualiza posições dentro da lista completa
-            final pinnedCount = _pinnedNotes.length;
-            for (int i = 0; i < reorderedOthers.length; i++) {
-              final noteIndex = _notes.indexWhere((n) => n.id == reorderedOthers[i].id);
-              if (noteIndex != -1) {
-                _notes[noteIndex] = reorderedOthers[i].copyWith(position: pinnedCount + i);
-              }
-            }
-          }
+    onDragStarted: (index) {
+      setState(() {
+        final noteId = notes[index].id;
+        _longPressedIndex = _notes.indexWhere((n) => n.id == noteId);
+        _isDragging = false;
+      });
+      HapticFeedback.mediumImpact();
+    },
 
-          _isDragging = true;
-        });
-      },
-
-      onDragStarted: (index) {
-        setState(() {
-          // ✅ Mapeia índice local para índice global
-          final noteId = notes[index].id;
-          _longPressedIndex = _notes.indexWhere((n) => n.id == noteId);
-          _isDragging = false;
-        });
-        HapticFeedback.mediumImpact();
-      },
-
-      onDragEnd: (index) {
-        HapticFeedback.lightImpact();
-        Future.delayed(Duration(milliseconds: 100), () {
-          if (!_isDragging && _longPressedIndex != null) {
-            final noteId = _notes[_longPressedIndex!].id;
-            setState(() {
-              _toggleNoteSelection(noteId);
-              _longPressedIndex = null;
-            });
-            HapticFeedback.selectionClick();
-          }
+    onDragEnd: (index) {
+      HapticFeedback.lightImpact();
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (!_isDragging && _longPressedIndex != null) {
+          final noteId = _notes[_longPressedIndex!].id;
           setState(() {
-            _isDragging = false;
+            _toggleNoteSelection(noteId);
             _longPressedIndex = null;
           });
+          HapticFeedback.selectionClick();
+        }
+        setState(() {
+          _isDragging = false;
+          _longPressedIndex = null;
         });
-      },
+      });
+    },
 
-      builder: (children) {
-        return GridView(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.1,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-          ),
-          children: children,
-        );
-      },
+    builder: (children) {
+      return GridView(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1.1,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+        ),
+        children: children,
+      );
+    },
 
-      children: generatedChildren,
-    );
-  }
+    children: generatedChildren,
+  );
+}
 
   // 🏷️ HEADER DE SEÇÃO
   Widget _buildSectionHeader(BuildContext context, String title, int count) {
@@ -1398,15 +1496,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 // 📋 LIST VIEW COM DRAG & DROP - VERSÃO PREMIUM
+// ✅ SUBSTITUIR O MÉTODO _buildSIMPLEListView
 Widget _buildSIMPLEListView(BuildContext context) {
-  
   return ReorderableListView.builder(
     padding: EdgeInsets.all(16),
 
-    // 🔥 PROXY DECORATOR SEM EXPANDIR TAMANHO
     proxyDecorator: (child, index, animation) {
       return AnimatedBuilder(
-        
         animation: animation,
         builder: (BuildContext context, Widget? child) {
           final double animValue = Curves.easeInOut.transform(animation.value);
@@ -1414,7 +1510,6 @@ Widget _buildSIMPLEListView(BuildContext context) {
           final double rotation = lerpDouble(0, 0.02, animValue)!;
 
           return Transform.rotate(
-            
             angle: rotation,
             child: Material(
               clipBehavior: Clip.antiAlias,
@@ -1422,8 +1517,6 @@ Widget _buildSIMPLEListView(BuildContext context) {
               elevation: elevation,
               shadowColor: Colors.black.withOpacity(0.25),
               color: Colors.transparent,
-
-              // 📌 Aqui garantimos que o CARD NÃO AUMENTA DE TAMANHO
               child: child,
             ),
           );
@@ -1436,19 +1529,24 @@ Widget _buildSIMPLEListView(BuildContext context) {
       setState(() {
         if (newIndex > oldIndex) newIndex -= 1;
 
+        // ✅ 1. Remove e insere na nova posição
         final NoteModel item = _notes.removeAt(oldIndex);
         _notes.insert(newIndex, item);
 
+        // ✅ 2. Atualiza positions
         for (int i = 0; i < _notes.length; i++) {
           _notes[i] = _notes[i].copyWith(position: i);
         }
       });
+
+      // ✅ 3. Salva no banco
+      _sortAndSaveNotes();
     },
 
     itemCount: _notes.length,
     itemBuilder: (context, index) {
       final note = _notes[index];
-       final isSelected = _isNoteSelected(note.id);
+      final isSelected = _isNoteSelected(note.id);
       return _buildListNoteCard(context, note, isSelected);
     },
   );
