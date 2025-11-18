@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ✅ LISTA DE NOTAS COMO ESTADO LOCAL
   late List<NoteModel> _notes;
 
-    // 🆕 LISTA CENTRALIZADA DE TAGS
+  // 🆕 LISTA CENTRALIZADA DE TAGS
   late List<TagModel> _availableTags;
 
   // 🆕 CONTROLE DE SELEÇÃO
@@ -84,6 +84,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+// 🆕 MÉTODO CENTRALIZADO PARA ORDENAR E SALVAR
+  Future<void> _sortAndSaveNotes() async {
+    setState(() {
+      // ✅ 1. Ordena fisicamente a lista
+      _notes.sort((a, b) => a.position.compareTo(b.position));
+      
+      // ✅ 2. Garante que positions estão sequenciais (0, 1, 2...)
+      for (int i = 0; i < _notes.length; i++) {
+        _notes[i] = _notes[i].copyWith(position: i);
+      }
+    });
+
+    // TODO: 🔥 SALVAR NO BANCO DE DADOS
+    // await _databaseService.updateNotesPositions(_notes);
+    
+    // ✅ Exemplo de como ficará:
+    // try {
+    //   await _databaseService.batchUpdate(
+    //     _notes.map((note) => {
+    //       'id': note.id,
+    //       'position': note.position,
+    //     }).toList(),
+    //   );
+    // } catch (e) {
+    //   Get.snackbar('Erro', 'Falha ao salvar ordem das notas');
+    // }
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -97,27 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-   // 🆕 MÉTODO PARA CARREGAR TAGS DE EXEMPLO
+  // 🆕 MÉTODO PARA CARREGAR TAGS DE EXEMPLO
   List<TagModel> _getSampleTags() {
     return [
-      TagModel(
-        id: '1',
-        name: 'Trabalho',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      TagModel(
-        id: '2',
-        name: 'Pessoal',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      TagModel(
-        id: '3',
-        name: 'Ideias',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
+      TagModel(id: '1', name: 'Trabalho', createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      TagModel(id: '2', name: 'Pessoal', createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      TagModel(id: '3', name: 'Ideias', createdAt: DateTime.now(), updatedAt: DateTime.now()),
     ];
   }
 
@@ -347,539 +362,471 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // 🆕 APPBAR DE SELEÇÃO COM MENU DE MAIS OPÇÕES (ATUALIZADO)
-Widget _buildSelectionAppBar(BuildContext context) {
-  final allPinned = _selectedNoteIds.every((id) => _notes.firstWhere((n) => n.id == id).isPinned);
+  Widget _buildSelectionAppBar(BuildContext context) {
+    final allPinned = _selectedNoteIds.every((id) => _notes.firstWhere((n) => n.id == id).isPinned);
 
-  return AppBar(
-    key: ValueKey('selection_appbar'),
-    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-    leading: IconButton(
-      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimaryContainer),
-      onPressed: _clearSelection,
-      tooltip: 'Cancelar seleção',
-    ),
-    title: Text(
-      '${_selectedNoteIds.length} selecionada${_selectedNoteIds.length > 1 ? 's' : ''}',
-      style: AppTextStyles.bodyLarge.copyWith(
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).colorScheme.onPrimaryContainer,
+    return AppBar(
+      key: ValueKey('selection_appbar'),
+      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      leading: IconButton(
+        icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimaryContainer),
+        onPressed: _clearSelection,
+        tooltip: 'Cancelar seleção',
       ),
-    ),
-    actions: [
-      // 📌 BOTÃO PIN
-      IconButton(
-        icon: Icon(
-          allPinned ? Icons.push_pin : Icons.push_pin_outlined,
+      title: Text(
+        '${_selectedNoteIds.length} selecionada${_selectedNoteIds.length > 1 ? 's' : ''}',
+        style: AppTextStyles.bodyLarge.copyWith(
+          fontWeight: FontWeight.bold,
           color: Theme.of(context).colorScheme.onPrimaryContainer,
         ),
-        onPressed: _togglePinSelectedNotes,
-        tooltip: allPinned ? 'Desfixar' : 'Fixar',
       ),
-
-      // 🏷️ BOTÃO TAGS
-      IconButton(
-        icon: Icon(
-          Icons.label_outline,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
-        onPressed: _showTagSelectionDialog,
-        tooltip: 'Adicionar marcadores',
-      ),
-
-      // 🎨 BOTÃO MUDAR COR
-      IconButton(
-        icon: Icon(Icons.palette_outlined),
-        color: Theme.of(context).colorScheme.onPrimaryContainer,
-        onPressed: _changeColorOfSelectedNotes,
-        tooltip: 'Alterar cor',
-      ),
-
-      // 🗑️ BOTÃO DELETAR
-      IconButton(
-        icon: Icon(Icons.delete_outline),
-        color: Theme.of(context).colorScheme.error,
-        onPressed: () => _showDeleteConfirmationDialog(context),
-        tooltip: 'Excluir selecionadas',
-      ),
-
-      // 📁 MAIS OPÇÕES (ATUALIZADO!)
-      PopupMenuButton<String>(
-        icon: Icon(
-          Icons.more_vert,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
-        tooltip: 'Mais opções',
-        onSelected: (value) {
-          switch (value) {
-            case 'copy':
-              _duplicateSelectedNotes();
-              break;
-            case 'share':
-              _shareSelectedNotes();
-              break;
-          }
-        },
-        itemBuilder: (context) => [
-          // 📋 FAZER CÓPIA
-          PopupMenuItem(
-            value: 'copy',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.content_copy,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                SizedBox(width: 12),
-                Text(
-                  'Fazer cópia',
-                  style: AppTextStyles.bodyMedium,
-                ),
-              ],
-            ),
+      actions: [
+        // 📌 BOTÃO PIN
+        IconButton(
+          icon: Icon(
+            allPinned ? Icons.push_pin : Icons.push_pin_outlined,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
-
-          // 🔗 COMPARTILHAR
-          PopupMenuItem(
-            value: 'share',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.share,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                SizedBox(width: 12),
-                Text(
-                  'Compartilhar',
-                  style: AppTextStyles.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-
-      SizedBox(width: 8),
-    ],
-  );
-}
-
-
-// 📋 DUPLICAR NOTAS SELECIONADAS
-void _duplicateSelectedNotes() {
-  if (_selectedNoteIds.isEmpty) return;
-
-  final count = _selectedNoteIds.length;
-  final List<NoteModel> newNotes = [];
-
-  setState(() {
-    for (final noteId in _selectedNoteIds) {
-      final originalNote = _notes.firstWhere((n) => n.id == noteId);
-      
-      // ✅ Cria nova nota com ID único e título modificado
-      final duplicatedNote = NoteModel(
-        id: Uuid().v4(), // 🆕 ID ÚNICO
-        title: originalNote.title.isEmpty 
-          ? 'Sem título (cópia)' 
-          : '${originalNote.title} (cópia)',
-        content: originalNote.content,
-        color: originalNote.color,
-        isPinned: false, // ✅ Cópia não é fixada
-        position: _notes.length + newNotes.length, // ✅ Adiciona no final
-        tags: originalNote.tags != null 
-          ? List<String>.from(originalNote.tags!) // ✅ Copia tags
-          : null,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      newNotes.add(duplicatedNote);
-    }
-
-    // ✅ Adiciona todas as novas notas
-    _notes.addAll(newNotes);
-  });
-
-  _clearSelection();
-
-  HapticFeedback.mediumImpact();
-
-  Get.snackbar(
-    'Cópia${count > 1 ? 's' : ''} Criada${count > 1 ? 's' : ''}',
-    '$count nota${count > 1 ? 's' : ''} duplicada${count > 1 ? 's' : ''} com sucesso! 📋',
-    snackPosition: SnackPosition.BOTTOM,
-    duration: Duration(seconds: 2),
-  );
-
-  // TODO: Salvar no banco de dados
-}
-
-
-
-
-// ...existing code...
-
-// 🔗 COMPARTILHAR NOTAS SELECIONADAS
-void _shareSelectedNotes() async {
-  if (_selectedNoteIds.isEmpty) return;
-
-  final count = _selectedNoteIds.length;
-  final StringBuffer textToShare = StringBuffer();
-
-  // ✅ Monta o texto para compartilhar
-  for (int i = 0; i < _selectedNoteIds.length; i++) {
-    final noteId = _selectedNoteIds.elementAt(i);
-    final note = _notes.firstWhere((n) => n.id == noteId);
-
-    // ✅ Formato: "Título: Conteúdo"
-    if (note.title.isNotEmpty) {
-      textToShare.write('${note.title}: ');
-    }
-    textToShare.writeln(note.content);
-
-    // ✅ Adiciona separador entre notas (exceto na última)
-    if (i < _selectedNoteIds.length - 1) {
-      textToShare.writeln('\n---\n');
-    }
-  }
-
-  HapticFeedback.selectionClick();
-
-  try {
-    // ✅ Compartilha usando Share Plus
-    final result = await Share.share(
-      textToShare.toString(),
-      subject: count > 1 
-        ? 'ClipStick - $count notas' 
-        : 'ClipStick - ${_notes.firstWhere((n) => n.id == _selectedNoteIds.first).title}',
-    );
-
-    // ✅ Feedback após compartilhar
-    if (result.status == ShareResultStatus.success) {
-      Get.snackbar(
-        'Compartilhado!',
-        '$count nota${count > 1 ? 's' : ''} compartilhada${count > 1 ? 's' : ''} 🔗',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: Duration(seconds: 2),
-      );
-      _clearSelection();
-    }
-  } catch (e) {
-    Get.snackbar(
-      'Erro ao Compartilhar',
-      'Não foi possível compartilhar as notas',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Theme.of(context).colorScheme.errorContainer,
-      colorText: Theme.of(context).colorScheme.onErrorContainer,
-    );
-  }
-}
-
-
-// 🏷️ MOSTRAR DIALOG DE SELEÇÃO DE TAGS (ATUALIZADO)
-void _showTagSelectionDialog() async {
-  if (_selectedNoteIds.isEmpty) return;
-
-  // TODO: Carregar tags reais do banco de dados
- final availableTags = _availableTags;
-
-  // ✅ Se não há tags cadastradas, mostra mensagem
-  if (availableTags.isEmpty) {
-    Get.dialog(
-      AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              Icons.label_off_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            SizedBox(width: 12),
-            Text(
-              'Nenhum Marcador',
-              style: AppTextStyles.headingSmall,
-            ),
-          ],
+          onPressed: _togglePinSelectedNotes,
+          tooltip: allPinned ? 'Desfixar' : 'Fixar',
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.label_off_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Você ainda não possui marcadores cadastrados.',
-              style: AppTextStyles.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Crie seu primeiro marcador para organizar suas notas!',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+
+        // 🏷️ BOTÃO TAGS
+        IconButton(
+          icon: Icon(Icons.label_outline, color: Theme.of(context).colorScheme.onPrimaryContainer),
+          onPressed: _showTagSelectionDialog,
+          tooltip: 'Adicionar marcadores',
+        ),
+
+        // 🎨 BOTÃO MUDAR COR
+        IconButton(
+          icon: Icon(Icons.palette_outlined),
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+          onPressed: _changeColorOfSelectedNotes,
+          tooltip: 'Alterar cor',
+        ),
+
+        // 🗑️ BOTÃO DELETAR
+        IconButton(
+          icon: Icon(Icons.delete_outline),
+          color: Theme.of(context).colorScheme.error,
+          onPressed: () => _showDeleteConfirmationDialog(context),
+          tooltip: 'Excluir selecionadas',
+        ),
+
+        // 📁 MAIS OPÇÕES (ATUALIZADO!)
+        PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onPrimaryContainer),
+          tooltip: 'Mais opções',
+          onSelected: (value) {
+            switch (value) {
+              case 'copy':
+                _duplicateSelectedNotes();
+                break;
+              case 'share':
+                _shareSelectedNotes();
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            // 📋 FAZER CÓPIA
+            PopupMenuItem(
+              value: 'copy',
+              child: Row(
+                children: [
+                  Icon(Icons.content_copy, size: 20, color: Theme.of(context).colorScheme.onSurface),
+                  SizedBox(width: 12),
+                  Text('Fazer cópia', style: AppTextStyles.bodyMedium),
+                ],
               ),
-              textAlign: TextAlign.center,
+            ),
+
+            // 🔗 COMPARTILHAR
+            PopupMenuItem(
+              value: 'share',
+              child: Row(
+                children: [
+                  Icon(Icons.share, size: 20, color: Theme.of(context).colorScheme.onSurface),
+                  SizedBox(width: 12),
+                  Text('Compartilhar', style: AppTextStyles.bodyMedium),
+                ],
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text('Agora Não'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              Get.back(); // Fecha dialog
-              Get.to(() => EditTagsScreen()); // Vai para tela de criar tags
-            },
-            icon: Icon(Icons.add),
-            label: Text('Criar Marcador'),
-          ),
-        ],
-      ),
+
+        SizedBox(width: 8),
+      ],
     );
-    return;
   }
 
-  // ✅ Pega tags atuais das notas selecionadas
-  final Set<String> currentTags = {};
-  for (final noteId in _selectedNoteIds) {
-    final note = _notes.firstWhere((n) => n.id == noteId);
-    if (note.tags != null) {
-      currentTags.addAll(note.tags!);
+  // 📋 DUPLICAR NOTAS SELECIONADAS
+  void _duplicateSelectedNotes() {
+    if (_selectedNoteIds.isEmpty) return;
+
+    final count = _selectedNoteIds.length;
+    final List<NoteModel> newNotes = [];
+
+    setState(() {
+      for (final noteId in _selectedNoteIds) {
+        final originalNote = _notes.firstWhere((n) => n.id == noteId);
+
+        // ✅ Cria nova nota com ID único e título modificado
+        final duplicatedNote = NoteModel(
+          id: Uuid().v4(), // 🆕 ID ÚNICO
+          title: originalNote.title.isEmpty ? 'Sem título (cópia)' : '${originalNote.title} (cópia)',
+          content: originalNote.content,
+          color: originalNote.color,
+          isPinned: false, // ✅ Cópia não é fixada
+          position: _notes.length + newNotes.length, // ✅ Adiciona no final
+          tags: originalNote.tags != null
+              ? List<String>.from(originalNote.tags!) // ✅ Copia tags
+              : null,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        newNotes.add(duplicatedNote);
+      }
+
+      // ✅ Adiciona todas as novas notas
+      _notes.addAll(newNotes);
+    });
+
+    _clearSelection();
+
+    HapticFeedback.mediumImpact();
+
+    Get.snackbar(
+      'Cópia${count > 1 ? 's' : ''} Criada${count > 1 ? 's' : ''}',
+      '$count nota${count > 1 ? 's' : ''} duplicada${count > 1 ? 's' : ''} com sucesso! 📋',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 2),
+    );
+
+    // TODO: Salvar no banco de dados
+  }
+
+  // ...existing code...
+
+  // 🔗 COMPARTILHAR NOTAS SELECIONADAS
+  void _shareSelectedNotes() async {
+    if (_selectedNoteIds.isEmpty) return;
+
+    final count = _selectedNoteIds.length;
+    final StringBuffer textToShare = StringBuffer();
+
+    // ✅ Monta o texto para compartilhar
+    for (int i = 0; i < _selectedNoteIds.length; i++) {
+      final noteId = _selectedNoteIds.elementAt(i);
+      final note = _notes.firstWhere((n) => n.id == noteId);
+
+      // ✅ Formato: "Título: Conteúdo"
+      if (note.title.isNotEmpty) {
+        textToShare.write('${note.title}: ');
+      }
+      textToShare.writeln(note.content);
+
+      // ✅ Adiciona separador entre notas (exceto na última)
+      if (i < _selectedNoteIds.length - 1) {
+        textToShare.writeln('\n---\n');
+      }
+    }
+
+    HapticFeedback.selectionClick();
+
+    try {
+      // ✅ Compartilha usando Share Plus
+      final result = await Share.share(
+        textToShare.toString(),
+        subject: count > 1
+            ? 'ClipStick - $count notas'
+            : 'ClipStick - ${_notes.firstWhere((n) => n.id == _selectedNoteIds.first).title}',
+      );
+
+      // ✅ Feedback após compartilhar
+      if (result.status == ShareResultStatus.success) {
+        Get.snackbar(
+          'Compartilhado!',
+          '$count nota${count > 1 ? 's' : ''} compartilhada${count > 1 ? 's' : ''} 🔗',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: Duration(seconds: 2),
+        );
+        _clearSelection();
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Erro ao Compartilhar',
+        'Não foi possível compartilhar as notas',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+        colorText: Theme.of(context).colorScheme.onErrorContainer,
+      );
     }
   }
 
-  // ✅ Controla seleção local no dialog
-  final Set<String> selectedTagIds = Set.from(currentTags);
+  // 🏷️ MOSTRAR DIALOG DE SELEÇÃO DE TAGS (ATUALIZADO)
+  void _showTagSelectionDialog() async {
+    if (_selectedNoteIds.isEmpty) return;
 
-  await Get.dialog(
-    StatefulBuilder(
-      builder: (context, setDialogState) {
-        return AlertDialog(
+    // TODO: Carregar tags reais do banco de dados
+    final availableTags = _availableTags;
+
+    // ✅ Se não há tags cadastradas, mostra mensagem
+    if (availableTags.isEmpty) {
+      Get.dialog(
+        AlertDialog(
           title: Row(
             children: [
-              Icon(
-                Icons.label,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              Icon(Icons.label_off_outlined, color: Theme.of(context).colorScheme.primary),
               SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Selecionar Marcadores',
-                  style: AppTextStyles.headingSmall,
+              Text('Nenhum Marcador', style: AppTextStyles.headingSmall),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.label_off_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+              SizedBox(height: 16),
+              Text(
+                'Você ainda não possui marcadores cadastrados.',
+                style: AppTextStyles.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Crie seu primeiro marcador para organizar suas notas!',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ℹ️ INFORMAÇÃO
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${_selectedNoteIds.length} nota${_selectedNoteIds.length > 1 ? 's' : ''} selecionada${_selectedNoteIds.length > 1 ? 's' : ''}',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // 📋 LISTA DE TAGS
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: availableTags.length,
-                    itemBuilder: (context, index) {
-                      final tag = availableTags[index];
-                      final isSelected = selectedTagIds.contains(tag.id);
-
-                      return CheckboxListTile(
-                        value: isSelected,
-                        onChanged: (bool? value) {
-                          setDialogState(() {
-                            if (value == true) {
-                              selectedTagIds.add(tag.id);
-                            } else {
-                              selectedTagIds.remove(tag.id);
-                            }
-                          });
-                          HapticFeedback.selectionClick();
-                        },
-                        title: Text(
-                          tag.name,
-                          style: AppTextStyles.bodyMedium,
-                        ),
-                        secondary: Icon(
-                          Icons.label,
-                          color: isSelected 
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                        ),
-                        activeColor: Theme.of(context).colorScheme.primary,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                      );
-                    },
-                  ),
-                ),
-
-                // 💡 DICA
-                SizedBox(height: 12),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                      ),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Selecione um ou mais marcadores',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
           actions: [
-            // ❌ CANCELAR
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Text('Cancelar'),
-            ),
-
-            // ✅ CONFIRMAR
-            ElevatedButton(
+            TextButton(onPressed: () => Get.back(), child: Text('Agora Não')),
+            ElevatedButton.icon(
               onPressed: () {
-                Get.back();
-                _applyTagsToSelectedNotes(selectedTagIds.toList());
+                Get.back(); // Fecha dialog
+                Get.to(() => EditTagsScreen()); // Vai para tela de criar tags
               },
-              child: Text('Confirmar'),
+              icon: Icon(Icons.add),
+              label: Text('Criar Marcador'),
             ),
           ],
-        );
-      },
-    ),
-  );
-}
+        ),
+      );
+      return;
+    }
 
-
- 
-// 🏷️ APLICAR TAGS NAS NOTAS SELECIONADAS
-void _applyTagsToSelectedNotes(List<String> tagIds) {
-  if (_selectedNoteIds.isEmpty) return;
-
-  final count = _selectedNoteIds.length;
-
-  setState(() {
+    // ✅ Pega tags atuais das notas selecionadas
+    final Set<String> currentTags = {};
     for (final noteId in _selectedNoteIds) {
-      final index = _notes.indexWhere((n) => n.id == noteId);
-      if (index != -1) {
-         // ✅ ATUALIZA TAGS DA NOTA
-        // Se lista vazia, remove todas as tags (null)
-        // Se tem tags, aplica a nova lista
-        _notes[index] = _notes[index].copyWith(
-          tags: tagIds.isEmpty ? [] : tagIds, // 🆕 USA LISTA VAZIA EM VEZ DE NULL
-          updatedAt: DateTime.now(),
-        );
+      final note = _notes.firstWhere((n) => n.id == noteId);
+      if (note.tags != null) {
+        currentTags.addAll(note.tags!);
       }
     }
-  });
 
-  _clearSelection();
+    // ✅ Controla seleção local no dialog
+    final Set<String> selectedTagIds = Set.from(currentTags);
 
-  HapticFeedback.mediumImpact();
+    await Get.dialog(
+      StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.label, color: Theme.of(context).colorScheme.primary),
+                SizedBox(width: 12),
+                Expanded(child: Text('Selecionar Marcadores', style: AppTextStyles.headingSmall)),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ℹ️ INFORMAÇÃO
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: Theme.of(context).colorScheme.primary),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${_selectedNoteIds.length} nota${_selectedNoteIds.length > 1 ? 's' : ''} selecionada${_selectedNoteIds.length > 1 ? 's' : ''}',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-  // ✅ Notificação customizada
-  if (tagIds.isEmpty) {
-    Get.snackbar(
-      'Marcadores Removidos',
-      '$count nota${count > 1 ? 's' : ''} sem marcadores 🏷️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
-    );
-  } else {
-    Get.snackbar(
-      'Marcadores Aplicados',
-      '${tagIds.length} marcador${tagIds.length > 1 ? 'es' : ''} adicionado${tagIds.length > 1 ? 's' : ''} a $count nota${count > 1 ? 's' : ''} 🏷️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
+                  SizedBox(height: 16),
+
+                  // 📋 LISTA DE TAGS
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: availableTags.length,
+                      itemBuilder: (context, index) {
+                        final tag = availableTags[index];
+                        final isSelected = selectedTagIds.contains(tag.id);
+
+                        return CheckboxListTile(
+                          value: isSelected,
+                          onChanged: (bool? value) {
+                            setDialogState(() {
+                              if (value == true) {
+                                selectedTagIds.add(tag.id);
+                              } else {
+                                selectedTagIds.remove(tag.id);
+                              }
+                            });
+                            HapticFeedback.selectionClick();
+                          },
+                          title: Text(tag.name, style: AppTextStyles.bodyMedium),
+                          secondary: Icon(
+                            Icons.label,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                          ),
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // 💡 DICA
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Selecione um ou mais marcadores',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              // ❌ CANCELAR
+              TextButton(onPressed: () => Get.back(), child: Text('Cancelar')),
+
+              // ✅ CONFIRMAR
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                  _applyTagsToSelectedNotes(selectedTagIds.toList());
+                },
+                child: Text('Confirmar'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
-  // TODO: Salvar no banco de dados
-}
+  // 🏷️ APLICAR TAGS NAS NOTAS SELECIONADAS
+  void _applyTagsToSelectedNotes(List<String> tagIds) {
+    if (_selectedNoteIds.isEmpty) return;
 
-// 📭 ESTADO VAZIO (SEM TAGS)
-Widget _buildEmptyTagsState(BuildContext context) {
-  return Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.label_off_outlined,
-          size: 48,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-        ),
-        SizedBox(height: 12),
-        Text(
-          'Nenhum marcador criado',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+    final count = _selectedNoteIds.length;
+
+    setState(() {
+      for (final noteId in _selectedNoteIds) {
+        final index = _notes.indexWhere((n) => n.id == noteId);
+        if (index != -1) {
+          // ✅ ATUALIZA TAGS DA NOTA
+          // Se lista vazia, remove todas as tags (null)
+          // Se tem tags, aplica a nova lista
+          _notes[index] = _notes[index].copyWith(
+            tags: tagIds.isEmpty ? [] : tagIds, // 🆕 USA LISTA VAZIA EM VEZ DE NULL
+            updatedAt: DateTime.now(),
+          );
+        }
+      }
+    });
+
+    _clearSelection();
+
+    HapticFeedback.mediumImpact();
+
+    // ✅ Notificação customizada
+    if (tagIds.isEmpty) {
+      Get.snackbar(
+        'Marcadores Removidos',
+        '$count nota${count > 1 ? 's' : ''} sem marcadores 🏷️',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 2),
+      );
+    } else {
+      Get.snackbar(
+        'Marcadores Aplicados',
+        '${tagIds.length} marcador${tagIds.length > 1 ? 'es' : ''} adicionado${tagIds.length > 1 ? 's' : ''} a $count nota${count > 1 ? 's' : ''} 🏷️',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 2),
+      );
+    }
+
+    // TODO: Salvar no banco de dados
+  }
+
+  // 📭 ESTADO VAZIO (SEM TAGS)
+  Widget _buildEmptyTagsState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.label_off_outlined, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+          SizedBox(height: 12),
+          Text(
+            'Nenhum marcador criado',
+            style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
           ),
-        ),
-        SizedBox(height: 8),
-        TextButton.icon(
-          onPressed: () {
-            Get.back();
-            Get.to(() => EditTagsScreen());
-          },
-          icon: Icon(Icons.add),
-          label: Text('Criar primeiro marcador'),
-        ),
-      ],
-    ),
-  );
-}
-
-
+          SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () {
+              Get.back();
+              Get.to(() => EditTagsScreen());
+            },
+            icon: Icon(Icons.add),
+            label: Text('Criar primeiro marcador'),
+          ),
+        ],
+      ),
+    );
+  }
 
   // 🗑️ DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO
   void _showDeleteConfirmationDialog(BuildContext context) {
@@ -925,7 +872,9 @@ Widget _buildEmptyTagsState(BuildContext context) {
         content: 'Leite, pão, ovos, frutas, café, açúcar',
         color: AppColors.lightNoteYellow,
         position: 0,
-        isPinned: true, createdAt: null, updatedAt: null, // 🆕 FIXADO
+        isPinned: true,
+        createdAt: null,
+        updatedAt: null, // 🆕 FIXADO
       ),
       NoteModel(
         id: '2',
@@ -954,7 +903,8 @@ Widget _buildEmptyTagsState(BuildContext context) {
       NoteModel(
         id: '5',
         title: 'Receita de bolo',
-        content: '3 ovos, 2 xícaras de açúcar, 2 xícaras de farinha, 1 xícara de leite, 4kg de caju, 2kg de castanha, tres paes',
+        content:
+            '3 ovos, 2 xícaras de açúcar, 2 xícaras de farinha, 1 xícara de leite, 4kg de caju, 2kg de castanha, tres paes',
         color: AppColors.lightNoteOrange,
         position: 4,
         isPinned: false,
@@ -1017,88 +967,110 @@ Widget _buildEmptyTagsState(BuildContext context) {
     return _buildSECTIONEDListView(context);
   }
 
-
-
-
   // 📊 GRID VIEW SIMPLES (SEM FIXADOS)
-  Widget _buildSimpleGridView(BuildContext context) {
-    final generatedChildren = List.generate(_notes.length, (index) => _buildGridNoteCard(context, _notes[index]));
+ // ✅ SUBSTITUIR O MÉTODO _buildSimpleGridView
+Widget _buildSimpleGridView(BuildContext context) {
+  final generatedChildren = List.generate(
+    _notes.length, 
+    (index) => _buildGridNoteCard(context, _notes[index])
+  );
 
-    return Padding(
-      padding: EdgeInsets.all(16),
-      child: ReorderableBuilder(
-        scrollController: _scrollController,
-        enableLongPress: true,
-        longPressDelay: Duration(milliseconds: 500),
-        enableDraggable: true,
-        enableScrollingWhileDragging: true,
-        automaticScrollExtent: 80.0,
-        fadeInDuration: Duration(milliseconds: 300),
-        releasedChildDuration: Duration(milliseconds: 200),
-        positionDuration: Duration(milliseconds: 250),
-        dragChildBoxDecoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: 5,
-              offset: Offset(0, 6),
-            ),
-            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, spreadRadius: 2, offset: Offset(0, 4)),
-          ],
+  return Padding(
+    padding: EdgeInsets.all(16),
+    child: ReorderableBuilder(
+      scrollController: _scrollController,
+      enableLongPress: true,
+      longPressDelay: Duration(milliseconds: 500),
+      enableDraggable: true,
+      enableScrollingWhileDragging: true,
+      automaticScrollExtent: 80.0,
+      fadeInDuration: Duration(milliseconds: 300),
+      releasedChildDuration: Duration(milliseconds: 200),
+      positionDuration: Duration(milliseconds: 250),
+      
+      dragChildBoxDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary, 
+          width: 3
         ),
-        onReorder: (ReorderedListFunction reorderedListFunction) {
-          setState(() {
-            _notes = reorderedListFunction(_notes) as List<NoteModel>;
-            for (int i = 0; i < _notes.length; i++) {
-              _notes[i] = _notes[i].copyWith(position: i);
-            }
-            _isDragging = true;
-          });
-        },
-        onDragStarted: (index) {
-          setState(() {
-            _longPressedIndex = index;
-            _isDragging = false;
-          });
-          HapticFeedback.mediumImpact();
-        },
-        onDragEnd: (index) {
-          HapticFeedback.lightImpact();
-          Future.delayed(Duration(milliseconds: 100), () {
-            if (!_isDragging && _longPressedIndex != null) {
-              final noteId = _notes[_longPressedIndex!].id;
-              setState(() {
-                _toggleNoteSelection(noteId);
-                _longPressedIndex = null;
-              });
-              HapticFeedback.selectionClick();
-            }
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2), 
+            blurRadius: 12, 
+            spreadRadius: 2, 
+            offset: Offset(0, 4)
+          ),
+        ],
+      ),
+      
+      onReorder: (ReorderedListFunction reorderedListFunction) {
+        setState(() {
+          // ✅ 1. Reordena a lista
+          _notes = reorderedListFunction(_notes) as List<NoteModel>;
+          
+          // ✅ 2. Atualiza positions
+          for (int i = 0; i < _notes.length; i++) {
+            _notes[i] = _notes[i].copyWith(position: i);
+          }
+          
+          _isDragging = true;
+        });
+
+        // ✅ 3. Salva no banco (quando implementar)
+        _sortAndSaveNotes();
+      },
+      
+      onDragStarted: (index) {
+        setState(() {
+          _longPressedIndex = index;
+          _isDragging = false;
+        });
+        HapticFeedback.mediumImpact();
+      },
+      
+      onDragEnd: (index) {
+        HapticFeedback.lightImpact();
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (!_isDragging && _longPressedIndex != null) {
+            final noteId = _notes[_longPressedIndex!].id;
             setState(() {
-              _isDragging = false;
+              _toggleNoteSelection(noteId);
               _longPressedIndex = null;
             });
+            HapticFeedback.selectionClick();
+          }
+          setState(() {
+            _isDragging = false;
+            _longPressedIndex = null;
           });
-        },
-        builder: (children) {
-          return GridView(
-            key: _gridViewKey,
-            controller: _scrollController,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1.1,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-            ),
-            children: children,
-          );
-        },
-        children: generatedChildren,
-      ),
-    );
-  }
+        });
+      },
+      
+      builder: (children) {
+        return GridView(
+          key: _gridViewKey,
+          controller: _scrollController,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.1,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+          ),
+          children: children,
+        );
+      },
+      
+      children: generatedChildren,
+    ),
+  );
+}
 
   // 📊 GRID VIEW COM SEÇÕES (FIXADOS + OUTROS) - CORRIGIDO
   Widget _buildSectionedGridView(BuildContext context) {
@@ -1134,313 +1106,364 @@ Widget _buildEmptyTagsState(BuildContext context) {
       ),
     );
   }
+
   //gpt
   Widget _buildSECTIONEDListView(BuildContext context) {
-  // Helper para criar cada item com gesture + aparência similar ao proxyDecorator
- Widget buildDraggableItem(
-  BuildContext ctx,
-  NoteModel note,
-  int sectionIndex,
-  int indexInSection,
-) {
-  // Variáveis locais por item — recreated a cada build, correto
-  Offset? pointerDownPos;
-  bool tapLock = false;
-  bool didMove = false;
-  late DateTime pointerDownTime;
-  const double moveThreshold = 6.0; // px
-  const int longPressThresholdMs = 220; // ms (ajuste se quiser)
+    // Helper para criar cada item com gesture + aparência similar ao proxyDecorator
+    Widget buildDraggableItem(BuildContext ctx, NoteModel note, int sectionIndex, int indexInSection) {
+      // Variáveis locais por item — recreated a cada build, correto
+      Offset? pointerDownPos;
+      bool tapLock = false;
+      bool didMove = false;
+      late DateTime pointerDownTime;
+      const double moveThreshold = 6.0; // px
+      const int longPressThresholdMs = 220; // ms (ajuste se quiser)
+     
+      final isSelected = _isNoteSelected(note.id);
 
-  return Listener(
-    behavior: HitTestBehavior.opaque,
+      return Listener(
+        behavior: HitTestBehavior.opaque,
 
-    onPointerDown: (PointerDownEvent ev) {
-      pointerDownPos = ev.position;
-      didMove = false;
-      pointerDownTime = DateTime.now();
-      // marcaremos longPressedIndex quando o long press for confirmado por tempo
-      // mas NÃO chamaremos seleção aqui.
-      _longPressedIndex = indexInSection;
-    },
+        onPointerDown: (PointerDownEvent ev) {
+          pointerDownPos = ev.position;
+          didMove = false;
+          pointerDownTime = DateTime.now();
+          // marcaremos longPressedIndex quando o long press for confirmado por tempo
+          // mas NÃO chamaremos seleção aqui.
+          _longPressedIndex = indexInSection;
+        },
 
-    onPointerMove: (PointerMoveEvent ev) {
-      if (pointerDownPos != null) {
-        final distance = (ev.position - pointerDownPos!).distance;
-        if (!didMove && distance > moveThreshold) {
-          didMove = true;
-          // sinalizamos que houve movimento real (arrasto)
-          _isDragging = true;
-          _longPressedIndex = null;
-        }
-      }
-    },
-
-    onPointerUp: (PointerUpEvent ev) {
-      final pressDuration = DateTime.now().difference(pointerDownTime).inMilliseconds;
-
-      // Caso: não houve movimento e o tempo excedeu o threshold -> é long press sem mover => selecionar
-      if (!didMove && pressDuration >= longPressThresholdMs) {
-        // Toggle selection (long press sem movimento)
-        final noteId = note.id;
-        setState(() {
-          _toggleNoteSelection(noteId);
-          _longPressedIndex = null;
-        });
-        HapticFeedback.selectionClick();
-      } else {
-        // Caso: tap rápido (pressDuration < threshold) -> abrir nota
-       if (!didMove && pressDuration < longPressThresholdMs) {
-  if (_isSelectionMode) {
-    setState(() => _toggleNoteSelection(note.id));
-  } else {
-    // TAP NORMAL → ABRIR NOTA (com proteção contra duplo disparo)
-    if (!tapLock) {
-      tapLock = true;
-      _openNote(context, note);
-
-      // libera após um pequeno intervalo
-      Future.delayed(Duration(milliseconds: 120), () {
-        tapLock = false;
-      });
-    }
-  }
-}
-
-        // Reset flags
-        Future.delayed(Duration(milliseconds: 100), () {
-          _isDragging = false;
-          _longPressedIndex = null;
-        });
-      }
-
-      pointerDownPos = null;
-      didMove = false;
-    },
-
-    onPointerCancel: (ev) {
-      pointerDownPos = null;
-      didMove = false;
-      Future.delayed(Duration(milliseconds: 100), () {
-        _isDragging = false;
-        _longPressedIndex = null;
-      });
-    },
-
-    // Mantemos o visual do item por baixo do Listener
-    child: AnimatedContainer(
-      duration: Duration(milliseconds: 160),
-      curve: Curves.easeInOut,
-      child: _buildListNoteCard(context, note),
-    ),
-  );
-}
-
-
-  // Gera os children para cada seção
-  final pinnedChildren = List<Widget>.generate(
-    _pinnedNotes.length,
-    (i) => KeyedSubtree(
-      key: ValueKey(_pinnedNotes[i].id),
-      child: buildDraggableItem(context, _pinnedNotes[i], 0, i),
-    ),
-  );
-
-  final otherChildren = List<Widget>.generate(
-    _otherNotes.length,
-    (i) => KeyedSubtree(
-      key: ValueKey(_otherNotes[i].id),
-      child: buildDraggableItem(context, _otherNotes[i], 1, i),
-    ),
-  );
-
-  return SingleChildScrollView(
-  //  controller: _scrollController,
-    padding: EdgeInsets.all(16),
-    child: Column(
-      
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ---------- FIXADOS ----------
-        if (_pinnedNotes.isNotEmpty) ...[
-          _buildSectionHeader(context, '📌 FIXADOS', _pinnedNotes.length),
-          SizedBox(height: 12),
-    
-          ReorderableColumn(
-            
-            // mantém  o layout como lista vertical
-            crossAxisAlignment: CrossAxisAlignment.start,
-            needsLongPressDraggable: true, // exige long press para arrastar (comportamento do grid)
-            children: pinnedChildren,
-            onReorder: (oldIndex, newIndex) {
-              // mapear indices relativos da seção para _notes e aplicar mudança apenas dentro da seção
-              setState(() {
-                if (newIndex > oldIndex) newIndex -= 1;
-    
-                final movedNote = _pinnedNotes[oldIndex];
-                final originalOldIndex = _notes.indexWhere((n) => n.id == movedNote.id);
-                final targetNote = _pinnedNotes[newIndex];
-                final originalNewIndex = _notes.indexWhere((n) => n.id == targetNote.id);
-    
-                final item = _notes.removeAt(originalOldIndex);
-                _notes.insert(originalNewIndex, item);
-    
-                for (int i = 0; i < _notes.length; i++) {
-                  _notes[i] = _notes[i].copyWith(position: i);
-                }
-    
-                // sinaliza que foi um drag real para evitar seleção
-                _isDragging = true;
-                _longPressedIndex = null;
-              });
-            },
-          ),
-    
-          SizedBox(height: 24),
-        ],
-    
-        // ---------- OUTRAS NOTAS ----------
-        if (_otherNotes.isNotEmpty) ...[
-          _buildSectionHeader(context, '📋 OUTRAS NOTAS', _otherNotes.length),
-          SizedBox(height: 12),
-    
-          ReorderableColumn(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            needsLongPressDraggable: true,
-            children: otherChildren,
-            onReorder: (oldIndex, newIndex) {
-              setState(() {
-                if (newIndex > oldIndex) newIndex -= 1;
-    
-                final movedNote = _otherNotes[oldIndex];
-                final originalOldIndex = _notes.indexWhere((n) => n.id == movedNote.id);
-                final targetNote = _otherNotes[newIndex];
-                final originalNewIndex = _notes.indexWhere((n) => n.id == targetNote.id);
-    
-                final item = _notes.removeAt(originalOldIndex);
-                _notes.insert(originalNewIndex, item);
-    
-                for (int i = 0; i < _notes.length; i++) {
-                  _notes[i] = _notes[i].copyWith(position: i);
-                }
-    
-                _isDragging = true;
-                _longPressedIndex = null;
-              });
-            },
-          ),
-        ],
-      ],
-    ),
-  );
-}
-
-
-  // 📊 GRID REORDENÁVEL DE UMA SEÇÃO (COM DRAG & DROP)
-  Widget _buildReorderableGridSection(BuildContext context, List<NoteModel> notes, {required bool isPinnedSection}) {
-    final generatedChildren = List.generate(notes.length, (index) => _buildGridNoteCard(context, notes[index]));
-
-    return ReorderableBuilder(
-      enableLongPress: true,
-      longPressDelay: Duration(milliseconds: 500),
-      enableDraggable: true,
-      enableScrollingWhileDragging: false, // ✅ Desabilita scroll automático (já está em SingleChildScrollView)
-      automaticScrollExtent: 0, // ✅ Desabilita scroll automático
-
-      fadeInDuration: Duration(milliseconds: 300),
-      releasedChildDuration: Duration(milliseconds: 200),
-      positionDuration: Duration(milliseconds: 250),
-
-      dragChildBoxDecoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-            blurRadius: 20,
-            spreadRadius: 5,
-            offset: Offset(0, 6),
-          ),
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 12, spreadRadius: 2, offset: Offset(0, 4)),
-        ],
-      ),
-
-      onReorder: (ReorderedListFunction reorderedListFunction) {
-        setState(() {
-          // ✅ Reordena apenas dentro da seção correspondente
-          if (isPinnedSection) {
-            // Reordena fixados
-            final reorderedPinned = reorderedListFunction(_pinnedNotes) as List<NoteModel>;
-
-            // Atualiza posições dentro da lista completa
-            for (int i = 0; i < reorderedPinned.length; i++) {
-              final noteIndex = _notes.indexWhere((n) => n.id == reorderedPinned[i].id);
-              if (noteIndex != -1) {
-                _notes[noteIndex] = reorderedPinned[i].copyWith(position: i);
-              }
-            }
-          } else {
-            // Reordena outras notas
-            final reorderedOthers = reorderedListFunction(_otherNotes) as List<NoteModel>;
-
-            // Atualiza posições dentro da lista completa
-            final pinnedCount = _pinnedNotes.length;
-            for (int i = 0; i < reorderedOthers.length; i++) {
-              final noteIndex = _notes.indexWhere((n) => n.id == reorderedOthers[i].id);
-              if (noteIndex != -1) {
-                _notes[noteIndex] = reorderedOthers[i].copyWith(position: pinnedCount + i);
-              }
+        onPointerMove: (PointerMoveEvent ev) {
+          if (pointerDownPos != null) {
+            final distance = (ev.position - pointerDownPos!).distance;
+            if (!didMove && distance > moveThreshold) {
+              didMove = true;
+              // sinalizamos que houve movimento real (arrasto)
+              _isDragging = true;
+              _longPressedIndex = null;
             }
           }
+        },
 
-          _isDragging = true;
-        });
-      },
+        onPointerUp: (PointerUpEvent ev) {
+          final pressDuration = DateTime.now().difference(pointerDownTime).inMilliseconds;
 
-      onDragStarted: (index) {
-        setState(() {
-          // ✅ Mapeia índice local para índice global
-          final noteId = notes[index].id;
-          _longPressedIndex = _notes.indexWhere((n) => n.id == noteId);
-          _isDragging = false;
-        });
-        HapticFeedback.mediumImpact();
-      },
-
-      onDragEnd: (index) {
-        HapticFeedback.lightImpact();
-        Future.delayed(Duration(milliseconds: 100), () {
-          if (!_isDragging && _longPressedIndex != null) {
-            final noteId = _notes[_longPressedIndex!].id;
+          // Caso: não houve movimento e o tempo excedeu o threshold -> é long press sem mover => selecionar
+          if (!didMove && pressDuration >= longPressThresholdMs) {
+            // Toggle selection (long press sem movimento)
+            final noteId = note.id;
             setState(() {
               _toggleNoteSelection(noteId);
               _longPressedIndex = null;
             });
             HapticFeedback.selectionClick();
+          } else {
+            // Caso: tap rápido (pressDuration < threshold) -> abrir nota
+            if (!didMove && pressDuration < longPressThresholdMs) {
+              if (_isSelectionMode) {
+                setState(() => _toggleNoteSelection(note.id));
+              } else {
+                // TAP NORMAL → ABRIR NOTA (com proteção contra duplo disparo)
+                if (!tapLock) {
+                  tapLock = true;
+                  _openNote(context, note);
+
+                  // libera após um pequeno intervalo
+                  Future.delayed(Duration(milliseconds: 120), () {
+                    tapLock = false;
+                  });
+                }
+              }
+            }
+
+            // Reset flags
+            Future.delayed(Duration(milliseconds: 100), () {
+              _isDragging = false;
+              _longPressedIndex = null;
+            });
           }
-          setState(() {
+
+          pointerDownPos = null;
+          didMove = false;
+        },
+
+        onPointerCancel: (ev) {
+          pointerDownPos = null;
+          didMove = false;
+          Future.delayed(Duration(milliseconds: 100), () {
             _isDragging = false;
             _longPressedIndex = null;
           });
-        });
-      },
+        },
 
-      builder: (children) {
-        return GridView(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.1,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
+        // Mantemos o visual do item por baixo do Listener
+        child: Padding(
+         padding: const EdgeInsets.only(bottom: 4.0),
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: isSelected
+          ? Border.all(
+              color: Theme.of(context).colorScheme.primary,
+              width: 3,
+            )
+          : null,
+            /*   boxShadow: [
+                if (isSelected)
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.25),
+            blurRadius: 2,
+            spreadRadius: 0,
           ),
-          children: children,
-        );
-      },
+              ], */
+            ),
+            child: _buildListNoteCard(context, note,  isSelected),
+          ),
+        ),
+      );
+    }
 
-      children: generatedChildren,
+    // Gera os children para cada seção
+    final pinnedChildren = List<Widget>.generate(
+      _pinnedNotes.length,
+      (i) => KeyedSubtree(key: ValueKey(_pinnedNotes[i].id), child: buildDraggableItem(context, _pinnedNotes[i], 0, i)),
+    );
+
+    final otherChildren = List<Widget>.generate(
+      _otherNotes.length,
+      (i) => KeyedSubtree(key: ValueKey(_otherNotes[i].id), child: buildDraggableItem(context, _otherNotes[i], 1, i)),
+    );
+
+    return SingleChildScrollView(
+      //  controller: _scrollController,
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ---------- FIXADOS ----------
+          if (_pinnedNotes.isNotEmpty) ...[
+            _buildSectionHeader(context, '📌 FIXADOS', _pinnedNotes.length),
+            SizedBox(height: 12),
+
+            ReorderableColumn(
+              // mantém  o layout como lista vertical
+              crossAxisAlignment: CrossAxisAlignment.start,
+              needsLongPressDraggable: true, // exige long press para arrastar (comportamento do grid)
+              children: pinnedChildren,
+              onReorder: (oldIndex, newIndex) {
+  setState(() {
+    // ❌ REMOVIDO: if (newIndex > oldIndex) newIndex -= 1;
+    // ✅ ReorderableColumn NÃO precisa desse ajuste!
+
+    // ✅ 1. CAPTURA A LISTA LOCAL ANTES DE MODIFICAR
+    final localPinnedNotes = List<NoteModel>.from(_pinnedNotes);
+    
+    if (oldIndex >= localPinnedNotes.length || newIndex >= localPinnedNotes.length) {
+      return; // 🛡️ PROTEÇÃO
+    }
+
+    // ✅ 2. Reordena localmente
+    final movedNote = localPinnedNotes.removeAt(oldIndex);
+    localPinnedNotes.insert(newIndex, movedNote);
+
+    // ✅ 3. Remove TODOS os fixados de _notes
+    _notes.removeWhere((n) => n.isPinned);
+
+    // ✅ 4. Insere a lista reordenada no INÍCIO
+    _notes.insertAll(0, localPinnedNotes);
+
+    // ✅ 5. Atualiza positions globais
+    for (int i = 0; i < _notes.length; i++) {
+      _notes[i] = _notes[i].copyWith(position: i);
+    }
+
+    _isDragging = true;
+    _longPressedIndex = null;
+  });
+
+  HapticFeedback.lightImpact();
+  _sortAndSaveNotes();
+},
+            ),
+
+            SizedBox(height: 24),
+          ],
+
+          // ---------- OUTRAS NOTAS ----------
+          if (_otherNotes.isNotEmpty) ...[
+            _buildSectionHeader(context, '📋 OUTRAS NOTAS', _otherNotes.length),
+            SizedBox(height: 12),
+
+            ReorderableColumn(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              needsLongPressDraggable: true,
+              children: otherChildren,
+              onReorder: (oldIndex, newIndex) {
+  setState(() {
+    // ❌ REMOVIDO: if (newIndex > oldIndex) newIndex -= 1;
+    // ✅ ReorderableColumn NÃO precisa desse ajuste!
+
+    // ✅ 1. CAPTURA A LISTA LOCAL ANTES DE MODIFICAR
+    final localOtherNotes = List<NoteModel>.from(_otherNotes);
+    
+    if (oldIndex >= localOtherNotes.length || newIndex >= localOtherNotes.length) {
+      return; // 🛡️ PROTEÇÃO
+    }
+
+    // ✅ 2. Reordena localmente
+    final movedNote = localOtherNotes.removeAt(oldIndex);
+    localOtherNotes.insert(newIndex, movedNote);
+
+    // ✅ 3. Mantém apenas os fixados em _notes
+    _notes.removeWhere((n) => !n.isPinned);
+
+    // ✅ 4. Adiciona a lista reordenada APÓS fixados
+    _notes.addAll(localOtherNotes);
+
+    // ✅ 5. Atualiza positions globais
+    for (int i = 0; i < _notes.length; i++) {
+      _notes[i] = _notes[i].copyWith(position: i);
+    }
+
+    _isDragging = true;
+    _longPressedIndex = null;
+  });
+
+  HapticFeedback.lightImpact();
+  _sortAndSaveNotes();
+},
+            ),
+          ],
+        ],
+      ),
     );
   }
+
+  // 📊 GRID REORDENÁVEL DE UMA SEÇÃO (COM DRAG & DROP)
+  // ✅ SUBSTITUIR O MÉTODO _buildReorderableGridSection
+Widget _buildReorderableGridSection(
+  BuildContext context, 
+  List<NoteModel> notes, 
+  {required bool isPinnedSection}
+) {
+  final generatedChildren = List.generate(
+    notes.length, 
+    (index) => _buildGridNoteCard(context, notes[index])
+  );
+
+  return ReorderableBuilder(
+    enableLongPress: true,
+    longPressDelay: Duration(milliseconds: 500),
+    enableDraggable: true,
+    enableScrollingWhileDragging: false,
+    automaticScrollExtent: 0,
+    fadeInDuration: Duration(milliseconds: 300),
+    releasedChildDuration: Duration(milliseconds: 200),
+    positionDuration: Duration(milliseconds: 250),
+
+    dragChildBoxDecoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary, 
+        width: 3
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+          blurRadius: 20,
+          spreadRadius: 5,
+          offset: Offset(0, 6),
+        ),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2), 
+          blurRadius: 12, 
+          spreadRadius: 2, 
+          offset: Offset(0, 4)
+        ),
+      ],
+    ),
+
+    onReorder: (ReorderedListFunction reorderedListFunction) {
+      setState(() {
+        if (isPinnedSection) {
+          // ✅ 1. Reordena lista local
+          final reorderedPinned = reorderedListFunction(_pinnedNotes) as List<NoteModel>;
+          
+          // ✅ 2. Remove TODOS os fixados de _notes
+          _notes.removeWhere((n) => n.isPinned);
+          
+          // ✅ 3. Insere reordenados no INÍCIO
+          _notes.insertAll(0, reorderedPinned);
+          
+        } else {
+          // ✅ MESMA LÓGICA para _otherNotes
+          final reorderedOthers = reorderedListFunction(_otherNotes) as List<NoteModel>;
+          
+          // ✅ Remove não-fixados
+          _notes.removeWhere((n) => !n.isPinned);
+          
+          // ✅ Insere após fixados
+          _notes.addAll(reorderedOthers);
+        }
+        
+        // ✅ 4. Atualiza positions globais
+        for (int i = 0; i < _notes.length; i++) {
+          _notes[i] = _notes[i].copyWith(position: i);
+        }
+        
+        _isDragging = true;
+      });
+
+      // ✅ 5. Salva no banco
+      _sortAndSaveNotes();
+    },
+
+    onDragStarted: (index) {
+      setState(() {
+        final noteId = notes[index].id;
+        _longPressedIndex = _notes.indexWhere((n) => n.id == noteId);
+        _isDragging = false;
+      });
+      HapticFeedback.mediumImpact();
+    },
+
+    onDragEnd: (index) {
+      HapticFeedback.lightImpact();
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (!_isDragging && _longPressedIndex != null) {
+          final noteId = _notes[_longPressedIndex!].id;
+          setState(() {
+            _toggleNoteSelection(noteId);
+            _longPressedIndex = null;
+          });
+          HapticFeedback.selectionClick();
+        }
+        setState(() {
+          _isDragging = false;
+          _longPressedIndex = null;
+        });
+      });
+    },
+
+    builder: (children) {
+      return GridView(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1.1,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+        ),
+        children: children,
+      );
+    },
+
+    children: generatedChildren,
+  );
+}
 
   // 🏷️ HEADER DE SEÇÃO
   Widget _buildSectionHeader(BuildContext context, String title, int count) {
@@ -1472,86 +1495,63 @@ Widget _buildEmptyTagsState(BuildContext context) {
     );
   }
 
-  // 📊 GRID DE UMA SEÇÃO
-  Widget _buildGridSection(BuildContext context, List<NoteModel> notes) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.1,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-      ),
-      itemCount: notes.length,
-      itemBuilder: (context, index) {
-        return _buildGridNoteCard(context, notes[index]);
-      },
-    );
-  }
+// 📋 LIST VIEW COM DRAG & DROP - VERSÃO PREMIUM
+// ✅ SUBSTITUIR O MÉTODO _buildSIMPLEListView
+Widget _buildSIMPLEListView(BuildContext context) {
+  return ReorderableListView.builder(
+    padding: EdgeInsets.all(16),
 
-  // 📋 LIST VIEW COM DRAG & DROP - VERSÃO PREMIUM
-  Widget _buildSIMPLEListView(BuildContext context) {
-    return ReorderableListView.builder(
-      padding: EdgeInsets.all(16),
-      // ✅ CUSTOMIZAR O VISUAL AO ARRASTAR - VERSÃO PREMIUM
-      proxyDecorator: (child, index, animation) {
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (BuildContext context, Widget? child) {
-            final double animValue = Curves.easeInOut.transform(animation.value);
-            final double elevation = lerpDouble(2, 12, animValue)!;
-            final double scale = lerpDouble(1.0, 1.08, animValue)!;
-            final double rotation = lerpDouble(0, 0.02, animValue)!; // ✅ ROTAÇÃO SUTIL
+    proxyDecorator: (child, index, animation) {
+      return AnimatedBuilder(
+        animation: animation,
+        builder: (BuildContext context, Widget? child) {
+          final double animValue = Curves.easeInOut.transform(animation.value);
+          final double elevation = lerpDouble(2, 12, animValue)!;
+          final double rotation = lerpDouble(0, 0.02, animValue)!;
 
-            return Transform.rotate(
-              angle: rotation,
-              child: Transform.scale(
-                scale: scale,
-                child: Material(
-                  elevation: elevation,
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Card(
-                    elevation: 0,
-                    margin: EdgeInsets.zero,
-                    color: _notes[index].color,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                        width: 2, // ✅ BORDA DESTACADA AO ARRASTAR
-                      ),
-                    ),
-                    child: child,
-                  ),
-                ),
-              ),
-            );
-          },
-          child: child,
-        );
-      },
-      onReorder: (oldIndex, newIndex) {
-        setState(() {
-          if (newIndex > oldIndex) {
-            newIndex -= 1;
-          }
-          final NoteModel item = _notes.removeAt(oldIndex);
-          _notes.insert(newIndex, item);
+          return Transform.rotate(
+            angle: rotation,
+            child: Material(
+              clipBehavior: Clip.antiAlias,
+              borderRadius: BorderRadius.circular(12),
+              elevation: elevation,
+              shadowColor: Colors.black.withOpacity(0.25),
+              color: Colors.transparent,
+              child: child,
+            ),
+          );
+        },
+        child: child,
+      );
+    },
 
-          for (int i = 0; i < _notes.length; i++) {
-            _notes[i] = _notes[i].copyWith(position: i);
-          }
-        });
-      },
-      itemCount: _notes.length,
-      itemBuilder: (context, index) {
-        final note = _notes[index];
-        return _buildListNoteCard(context, note);
-      },
-    );
-  }
+    onReorder: (oldIndex, newIndex) {
+      setState(() {
+        if (newIndex > oldIndex) newIndex -= 1;
+
+        // ✅ 1. Remove e insere na nova posição
+        final NoteModel item = _notes.removeAt(oldIndex);
+        _notes.insert(newIndex, item);
+
+        // ✅ 2. Atualiza positions
+        for (int i = 0; i < _notes.length; i++) {
+          _notes[i] = _notes[i].copyWith(position: i);
+        }
+      });
+
+      // ✅ 3. Salva no banco
+      _sortAndSaveNotes();
+    },
+
+    itemCount: _notes.length,
+    itemBuilder: (context, index) {
+      final note = _notes[index];
+      final isSelected = _isNoteSelected(note.id);
+      return _buildListNoteCard(context, note, isSelected);
+    },
+  );
+}
+
 
   // 🎯 CARD PARA GRID VIEW COM VISUAL DE SELEÇÃO
   Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
@@ -1647,14 +1647,10 @@ Widget _buildEmptyTagsState(BuildContext context) {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              Visibility(
-                visible: note.tags != null && note.tags!.isNotEmpty,
-                child: Column(children: [
-                   SizedBox(height: 8),
-               _buildTagsRow(context, note),
-                ],),
-              )
-               
+                Visibility(
+                  visible: note.tags != null && note.tags!.isNotEmpty,
+                  child: Column(children: [SizedBox(height: 8), _buildTagsRow(context, note)]),
+                ),
               ],
             ),
           ),
@@ -1664,96 +1660,85 @@ Widget _buildEmptyTagsState(BuildContext context) {
   }
 
   // 🆕 WIDGET PARA EXIBIR TAGS NO CARD
-Widget _buildTagsRow(BuildContext context, NoteModel note) {
-  // ✅ Se não tem tags, retorna espaço vazio
-  if (note.tags == null || note.tags!.isEmpty) {
-    return SizedBox(height: 20); // Mantém altura para consistência
+  Widget _buildTagsRow(BuildContext context, NoteModel note) {
+    // ✅ Se não tem tags, retorna espaço vazio
+    if (note.tags == null || note.tags!.isEmpty) {
+      return SizedBox(height: 20); // Mantém altura para consistência
+    }
+
+    // ✅ Busca nomes das tags
+    final tagNames = note.tags!.map((tagId) {
+      final tag = _availableTags.firstWhere(
+        (t) => t.id == tagId,
+        orElse: () => TagModel(id: tagId, name: 'Tag', createdAt: DateTime.now(), updatedAt: DateTime.now()),
+      );
+      return tag.name;
+    }).toList();
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        // ✅ Mostra até 2 tags
+        ...tagNames.take(2).map((tagName) {
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), width: 0.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.label, size: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                SizedBox(width: 3),
+                Text(
+                  tagName,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 9,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
+        // ✅ Indicador "+N" se houver mais de 2 tags
+        if (tagNames.length > 2)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '+${tagNames.length - 2}',
+              style: AppTextStyles.bodySmall.copyWith(
+                fontSize: 9,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
-  // ✅ Busca nomes das tags
-  final tagNames = note.tags!.map((tagId) {
-    final tag = _availableTags.firstWhere(
-      (t) => t.id == tagId,
-      orElse: () => TagModel(
-        id: tagId,
-        name: 'Tag',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-    return tag.name;
-  }).toList();
-
-  return Wrap(
-    spacing: 4,
-    runSpacing: 4,
-    children: [
-      // ✅ Mostra até 2 tags
-      ...tagNames.take(2).map((tagName) {
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-              width: 0.5,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.label,
-                size: 10,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
-              SizedBox(width: 3),
-              Text(
-                tagName,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontSize: 9,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
-
-      // ✅ Indicador "+N" se houver mais de 2 tags
-      if (tagNames.length > 2)
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            '+${tagNames.length - 2}',
-            style: AppTextStyles.bodySmall.copyWith(
-              fontSize: 9,
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-    ],
-  );
-}
-
   // 🎯 CARD PARA LIST VIEW (Draggable)
-  Widget _buildListNoteCard(BuildContext context, NoteModel note) {
+  Widget _buildListNoteCard(BuildContext context, NoteModel note, bool isSelected) {
+    final cardElevation = isSelected ? 6.0 : 2.0;
     return Card(
       key: ValueKey(note.id),
-      margin: EdgeInsets.only(bottom: 12),
-      elevation: 2,
+     //margin: EdgeInsets.only(bottom: 12),
+      elevation: cardElevation,
       shadowColor: Theme.of(context).colorScheme.shadow,
       color: note.color,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: EdgeInsets.all(16),
+        contentPadding: EdgeInsets.all(10),
         /*  leading: Container(width: 6, height: 60, decoration: BoxDecoration(color: note.color,
         borderRadius: BorderRadius.circular(3),),), */
         title: Text(
@@ -1771,18 +1756,18 @@ Widget _buildTagsRow(BuildContext context, NoteModel note) {
             children: [
               Text(
                 note.content,
-                style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8)),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (note.tags != null && note.tags!.isNotEmpty)
-               SizedBox(height: 12),
-            _buildTagsRow(context, note),
+              if (note.tags != null && note.tags!.isNotEmpty) SizedBox(height: 12),
+              _buildTagsRow(context, note),
             ],
           ),
-          
         ),
-     
+
         //onTap: () => _openNote(context, note),
       ),
     );
@@ -1944,140 +1929,134 @@ Widget _buildTagsRow(BuildContext context, NoteModel note) {
 
   // 🆕 ADICIONAR SEÇÃO DE MARCADORES NO DRAWER
   Widget _buildTagsSection(BuildContext context) {
-  // TODO: Carregar tags reais do estado/banco
-   // ✅ USA A LISTA CENTRALIZADA (removido o hardcode)
-  final tags = _availableTags;
-  final hasTags = tags.isNotEmpty;
+    // TODO: Carregar tags reais do estado/banco
+    // ✅ USA A LISTA CENTRALIZADA (removido o hardcode)
+    final tags = _availableTags;
+    final hasTags = tags.isNotEmpty;
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // 🏷️ HEADER DA SEÇÃO
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'MARCADORES',
-              style: AppTextStyles.bodySmall.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            if (hasTags)
-              TextButton(
-                onPressed: () {
-                  Get.back();
-                  Get.to(() => EditTagsScreen());
-                },
-                child: Text(
-                  'Editar',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 🏷️ HEADER DA SEÇÃO
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'MARCADORES',
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
-          ],
-        ),
-      ),
-
-      // 📋 LISTA DE MARCADORES
-      ...tags.map((tag) => _buildTagItem(
-        context,
-        tag,
-        _getIconForTag(tag.name), // 🆕 FUNÇÃO PARA ÍCONE DINÂMICO
-      )),
-
-      SizedBox(height: 8),
-
-      // ➕ BOTÃO CRIAR NOVO MARCADOR
-      ListTile(
-        leading: Icon(
-          Icons.add_circle_outline,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        title: Text(
-          'Criar Novo Marcador',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w600,
+              if (hasTags)
+                TextButton(
+                  onPressed: () {
+                    Get.back();
+                    Get.to(() => EditTagsScreen());
+                  },
+                  child: Text(
+                    'Editar',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        onTap: () {
-          Get.back();
-          Get.to(() => EditTagsScreen());
-        },
-      ),
 
-      Divider(height: 24),
-    ],
-  );
-}
-
-// 🏷️ ITEM DE MARCADOR (ATUALIZADO COM PASSAGEM DE NOTAS)
-Widget _buildTagItem(BuildContext context, TagModel tag, IconData icon) {
-  // ✅ CONTA QUANTAS NOTAS TÊM ESTE MARCADOR
-  final noteCount = _notes.where((note) {
-    return note.tags != null && note.tags!.contains(tag.id);
-  }).length;
-
-  return ListTile(
-    leading: Icon(
-      icon,
-      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-      size: 20,
-    ),
-    title: Text(
-      tag.name,
-      style: AppTextStyles.bodyMedium,
-    ),
-    // ✅ MOSTRA CONTADOR DE NOTAS
-    trailing: noteCount > 0
-      ? Container(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
+        // 📋 LISTA DE MARCADORES
+        ...tags.map(
+          (tag) => _buildTagItem(
+            context,
+            tag,
+            _getIconForTag(tag.name), // 🆕 FUNÇÃO PARA ÍCONE DINÂMICO
           ),
-          child: Text(
-            '$noteCount',
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+
+        SizedBox(height: 8),
+
+        // ➕ BOTÃO CRIAR NOVO MARCADOR
+        ListTile(
+          leading: Icon(Icons.add_circle_outline, color: Theme.of(context).colorScheme.primary),
+          title: Text(
+            'Criar Novo Marcador',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        )
-      : null,
-    onTap: () {
-      Get.back(); // Fecha drawer
-      // ✅ PASSA A LISTA DE NOTAS PARA A TELA DO MARCADOR
-      Get.to(() => TagViewScreen(
-        tag: tag,
-        allNotes: _notes, // 🆕 PASSA TODAS AS NOTAS
-      ));
-    },
-  );
-}
+          onTap: () {
+            Get.back();
+            Get.to(() => EditTagsScreen());
+          },
+        ),
 
-// 🆕 FUNÇÃO AUXILIAR PARA ÍCONES DINÂMICOS
-IconData _getIconForTag(String tagName) {
-  switch (tagName.toLowerCase()) {
-    case 'trabalho':
-      return Icons.work_outline;
-    case 'pessoal':
-      return Icons.person_outline;
-    case 'ideias':
-      return Icons.lightbulb_outline;
-    case 'estudo':
-      return Icons.school_outlined;
-    case 'compras':
-      return Icons.shopping_cart_outlined;
-    default:
-      return Icons.label_outline;
+        Divider(height: 24),
+      ],
+    );
   }
-}
+
+  // 🏷️ ITEM DE MARCADOR (ATUALIZADO COM PASSAGEM DE NOTAS)
+  Widget _buildTagItem(BuildContext context, TagModel tag, IconData icon) {
+    // ✅ CONTA QUANTAS NOTAS TÊM ESTE MARCADOR
+    final noteCount = _notes.where((note) {
+      return note.tags != null && note.tags!.contains(tag.id);
+    }).length;
+
+    return ListTile(
+      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), size: 20),
+      title: Text(tag.name, style: AppTextStyles.bodyMedium),
+      // ✅ MOSTRA CONTADOR DE NOTAS
+      trailing: noteCount > 0
+          ? Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$noteCount',
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            )
+          : null,
+      onTap: () {
+        Get.back(); // Fecha drawer
+        // ✅ PASSA A LISTA DE NOTAS PARA A TELA DO MARCADOR
+        Get.to(
+          () => TagViewScreen(
+            tag: tag,
+            allNotes: _notes, // 🆕 PASSA TODAS AS NOTAS
+          ),
+        );
+      },
+    );
+  }
+
+  // 🆕 FUNÇÃO AUXILIAR PARA ÍCONES DINÂMICOS
+  IconData _getIconForTag(String tagName) {
+    switch (tagName.toLowerCase()) {
+      case 'trabalho':
+        return Icons.work_outline;
+      case 'pessoal':
+        return Icons.person_outline;
+      case 'ideias':
+        return Icons.lightbulb_outline;
+      case 'estudo':
+        return Icons.school_outlined;
+      case 'compras':
+        return Icons.shopping_cart_outlined;
+      default:
+        return Icons.label_outline;
+    }
+  }
 
   @override
   Widget _buildDrawer(BuildContext context) {
@@ -2126,9 +2105,9 @@ IconData _getIconForTag(String tagName) {
               Get.snackbar('Nova Nota', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
           ),
-           Divider(),
+          Divider(),
 
-         _buildTagsSection(context),
+          _buildTagsSection(context),
 
           Divider(),
 
