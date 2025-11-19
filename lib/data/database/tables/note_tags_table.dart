@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'notes_table.dart';
-import 'tags_table.dart';
+import 'package:clipstick/data/database/tables/notes_table.dart';
+import 'package:clipstick/data/database/tables/tags_table.dart';
 
 /// 🔗 TABELA DE RELACIONAMENTO NOTES ↔ TAGS
 /// 
