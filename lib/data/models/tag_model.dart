@@ -1,20 +1,31 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-/// 🏷️ Modelo de Marcador/Tag
+/// 🏷️ MODELO DE TAG (ETIQUETA)
+/// 
+/// Representa uma tag que pode ser associada a múltiplas notas.
+/// 
+/// **Exemplo:**
+/// ```dart
+/// final tag = TagModel(
+///   id: 'tag-trabalho',
+///   name: 'Trabalho',
+///   createdAt: DateTime.now(),
+/// );
+/// ```
 class TagModel {
   final String id;
   final String name;
   final DateTime createdAt;
-  final DateTime? updatedAt;
+  final DateTime updatedAt;
 
-  TagModel({
+  const TagModel({
     required this.id,
     required this.name,
-    DateTime? createdAt,
-    this.updatedAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+    required this.createdAt,
+    required this.updatedAt,
+  });
 
-  // ✅ COPYWITH
+  /// 📝 COPIAR COM ALTERAÇÕES
   TagModel copyWith({
     String? id,
     String? name,
@@ -29,38 +40,53 @@ class TagModel {
     );
   }
 
-  // ✅ TOJSON
-  Map<String, dynamic> toJson() {
+  /// 🗺️ CONVERTER PARA MAP
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
   }
 
-  // ✅ FROMJSON
-  factory TagModel.fromJson(Map<String, dynamic> json) {
+  /// 🗺️ CRIAR A PARTIR DE MAP
+  factory TagModel.fromMap(Map<String, dynamic> map) {
     return TagModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] != null 
-        ? DateTime.parse(json['updatedAt'] as String) 
-        : null,
+      id: map['id'] as String,
+      name: map['name'] as String,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
     );
   }
 
-  @override
-  bool operator ==(Object other) =>
-    identical(this, other) ||
-    other is TagModel &&
-    runtimeType == other.runtimeType &&
-    id == other.id;
+  /// 📄 CONVERTER PARA JSON
+  String toJson() => json.encode(toMap());
+
+  /// 📄 CRIAR A PARTIR DE JSON
+  factory TagModel.fromJson(String source) {
+    return TagModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  }
 
   @override
-  int get hashCode => id.hashCode;
+  String toString() {
+    return 'TagModel(id: $id, name: $name, createdAt: $createdAt, updatedAt: $updatedAt)';
+  }
 
   @override
-  String toString() => 'TagModel(id: $id, name: $name)';
+  bool operator ==(covariant TagModel other) {
+    if (identical(this, other)) return true;
+    return other.id == id &&
+        other.name == name &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt;
+  }
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        name.hashCode ^
+        createdAt.hashCode ^
+        updatedAt.hashCode;
+  }
 }

@@ -44,17 +44,17 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
         TagModel(
           id: '1',
           name: 'Trabalho',
-          createdAt: DateTime.now().subtract(Duration(days: 5)),
+          createdAt: DateTime.now().subtract(Duration(days: 5)), updatedAt: DateTime.now(),
         ),
         TagModel(
           id: '2',
           name: 'Pessoal',
-          createdAt: DateTime.now().subtract(Duration(days: 3)),
+          createdAt: DateTime.now().subtract(Duration(days: 3)), updatedAt: DateTime.now(),
         ),
         TagModel(
           id: '3',
           name: 'Ideias',
-          createdAt: DateTime.now().subtract(Duration(days: 1)),
+          createdAt: DateTime.now().subtract(Duration(days: 1)), updatedAt: DateTime.now(),
         ),
       ]);
     });
@@ -80,7 +80,7 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
 
     final newTag = TagModel(
       id: Uuid().v4(),
-      name: tagName,
+      name: tagName, createdAt: DateTime.now(), updatedAt: DateTime.now(),
     );
 
     setState(() {
