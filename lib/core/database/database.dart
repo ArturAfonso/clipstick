@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:ui';
+import 'package:clipstick/data/database/converters/color_converter.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,6 +10,10 @@ import 'package:path/path.dart' as p;
 import 'package:clipstick/data/database/tables/notes_table.dart';
 import 'package:clipstick/data/database/tables/tags_table.dart';
 import 'package:clipstick/data/database/tables/note_tags_table.dart';
+
+// 🆕 IMPORTAR DAOs
+import 'package:clipstick/data/database/daos/notes_dao.dart';
+import 'package:clipstick/data/database/daos/tags_dao.dart';
 
 // 🤖 IMPORTANTE: Este arquivo será gerado pelo build_runner
 // Rodar: dart run build_runner build --delete-conflicting-outputs
@@ -33,7 +39,10 @@ part 'database.g.dart';
 /// final notes = await db.select(db.notes).get();
 /// await db.close();
 /// ```
-@DriftDatabase(tables: [Notes, Tags, NoteTags])
+@DriftDatabase(
+  tables: [Notes, Tags, NoteTags],
+   daos: [NotesDao, TagsDao],
+)
 class AppDatabase extends _$AppDatabase {
   
   /// ✅ CONSTRUTOR PADRÃO
