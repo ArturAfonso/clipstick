@@ -1,4 +1,6 @@
+import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/note_colors_helper.dart';
@@ -46,19 +48,17 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
   void _saveChanges() {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implementar edição de nota com Cubit
-      
-      // ✅ Criar nota atualizada
       final updatedNote = widget.note.copyWith(
         title: _titleController.text,
         content: _contentController.text,
         color: _selectedColor,
         updatedAt: DateTime.now(),
       );
-      
-      // ✅ Retornar nota atualizada para a tela anterior
-      Get.back(result: updatedNote);
-      
+
+      // Atualiza a nota via Cubit
+      context.read<HomeCubit>().updateNote(updatedNote);
+
+      Get.back(); // Fecha o BottomSheet
       Get.snackbar(
         'Nota Atualizada',
         '${_titleController.text} foi atualizada com sucesso! ✏️',
@@ -67,37 +67,33 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
         colorText: Theme.of(context).colorScheme.onSurface,
         duration: Duration(seconds: 2),
       );
-      
-      // TODO: Chamar o Cubit para atualizar a nota
-      // context.read<HomeCubit>().updateNote(updatedNote);
     }
   }
 
   void _deleteNote() {
-    // ✅ Confirmação antes de deletar
     Get.dialog(
       AlertDialog(
         title: Text('Excluir nota?'),
         content: Text('Esta ação não pode ser desfeita.'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(), // Fecha o dialog
+            onPressed: () => Get.back(),
             child: Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () { 
+            onPressed: () {
+              // Deleta a nota via Cubit
+              context.read<HomeCubit>().deleteNote(widget.note.id);
+
               Get.back(); // Fecha o dialog
-              Get.back(result: 'delete'); // Fecha o sheet e retorna 'delete'
-              
+              Get.back(); // Fecha o sheet
+
               Get.snackbar(
                 'Nota Excluída',
                 '${widget.note.title} foi excluída! 🗑️',
                 snackPosition: SnackPosition.BOTTOM,
                 duration: Duration(seconds: 2),
               );
-              
-              // TODO: Chamar o Cubit para deletar a nota
-              // context.read<HomeCubit>().deleteNote(widget.note.id);
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,

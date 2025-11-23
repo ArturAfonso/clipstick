@@ -52,6 +52,20 @@ class NoteModel {
     );
   }
 
+    static NoteModel empty() {
+    return NoteModel(
+      id: '',
+      title: '',
+      content: '',
+      color: Colors.white,
+      isPinned: false,
+      position: 0,
+      tags: [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,

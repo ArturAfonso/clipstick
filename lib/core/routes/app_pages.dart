@@ -8,19 +8,13 @@ import 'app_routes.dart';
 
 class AppPages {
   static final pages = [
-    GetPage(
+   GetPage(
       name: AppRoutes.initial,
-      page: () => BlocProvider(
-        create: (context) => HomeCubit()..loadNotes(),
-        child: const HomeScreen(),
-      ),
+      page: () => const HomeScreen(),
     ),
     GetPage(
       name: AppRoutes.home,
-      page: () => BlocProvider(
-        create: (context) => HomeCubit()..loadNotes(),
-        child: const HomeScreen(),
-      ),
+      page: () => const HomeScreen(),
     ),
     // TODO: Adicionar outras rotas
   ];

@@ -1,4 +1,8 @@
+import 'package:clipstick/data/models/tag_model.dart';
+import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
+import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/note_model.dart';
 
@@ -76,6 +80,66 @@ class NoteCard extends StatelessWidget {
 
                 // 🏷️ TAGS (se houver)
                 if (note.tags != null && note.tags!.isNotEmpty) ...[
+                  
+                  SizedBox(height: 12),
+                  BlocBuilder<TagsCubit, TagsState>(
+                    builder: (context, tagState) {
+                      List<String> tagNames = [];
+                      if (tagState is TagsLoaded) {
+                        tagNames = note.tags!
+                            .map((tagId) {
+                              final tag = tagState.tags.firstWhere(
+                                (t) => t.id == tagId,
+                                orElse: () => TagModel(id: tagId, name: tagId, createdAt: DateTime.now(), updatedAt: DateTime.now()), // Provide a fallback TagModel
+                              );
+                              return tag.name;
+                            })
+                            .toList();
+                      } else {
+                        tagNames = note.tags!;
+                      }
+                      return Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: tagNames.take(2).map((tagName) {
+                          return Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getTextColor(noteColor).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: _getTextColor(noteColor).withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.label, size: 10, color: _getTextColor(noteColor).withOpacity(0.7)),
+                                SizedBox(width: 4),
+                                Text(
+                                  tagName,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    fontSize: 10,
+                                    color: _getTextColor(noteColor).withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                  if (note.tags!.length > 2)
+                    Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        '+${note.tags!.length - 2} mais',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontSize: 10,
+                          color: _getTextColor(noteColor).withOpacity(0.6),
+                        ),
+                      ),
+                    ),
+                  /* 
                   SizedBox(height: 12),
                   Wrap(
                     spacing: 6,
@@ -115,7 +179,7 @@ class NoteCard extends StatelessWidget {
                           color: _getTextColor(noteColor).withOpacity(0.6),
                         ),
                       ),
-                    ),
+                    ), */
                 ],
 
                 // 📅 DATA DE ATUALIZAÇÃO

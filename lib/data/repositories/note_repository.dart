@@ -32,8 +32,14 @@ abstract class NoteRepository {
   /// ➕ CRIAR NOVA NOTA
   Future<void> createNote(NoteModel note);
 
+  //adcionar nota em lote
+  Future<void> addNotesBatch(List<NoteModel> notes);
+
   /// ✏️ ATUALIZAR NOTA EXISTENTE
   Future<void> updateNote(NoteModel note);
+
+  /// 🔄 ATUALIZAR VÁRIAS NOTAS EM LOTE
+Future<void> updateNotesBatch(List<NoteModel> notes);
 
   /// 🗑️ DELETAR NOTA
   Future<void> deleteNote(String id);
@@ -62,8 +68,8 @@ abstract class NoteRepository {
   // ═══════════════════════════════════════════════════════════════
 
   /// 🔄 ATUALIZAR POSIÇÕES EM LOTE
-  Future<void> updatePositions(List<NoteModel> notes);
-
+ //versao original Future<void> updatePositions(List<NoteModel> notes);
+Future<void> updateNotesPositions(List<NoteModel> notes);
   // ═══════════════════════════════════════════════════════════════
   // 🏷️ OPERAÇÕES COM TAGS
   // ═══════════════════════════════════════════════════════════════

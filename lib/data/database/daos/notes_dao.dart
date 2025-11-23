@@ -47,6 +47,9 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     .get();
   }
 
+
+  
+
   /// 📺 WATCH: Observar TODAS as notas (Stream reativo)
   /// 
   /// **Retorna:** Stream que emite nova lista quando banco muda
@@ -123,6 +126,28 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   Future<bool> updateNote(NotesCompanion note) {
     return update(notes).replace(note);
   }
+
+
+/// 🔄 ATUALIZAR VÁRIAS NOTAS EM LOTE (todos os campos principais)
+Future<void> updateNotesBatch(List<NoteEntity> notesToUpdate) async {
+  await batch((batch) {
+    for (final note in notesToUpdate) {
+      batch.update(
+        notes,
+        NotesCompanion(
+          title: Value(note.title),
+          content: Value(note.content),
+          color: Value(note.color),
+          position: Value(note.position),
+          isPinned: Value(note.isPinned),
+          updatedAt: Value(DateTime.now()),
+        ),
+        where: (n) => n.id.equals(note.id),
+      );
+    }
+  });
+}
+
 
   /// 🗑️ DELETAR NOTA POR ID
   /// 
@@ -346,4 +371,25 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       ..where(notes.isPinned.equals(false));
     return await query.map((row) => row.read(count)!).getSingle();
   }
+
+  Future<void> insertNotesBatch(List<NoteEntity> notesToInsert) async {
+  await batch((batch) {
+    for (final note in notesToInsert) {
+      batch.insert(
+        notes,
+        NotesCompanion.insert(
+          id: note.id,
+          title: note.title as Value<String>,
+          content: note.content,
+          color: note.color,
+          position: note.position,
+          isPinned: note.isPinned as Value<bool>,
+          createdAt: note.createdAt ?? DateTime.now(),
+          updatedAt: note.updatedAt ?? DateTime.now(),
+        ),
+        mode: InsertMode.insertOrIgnore,
+      );
+    }
+  });
+}
 }

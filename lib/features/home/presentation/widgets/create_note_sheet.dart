@@ -1,4 +1,7 @@
+import 'package:clipstick/data/models/note_model.dart';
+import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -39,25 +42,34 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   }
 
   void _createNote() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implementar criação de nota com Cubit
-      Get.back(); // Fecha o BottomSheet
-      Get.snackbar(
-        'Nota Criada',
-        '${_titleController.text} foi criada com sucesso! 📝',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: _selectedColor.withOpacity(0.9),
-        colorText: Theme.of(context).colorScheme.onSurface,
-        duration: Duration(seconds: 2),
-      );
-      
-      // TODO: Chamar o Cubit para adicionar a nota
-      // context.read<HomeCubit>().addNote(
-      //   title: _titleController.text,
-      //   content: _contentController.text,
-      //   color: _selectedColor,
-      // );
-    }
+    
+  if (_formKey.currentState!.validate()) {
+    // Cria o modelo da nota
+    final newNote = NoteModel(
+      id: UniqueKey().toString(), // ou use um UUID se preferir
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
+      color: _selectedColor,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      isPinned: false,
+      position: 0,
+      tags: [],
+    );
+
+    // Adiciona a nota via Cubit
+    context.read<HomeCubit>().addNote(newNote);
+
+    Get.back(); // Fecha o BottomSheet
+    Get.snackbar(
+      'Nota Criada',
+      '${_titleController.text} foi criada com sucesso! 📝',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: _selectedColor.withOpacity(0.9),
+      colorText: Theme.of(context).colorScheme.onSurface,
+      duration: Duration(seconds: 2),
+    );
+  }
   }
 
   @override

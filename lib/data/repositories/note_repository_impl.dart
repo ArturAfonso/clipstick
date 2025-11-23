@@ -92,6 +92,22 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
+Future<void> addNotesBatch(List<NoteModel> notes) async {
+  final entities = notes.map((model) => NoteEntity(
+    id: model.id,
+    title: model.title,
+    content: model.content,
+    color: model.color,
+    position: model.position,
+    isPinned: model.isPinned,
+    createdAt: model.createdAt ?? DateTime.now(),
+    updatedAt: model.updatedAt ?? DateTime.now(),
+  )).toList();
+
+  await _database.notesDao.insertNotesBatch(entities);
+}
+
+  @override
   Future<void> updateNote(NoteModel note) async {
     // 1. Atualizar nota
     await _database.notesDao.upsertNote(_modelToCompanion(note));
@@ -102,6 +118,33 @@ class NoteRepositoryImpl implements NoteRepository {
       tagIds: note.tags ?? [],
     );
   }
+
+
+//atualziar varias notas de uma bvez
+@override
+Future<void> updateNotesBatch(List<NoteModel> notes) async {
+  // Atualiza os campos principais das notas
+  final entities = notes.map((model) => NoteEntity(
+    id: model.id,
+    title: model.title,
+    content: model.content,
+    color: model.color,
+    position: model.position,
+    isPinned: model.isPinned,
+    createdAt: model.createdAt ?? DateTime.now(),
+    updatedAt: DateTime.now(),
+  )).toList();
+
+  await _database.notesDao.updateNotesBatch(entities);
+
+  // Atualiza as tags de cada nota
+  for (final note in notes) {
+    await _database.tagsDao.setTagsForNote(
+      noteId: note.id,
+      tagIds: note.tags ?? [],
+    );
+  }
+}
 
   @override
   Future<void> deleteNote(String id) async {
@@ -147,22 +190,23 @@ class NoteRepositoryImpl implements NoteRepository {
   // 🔢 OPERAÇÕES COM POSIÇÕES
   // ═══════════════════════════════════════════════════════════════
 
-  @override
-  Future<void> updatePositions(List<NoteModel> notes) async {
-    // Converter models → entities (sem buscar tags, só position importa)
-    final entities = notes.map((model) => NoteEntity(
-      id: model.id,
-      title: model.title,
-      content: model.content,
-      color: model.color,
-      position: model.position,
-      isPinned: model.isPinned,
-      createdAt: model.createdAt ?? DateTime.now(),
-      updatedAt: DateTime.now(),
-    )).toList();
 
-    await _database.notesDao.updatePositions(entities);
-  }
+   @override
+ Future<void> updateNotesPositions (List<NoteModel> notes) async {
+  final entities = notes.map((model) => NoteEntity(
+    id: model.id,
+    title: model.title,
+    content: model.content,
+    color: model.color,
+    position: model.position,
+    isPinned: model.isPinned,
+    createdAt: model.createdAt ?? DateTime.now(),
+    updatedAt: DateTime.now(),
+  )).toList();
+
+  await _database.notesDao.updatePositions(entities);
+}
+
 
   // ═══════════════════════════════════════════════════════════════
   // 🏷️ OPERAÇÕES COM TAGS
