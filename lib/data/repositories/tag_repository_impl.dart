@@ -3,23 +3,12 @@ import 'package:clipstick/data/models/tag_model.dart';
 import 'package:clipstick/data/repositories/tag_repository.dart';
 import 'package:drift/drift.dart';
 
-/// 🏷️ IMPLEMENTAÇÃO DO REPOSITÓRIO DE TAGS (USANDO DRIFT)
-/// 
-/// Conecta a camada de domínio (TagModel) com a camada de dados (Drift).
-/// 
-/// **Responsabilidades:**
-/// - Converter TagEntity (Drift) ↔ TagModel (UI)
-/// - Delegar operações para TagsDao
 class TagRepositoryImpl implements TagRepository {
   final AppDatabase _database;
 
   TagRepositoryImpl(this._database);
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🔄 CONVERSORES (Entity ↔ Model)
-  // ═══════════════════════════════════════════════════════════════
-
-  /// 🔄 CONVERTE TagEntity (Drift) → TagModel (UI)
+  
   TagModel _entityToModel(TagEntity entity) {
     return TagModel(
       id: entity.id,
@@ -29,7 +18,7 @@ class TagRepositoryImpl implements TagRepository {
     );
   }
 
-  /// 🔄 CONVERTE TagModel (UI) → TagsCompanion (Drift)
+  
   TagsCompanion _modelToCompanion(TagModel model) {
     return TagsCompanion(
       id: Value(model.id),
@@ -38,10 +27,6 @@ class TagRepositoryImpl implements TagRepository {
       updatedAt: Value(model.updatedAt),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // 📋 OPERAÇÕES BÁSICAS (CRUD)
-  // ═══════════════════════════════════════════════════════════════
 
   @override
   Future<List<TagModel>> getAllTags() async {
@@ -90,9 +75,9 @@ class TagRepositoryImpl implements TagRepository {
     await _database.tagsDao.deleteTags(ids);
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🔗 RELACIONAMENTOS (NOTAS ↔ TAGS)
-  // ═══════════════════════════════════════════════════════════════
+  
+  
+  
 
   @override
   Future<List<TagModel>> getTagsForNote(String noteId) async {
@@ -107,10 +92,6 @@ class TagRepositoryImpl implements TagRepository {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 📊 ESTATÍSTICAS
-  // ═══════════════════════════════════════════════════════════════
-
   @override
   Future<int> countAllTags() => _database.tagsDao.countAllTags();
 
@@ -123,7 +104,7 @@ class TagRepositoryImpl implements TagRepository {
   Future<Map<TagModel, int>> getTagsWithNoteCounts() async {
     final entityMap = await _database.tagsDao.getTagsWithNoteCounts();
     
-    // Converter Map<TagEntity, int> → Map<TagModel, int>
+    
     final modelMap = <TagModel, int>{};
     entityMap.forEach((entity, count) {
       modelMap[_entityToModel(entity)] = count;

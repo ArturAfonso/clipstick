@@ -3,26 +3,14 @@ import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/data/repositories/note_repository.dart';
 import 'package:drift/drift.dart';
 
-/// 📝 IMPLEMENTAÇÃO DO REPOSITÓRIO DE NOTAS (USANDO DRIFT)
-/// 
-/// Conecta a camada de domínio (NoteModel) com a camada de dados (Drift).
-/// 
-/// **Responsabilidades:**
-/// - Converter NoteEntity (Drift) ↔ NoteModel (UI)
-/// - Delegar operações para NotesDao
-/// - Gerenciar tags das notas
+
 class NoteRepositoryImpl implements NoteRepository {
   final AppDatabase _database;
 
   NoteRepositoryImpl(this._database);
-
-  // ═══════════════════════════════════════════════════════════════
-  // 🔄 CONVERSORES (Entity ↔ Model)
-  // ═══════════════════════════════════════════════════════════════
-
-  /// 🔄 CONVERTE NoteEntity (Drift) → NoteModel (UI)
+ 
   Future<NoteModel> _entityToModel(NoteEntity entity) async {
-    // Buscar tags da nota
+    
     final tagEntities = await _database.tagsDao.getTagsForNote(entity.id);
     final tagIds = tagEntities.map((t) => t.id).toList();
 
@@ -39,7 +27,7 @@ class NoteRepositoryImpl implements NoteRepository {
     );
   }
 
-  /// 🔄 CONVERTE NoteModel (UI) → NotesCompanion (Drift)
+  
   NotesCompanion _modelToCompanion(NoteModel model) {
     return NotesCompanion(
       id: Value(model.id),
@@ -53,10 +41,7 @@ class NoteRepositoryImpl implements NoteRepository {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 📋 OPERAÇÕES BÁSICAS (CRUD)
-  // ═══════════════════════════════════════════════════════════════
-
+  
   @override
   Future<List<NoteModel>> getAllNotes() async {
     final entities = await _database.notesDao.getAllNotes();
@@ -79,10 +64,10 @@ class NoteRepositoryImpl implements NoteRepository {
 
   @override
   Future<void> createNote(NoteModel note) async {
-    // 1. Inserir nota
+    
     await _database.notesDao.upsertNote(_modelToCompanion(note));
 
-    // 2. Adicionar tags (se houver)
+    
     if (note.tags != null && note.tags!.isNotEmpty) {
       await _database.tagsDao.setTagsForNote(
         noteId: note.id,
@@ -109,10 +94,10 @@ Future<void> addNotesBatch(List<NoteModel> notes) async {
 
   @override
   Future<void> updateNote(NoteModel note) async {
-    // 1. Atualizar nota
+    
     await _database.notesDao.upsertNote(_modelToCompanion(note));
 
-    // 2. Atualizar tags
+    
     await _database.tagsDao.setTagsForNote(
       noteId: note.id,
       tagIds: note.tags ?? [],
@@ -120,10 +105,10 @@ Future<void> addNotesBatch(List<NoteModel> notes) async {
   }
 
 
-//atualziar varias notas de uma bvez
+
 @override
 Future<void> updateNotesBatch(List<NoteModel> notes) async {
-  // Atualiza os campos principais das notas
+  
   final entities = notes.map((model) => NoteEntity(
     id: model.id,
     title: model.title,
@@ -137,7 +122,7 @@ Future<void> updateNotesBatch(List<NoteModel> notes) async {
 
   await _database.notesDao.updateNotesBatch(entities);
 
-  // Atualiza as tags de cada nota
+  
   for (final note in notes) {
     await _database.tagsDao.setTagsForNote(
       noteId: note.id,
@@ -155,10 +140,6 @@ Future<void> updateNotesBatch(List<NoteModel> notes) async {
   Future<void> deleteNotes(List<String> ids) async {
     await _database.notesDao.deleteNotes(ids);
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // 📌 OPERAÇÕES COM NOTAS FIXADAS
-  // ═══════════════════════════════════════════════════════════════
 
   @override
   Future<List<NoteModel>> getPinnedNotes() async {
@@ -186,10 +167,6 @@ Future<void> updateNotesBatch(List<NoteModel> notes) async {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🔢 OPERAÇÕES COM POSIÇÕES
-  // ═══════════════════════════════════════════════════════════════
-
 
    @override
  Future<void> updateNotesPositions (List<NoteModel> notes) async {
@@ -206,11 +183,6 @@ Future<void> updateNotesBatch(List<NoteModel> notes) async {
 
   await _database.notesDao.updatePositions(entities);
 }
-
-
-  // ═══════════════════════════════════════════════════════════════
-  // 🏷️ OPERAÇÕES COM TAGS
-  // ═══════════════════════════════════════════════════════════════
 
   @override
   Future<List<NoteModel>> getNotesWithTag(String tagId) async {
@@ -240,10 +212,6 @@ Future<void> updateNotesBatch(List<NoteModel> notes) async {
     await _database.tagsDao.setTagsForNote(noteId: noteId, tagIds: tagIds);
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 🔍 BUSCA
-  // ═══════════════════════════════════════════════════════════════
-
   @override
   Future<List<NoteModel>> searchNotes(String query) async {
     final entities = await _database.notesDao.searchNotes(query);
@@ -257,11 +225,8 @@ Future<void> updateNotesBatch(List<NoteModel> notes) async {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // 📊 ESTATÍSTICAS
-  // ═══════════════════════════════════════════════════════════════
 
-  @override
+ @override
   Future<int> countAllNotes() => _database.notesDao.countAllNotes();
 
   @override

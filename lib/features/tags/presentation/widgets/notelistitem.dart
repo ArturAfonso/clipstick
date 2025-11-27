@@ -1,4 +1,4 @@
-import 'package:clipstick/core/theme/note_colors_helper.dart';
+
 import 'package:clipstick/data/models/tag_model.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
@@ -55,10 +55,10 @@ class NoteListItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🎯 HEADER: Título + Pin + Checkbox
+                
                 Row(
                   children: [
-                    // 📌 ÍCONE DE FIXADO
+                    
                     if (note.isPinned)
                       Padding(
                         padding: EdgeInsets.only(right: 8),
@@ -69,7 +69,7 @@ class NoteListItem extends StatelessWidget {
                         ),
                       ),
 
-                    // 📝 TÍTULO
+                    
                     Expanded(
                       child: Text(
                         note.title.isEmpty ? 'Sem título' : note.title,
@@ -82,7 +82,7 @@ class NoteListItem extends StatelessWidget {
                       ),
                     ),
 
-                    // ✅ CHECKBOX (se selecionado)
+                    
                     if (isSelected)
                       Icon(
                         Icons.check_circle,
@@ -92,7 +92,7 @@ class NoteListItem extends StatelessWidget {
                   ],
                 ),
 
-                // 📄 CONTEÚDO
+                
                 if (note.content.isNotEmpty) ...[
                   SizedBox(height: 8),
                   Text(
@@ -105,7 +105,7 @@ class NoteListItem extends StatelessWidget {
                   ),
                 ],
 
-                // 🏷️ TAGS (se houver)
+                
                 if (note.tags != null && note.tags!.isNotEmpty) ...[
                   
                   
@@ -120,7 +120,7 @@ class NoteListItem extends StatelessWidget {
                 (t) => t.id == tagId,
                 orElse: () => TagModel(id: tagId, name: tagId, createdAt: DateTime.now(), updatedAt: DateTime.now()),
               );
-              return tag.name ?? tagId;
+              return tag.name;
             })
             .toList();
       } else {
@@ -161,46 +161,10 @@ class NoteListItem extends StatelessWidget {
       );
     },
   ),
-                  
-                  /* 
-                  SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: note.tags!.take(3).map((tagId) {
-                      // TODO: Buscar nome real da tag do banco
-                      return Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getTextColor(noteColor).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: _getTextColor(noteColor).withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.label,
-                              size: 12,
-                              color: _getTextColor(noteColor).withOpacity(0.7),
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              tagId, // TODO: Substituir por tag.name
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: _getTextColor(noteColor).withOpacity(0.7),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ), */
+              
                 ],
 
-                // 📅 DATA DE ATUALIZAÇÃO
+                
                 SizedBox(height: 12),
                 Text(
                   _formatDate(note.updatedAt!),
@@ -216,13 +180,13 @@ class NoteListItem extends StatelessWidget {
     );
   }
 
-  // 🎨 CALCULAR COR DE TEXTO BASEADO NO FUNDO
+  
   Color _getTextColor(Color backgroundColor) {
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
-  // 📅 FORMATAR DATA
+  
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);

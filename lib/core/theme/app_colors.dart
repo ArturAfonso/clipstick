@@ -4,7 +4,7 @@ class AppColors {
   AppColors._();
 
   // ============================================
-  // 🌞 LIGHT THEME - BASEADO NO FIGMA CSS
+  // 🌞 LIGHT THEME - BASEADO NO FIGMA 
   // ============================================
   
   // Core Colors (HSL convertido para HEX)
@@ -51,7 +51,7 @@ class AppColors {
   static const Color lightSidebarBorder = Color(0xFFE5E7EB); // --sidebar-border: 220 13% 91%
 
   // ============================================
-  // 🌙 DARK THEME - BASEADO NO FIGMA CSS
+  // 🌙 DARK THEME - BASEADO NO FIGMA 
   // ============================================
   
   // Core Colors (HSL convertido para HEX)

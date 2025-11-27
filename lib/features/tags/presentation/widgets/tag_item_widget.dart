@@ -5,18 +5,18 @@ import '../../../../data/models/tag_model.dart';
 
 class TagItemWidget extends StatefulWidget {
   final TagModel tag;
-  final bool isEditing; // 🆕 RECEBE ESTADO DE FORA
-  final VoidCallback onStartEditing; // 🆕 CALLBACK
-  final VoidCallback onCancelEditing; // 🆕 CALLBACK
+  final bool isEditing; 
+  final VoidCallback onStartEditing; 
+  final VoidCallback onCancelEditing; 
   final VoidCallback onDelete;
   final Function(String newName) onUpdate;
 
   const TagItemWidget({
     super.key,
     required this.tag,
-    required this.isEditing, // 🆕
-    required this.onStartEditing, // 🆕
-    required this.onCancelEditing, // 🆕
+    required this.isEditing, 
+    required this.onStartEditing, 
+    required this.onCancelEditing, 
     required this.onDelete,
     required this.onUpdate,
   });
@@ -43,17 +43,17 @@ class _TagItemWidgetState extends State<TagItemWidget> {
     super.dispose();
   }
 
-  // 🆕 ATUALIZA QUANDO ESTADO MUDA
+  
   @override
   void didUpdateWidget(TagItemWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // Se acabou de entrar em modo edição, foca
+    
     if (widget.isEditing && !oldWidget.isEditing) {
       _focusNode.requestFocus();
     }
     
-    // Se saiu de edição, restaura texto original
+    
     if (!widget.isEditing && oldWidget.isEditing) {
       _controller.text = widget.tag.name;
       _focusNode.unfocus();
@@ -63,7 +63,7 @@ class _TagItemWidgetState extends State<TagItemWidget> {
   void _saveEdit() {
     final newName = _controller.text.trim();
     
-    // ✅ SEMPRE salva, mesmo se não mudou
+    
     widget.onUpdate(newName);
     
     HapticFeedback.mediumImpact();
@@ -80,7 +80,7 @@ class _TagItemWidgetState extends State<TagItemWidget> {
 
     return InkWell(
       onTap: () {
-        widget.onStartEditing(); // 🆕 USA CALLBACK
+        widget.onStartEditing(); 
         HapticFeedback.selectionClick();
       },
       borderRadius: BorderRadius.circular(12),

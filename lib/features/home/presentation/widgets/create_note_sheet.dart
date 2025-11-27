@@ -3,7 +3,6 @@ import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'color_picker_widget.dart';
 import '../../../../core/theme/note_colors_helper.dart';
@@ -44,9 +43,9 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   void _createNote() {
     
   if (_formKey.currentState!.validate()) {
-    // Cria o modelo da nota
+    
     final newNote = NoteModel(
-      id: UniqueKey().toString(), // ou use um UUID se preferir
+      id: UniqueKey().toString(), 
       title: _titleController.text.trim(),
       content: _contentController.text.trim(),
       color: _selectedColor,
@@ -57,10 +56,10 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       tags: [],
     );
 
-    // Adiciona a nota via Cubit
+    
     context.read<HomeCubit>().addNote(newNote);
 
-    Get.back(); // Fecha o BottomSheet
+    Get.back(); 
     Get.snackbar(
       'Nota Criada',
       '${_titleController.text} foi criada com sucesso! 📝',
@@ -82,7 +81,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 🎯 HANDLE DO BOTTOMSHEET (linha pra arrastar)
+          
           Container(
             margin: EdgeInsets.only(top: 12),
             width: 40,
@@ -93,7 +92,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
             ),
           ),
 
-          // 📝 CONTEÚDO DO FORMULÁRIO
+          
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -107,7 +106,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🎨 HEADER
+                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -127,7 +126,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 24),
 
-                    // 📝 CAMPO TÍTULO
+                    
                     Text(
                       'Título',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -159,7 +158,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    // 📄 CAMPO CONTEÚDO
+                    
                     Text(
                       'Conteúdo',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -192,7 +191,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    // 🎨 SELETOR DE COR
+                    
                     Text(
                       'Cor da nota',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -212,7 +211,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 32),
 
-                    // ✅ BOTÃO CRIAR NOTA
+                    
                     SizedBox(
                       width: double.infinity,
                       height: 52,

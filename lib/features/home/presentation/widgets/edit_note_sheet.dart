@@ -7,7 +7,7 @@ import '../../../../data/models/note_model.dart';
 import 'color_picker_widget.dart';
 
 class EditNoteSheet extends StatefulWidget {
-  final NoteModel note; // ✅ Recebe a nota a ser editada
+  final NoteModel note; 
 
   const EditNoteSheet({
     super.key,
@@ -30,7 +30,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
     super.didChangeDependencies();
     
     if (!_isInitialized) {
-      // ✅ Inicializa com os dados da nota existente
+      
       _titleController = TextEditingController(text: widget.note.title);
       _contentController = TextEditingController(text: widget.note.content);
       _selectedColor = widget.note.color;
@@ -54,10 +54,10 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
         updatedAt: DateTime.now(),
       );
 
-      // Atualiza a nota via Cubit
+      
       context.read<HomeCubit>().updateNote(updatedNote);
 
-      Get.back(); // Fecha o BottomSheet
+      Get.back(); 
       Get.snackbar(
         'Nota Atualizada',
         '${_titleController.text} foi atualizada com sucesso! ✏️',
@@ -81,11 +81,11 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
           ),
           TextButton(
             onPressed: () {
-              // Deleta a nota via Cubit
+              
               context.read<HomeCubit>().deleteNote(widget.note.id);
 
-              Get.back(); // Fecha o dialog
-              Get.back(); // Fecha o sheet
+              Get.back(); 
+              Get.back(); 
 
               Get.snackbar(
                 'Nota Excluída',
@@ -114,7 +114,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 🎯 HANDLE DO BOTTOMSHEET
+          
           Container(
             margin: EdgeInsets.only(top: 12),
             width: 40,
@@ -125,7 +125,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
             ),
           ),
 
-          // 📝 CONTEÚDO DO FORMULÁRIO
+          
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -139,7 +139,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🎨 HEADER COM BOTÃO DELETE
+                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -151,13 +151,13 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
                         ),
                         Row(
                           children: [
-                            // 🗑️ BOTÃO DELETAR
+                            
                             IconButton(
                               icon: Icon(Icons.delete_outline, color: Colors.red),
                               onPressed: _deleteNote,
                               tooltip: 'Excluir nota',
                             ),
-                            // ❌ BOTÃO FECHAR
+                            
                             IconButton(
                               icon: Icon(Icons.close),
                               onPressed: () => Get.back(),
@@ -170,7 +170,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 24),
 
-                    // 📝 CAMPO TÍTULO
+                    
                     Text(
                       'Título',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -202,7 +202,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    // 📄 CAMPO CONTEÚDO
+                    
                     Text(
                       'Conteúdo',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -235,7 +235,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    // 🎨 SELETOR DE COR
+                    
                     Text(
                       'Cor da nota',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -255,7 +255,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 32),
 
-                    // ✅ BOTÃO SALVAR ALTERAÇÕES
+                    
                     SizedBox(
                       width: double.infinity,
                       height: 52,

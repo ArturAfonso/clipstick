@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-//TODO: lembrar de criar uma classe melhor para notas, esta é temporaria.
 
 class NoteModel {
   final String id;
@@ -71,7 +70,7 @@ class NoteModel {
       'id': id,
       'title': title,
       'content': content,
-      'color': color.value,
+      'color': color,
       'position': position,
       'isPinned': isPinned,
       'tags': tags,
@@ -89,7 +88,7 @@ class NoteModel {
       position: map['position'] as int,
       isPinned: map['isPinned'] as bool? ?? false,
       tags: map['tags'] != null 
-        ? List<String>.from(map['tags'] as List) // 🆕 Converte para List<String>
+        ? List<String>.from(map['tags'] as List) // Converter para List<String>
         : null,
       createdAt: map['createdAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int) : null,
       updatedAt: map['updatedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int) : null,
@@ -132,16 +131,13 @@ class NoteModel {
       updatedAt.hashCode;
   }
 
-   // 🆕 VERIFICAR SE TEM TAG
   bool hasTag(String tagId) {
     return tags?.contains(tagId) ?? false;
   }
-
-  // 🆕 ADICIONAR TAG
-  NoteModel addTag(String tagId) {
+ NoteModel addTag(String tagId) {
     final currentTags = tags ?? [];
     if (currentTags.contains(tagId)) {
-      return this; // Já tem a tag
+      return this; 
     }
     return copyWith(
       tags: [...currentTags, tagId],
@@ -149,10 +145,9 @@ class NoteModel {
     );
   }
 
-  // 🆕 REMOVER TAG
-  NoteModel removeTag(String tagId) {
+   NoteModel removeTag(String tagId) {
     if (tags == null || !tags!.contains(tagId)) {
-      return this; // Não tem a tag
+      return this; 
     }
     return copyWith(
       tags: tags!.where((t) => t != tagId).toList(),
@@ -160,8 +155,7 @@ class NoteModel {
     );
   }
 
-  // 🆕 LIMPAR TODAS AS TAGS
-  NoteModel clearTags() {
+ NoteModel clearTags() {
     return copyWith(
       tags: [],
       updatedAt: DateTime.now(),

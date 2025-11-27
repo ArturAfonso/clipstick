@@ -2,7 +2,6 @@ import 'package:clipstick/core/theme/note_colors_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class ColorPickerDialog extends StatefulWidget {
@@ -32,7 +31,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   }
 
 
-// 🎨 OBTÉM CORES DO HELPER (baseado no tema)
+
   List<Color> get _predefinedColors {
     return NoteColorsHelper.getAvailableColors(context);
   }
@@ -49,7 +48,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🎨 HEADER
+            
             Row(
               children: [
                 Icon(
@@ -87,7 +86,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
             SizedBox(height: 24),
 
-            // 🎨 GRID DE CORES CIRCULARES
+            
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
@@ -97,7 +96,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
             SizedBox(height: 24),
 
-            // ✅ BOTÃO APLICAR
+            
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -126,39 +125,39 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   }
 
 
-  // 🎨 GRID DE CORES (CIRCULAR)
+  
   Widget _buildColorGrid(BuildContext context) {
     return GridView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5, // ✅ 5 colunas
+        crossAxisCount: 5, 
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
       ),
-      itemCount: _predefinedColors.length + 2, // ✅ +1 sem cor +1 personalizado
+      itemCount: _predefinedColors.length + 2, 
       itemBuilder: (context, index) {
-        // ❌ PRIMEIRO ITEM = SEM COR
+        
         if (index == 0) {
           return _buildNoColorButton(context);
         }
         
-        // 🎨 ÚLTIMO ITEM = BOTÃO PERSONALIZADO
+        
         if (index == _predefinedColors.length + 1) {
           return _buildCustomColorButton(context);
         }
 
-        // ✅ CORES NORMAIS
-        final color = _predefinedColors[index - 1]; // -1 porque índice 0 é "sem cor"
+        
+        final color = _predefinedColors[index - 1]; 
         return _buildColorButton(context, color);
       },
     );
   }
 
 
-// ❌ BOTÃO "SEM COR"
+
   Widget _buildNoColorButton(BuildContext context) {
-    final neutralColor = NoteColorsHelper.getNeutralColor(context); // ✅ USA HELPER
+    final neutralColor = NoteColorsHelper.getNeutralColor(context); 
     final isSelected = _selectedColor == neutralColor;
 
     return InkWell(
@@ -166,7 +165,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
       borderRadius: BorderRadius.circular(100),
       child: Container(
         decoration: BoxDecoration(
-          color: neutralColor, // ✅ COR NEUTRA DO TEMA
+          color: neutralColor, 
           shape: BoxShape.circle,
           border: Border.all(
             color: isSelected
@@ -197,7 +196,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     );
   }
 
-  // 🎨 BOTÃO DE COR NORMAL
+  
   Widget _buildColorButton(BuildContext context, Color color) {
     final isSelected = _selectedColor == color;
 
@@ -235,7 +234,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
     );
   }
 
-   // 🌈 BOTÃO "PERSONALIZADO"
+   
   Widget _buildCustomColorButton(BuildContext context) {
     return InkWell(
       onTap: () => _openCustomColorPicker(context),
@@ -278,7 +277,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
   }
   
 
-   // 🎨 ABRE DIALOG DE COR PERSONALIZADA
+   
   void _openCustomColorPicker(BuildContext context) async {
     final Color? customColor = await Get.dialog<Color>(
       Dialog(
@@ -289,7 +288,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 🎨 HEADER
+              
               Row(
                 children: [
                   Icon(
@@ -315,7 +314,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
               SizedBox(height: 24),
 
-              // 🎨 COLOR WHEEL
+              
               ColorPicker(
                 pickerColor: _selectedColor,
                 onColorChanged: (Color color) {
@@ -333,7 +332,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
 
               SizedBox(height: 24),
 
-              // ✅ BOTÃO CONFIRMAR
+              
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -361,13 +360,13 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
       ),
     );
 
-    // ✅ Se selecionou uma cor personalizada, atualiza
+    
     if (customColor != null) {
       setState(() => _selectedColor = customColor);
     }
   }
 
-// 🎨 CALCULAR COR DE CONTRASTE
+
   Color _getContrastColor(Color backgroundColor) {
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;

@@ -1,5 +1,7 @@
-import 'dart:ui';
 
+
+
+import 'package:clipstick/core/theme/app_colors.dart';
 import 'package:clipstick/core/theme/note_colors_helper.dart';
 import 'package:clipstick/core/theme/themetoggle_button.dart';
 import 'package:clipstick/data/models/note_model.dart';
@@ -20,7 +22,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:reorderables/reorderables.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
 import '../widgets/create_note_sheet.dart';
@@ -38,30 +39,30 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _gridViewKey = GlobalKey();
 
-  // 🆕 CONTROLE DE SELEÇÃO
+  
   final Set<String> _selectedNoteIds = {};
   bool _isDragging = false;
   int? _longPressedIndex;
 
-  // 🆕 MÉTODO PARA TOGGLE PIN
+  
   Future<void> _togglePinSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
-    // Pegue as notas do estado atual do Cubit
+    
     final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return;
 
     final notes = noteState.notes;
-    // Verifica se todos selecionados estão fixados
+    
     final allPinned = _selectedNoteIds.every((id) => notes.firstWhere((n) => n.id == id).isPinned);
 
-    // Cria as notas atualizadas (toggle pin)
+    
     final updatedNotes = notes
         .where((n) => _selectedNoteIds.contains(n.id))
         .map((note) => note.copyWith(isPinned: !allPinned, updatedAt: DateTime.now()))
         .toList();
 
-    // Atualiza em lote via Cubit
+    
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
     _clearSelection();
@@ -88,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // 🆕 MÉTODOS DE SELEÇÃO
+  
   bool get _isSelectionMode => _selectedNoteIds.isNotEmpty;
 
   bool _isNoteSelected(String noteId) {
@@ -116,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final count = _selectedNoteIds.length;
 
-    // Chama o Cubit para deletar as notas selecionadas
+    
     await context.read<HomeCubit>().deleteNotesBatch(_selectedNoteIds.toList());
 
     _clearSelection();
@@ -129,13 +130,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🆕 INTERCEPTAR BOTÃO VOLTAR DO CELULAR
+  
   Future<bool> _onWillPop() async {
     if (_isSelectionMode) {
       _clearSelection();
-      return false; // Não sai do app, apenas cancela seleção
+      return false; 
     }
-    return true; // Permite sair do app
+    return true; 
   }
 
   @override
@@ -143,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        // 🆕 APPBAR COM TRANSIÇÃO ANIMADA
+        
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
           child: SafeArea(
@@ -154,24 +155,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 transitionBuilder: (child, animation) {
-                  // ✅ ANIMAÇÃO DE ESCALA DO CENTRO
-                  return ScaleTransition(
+                 return ScaleTransition(
                     scale: animation,
                     alignment: Alignment.center,
                     child: FadeTransition(opacity: animation, child: child),
                   );
                 },
                 child: _isSelectionMode
-                    ? _buildSelectionAppBar(context) // 🆕 AppBar de seleção
-                    : _buildNormalAppBar(context), // ✅ AppBar normal
+                    ? _buildSelectionAppBar(context) 
+                    : _buildNormalAppBar(context), 
               ),
             ),
           ),
         ),
-        // 📱 DRAWER
+       
         drawer: _buildDrawer(context),
 
-        // 📝 BODY - CONTEÚDO PRINCIPAL
         body: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, noteState) {
             if (noteState is HomeError) {
@@ -212,11 +211,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ APPBAR NORMAL
+ 
   Widget _buildNormalAppBar(BuildContext context) {
     return AppBar(
       elevation: 10,
-      key: ValueKey('normal_appbar'), // ✅ Key para AnimatedSwitcher
+      key: ValueKey('normal_appbar'),
       leading: Builder(
         builder: (context) => IconButton(
           style: IconButton.styleFrom(
@@ -229,13 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       title: Text('Minhas notas', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.bold)),
       actions: [
-        /*   IconButton(
-          icon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSecondary),
-          onPressed: () {
-            // TODO: Implementar busca
-          },
-        ),
- */
+       
         BlocBuilder<ViewModeCubit, ViewModeState>(
           builder: (context, state) {
             return AnimatedSwitcher(
@@ -254,11 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 onPressed: () {
                   context.read<ViewModeCubit>().toggleViewMode();
-                  /*  if (state.isGridView) {
-                    context.read<ViewModeCubit>().setListView();
-                  } else {
-                    context.read<ViewModeCubit>().setGridView();
-                  } */
+                
                 },
                 tooltip: state.isGridView ? 'Visualização em Lista' : 'Visualização em Grade',
                 style: IconButton.styleFrom(
@@ -276,10 +265,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🆕 APPBAR DE SELEÇÃO COM MENU DE MAIS OPÇÕES (ATUALIZADO)
   Widget _buildSelectionAppBar(BuildContext context) {
-    // Pegue as notas do estado atual do Cubit
-    final noteState = context.read<HomeCubit>().state;
+   
+      final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return Container();
 
     final notes = noteState.notes;
@@ -303,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       actions: [
-        // 📌 BOTÃO PIN
+        
         IconButton(
           icon: Icon(
             allPinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -313,14 +301,14 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: allPinned ? 'Desfixar' : 'Fixar',
         ),
 
-        // 🏷️ BOTÃO TAGS
+        
         IconButton(
           icon: Icon(MdiIcons.tagOutline, color: Theme.of(context).colorScheme.surface),
           onPressed: _showTagSelectionDialog,
           tooltip: 'Adicionar marcadores',
         ),
 
-        // 🎨 BOTÃO MUDAR COR
+        
         IconButton(
           icon: Icon(Icons.palette_outlined),
           color: Theme.of(context).colorScheme.surface,
@@ -328,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: 'Alterar cor',
         ),
 
-        // 🗑️ BOTÃO DELETAR
+        
         IconButton(
           icon: Icon(FontAwesomeIcons.trashCan, size: 20),
           color: Theme.of(context).colorScheme.surface,
@@ -336,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: 'Excluir selecionadas',
         ),
 
-        // 📁 MAIS OPÇÕES (ATUALIZADO!)
+        
         PopupMenuButton<String>(
           icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.secondary),
           color: Theme.of(context).colorScheme.onSecondary,
@@ -352,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           },
           itemBuilder: (context) => [
-            // 📋 FAZER CÓPIA
+            
             PopupMenuItem(
               value: 'copy',
               child: Row(
@@ -367,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // 🔗 COMPARTILHAR
+            
             PopupMenuItem(
               value: 'share',
               child: Row(
@@ -389,12 +377,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📋 DUPLICAR NOTAS SELECIONADAS
   Future<void> _duplicateSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
-    // Pegue as notas do estado atual do Cubit
-    final noteState = context.read<HomeCubit>().state;
+     final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return;
 
     final notes = noteState.notes;
@@ -402,15 +388,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (final noteId in _selectedNoteIds) {
       final originalNote = notes.firstWhere((n) => n.id == noteId);
-
-      // Cria nova nota com ID único e título modificado
-      final duplicatedNote = NoteModel(
+     final duplicatedNote = NoteModel(
         id: Uuid().v4(),
         title: originalNote.title.isEmpty ? 'Sem título (cópia)' : '${originalNote.title} (cópia)',
         content: originalNote.content,
         color: originalNote.color,
         isPinned: false,
-        position: notes.length + newNotes.length, // Adiciona no final
+        position: notes.length + newNotes.length, 
         tags: originalNote.tags != null ? List<String>.from(originalNote.tags!) : null,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -419,8 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
       newNotes.add(duplicatedNote);
     }
 
-    // Salva todas as novas notas no banco de dados via Cubit
-    await context.read<HomeCubit>().addNotesBatch(newNotes);
+  await context.read<HomeCubit>().addNotesBatch(newNotes);
 
     _clearSelection();
 
@@ -434,9 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
       duration: Duration(seconds: 2),
     );
   }
-
-  // 🔗 COMPARTILHAR NOTAS SELECIONADAS
-  void _shareSelectedNotes() async {
+ void _shareSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
     final noteState = context.read<HomeCubit>().state;
@@ -445,8 +426,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final notes = noteState.notes;
     final count = _selectedNoteIds.length;
     final StringBuffer textToShare = StringBuffer();
-
-    // Monta o texto para compartilhar
     for (int i = 0; i < _selectedNoteIds.length; i++) {
       final noteId = _selectedNoteIds.elementAt(i);
       final note = notes.firstWhere((n) => n.id == noteId, orElse: () => NoteModel.empty());
@@ -485,14 +464,11 @@ class _HomeScreenState extends State<HomeScreen> {
         'Erro ao Compartilhar',
         'Não foi possível compartilhar as notas',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        colorText: Theme.of(context).colorScheme.onErrorContainer,
+        backgroundColor: Get.isDarkMode ?  AppColors.darkDestructive : AppColors.lightDestructive,
+        colorText:   AppColors.lightPrimaryForeground,
       );
     }
   }
-
-  // Importe seu arquivo de tema se precisar das cores específicas
-  // import 'theme/app_theme.dart';
 
   void _showTagSelectionDialog() async {
     if (_selectedNoteIds.isEmpty) return;
@@ -500,21 +476,16 @@ class _HomeScreenState extends State<HomeScreen> {
     await Get.dialog(
       BlocBuilder<TagsCubit, TagsState>(
         builder: (context, tagState) {
-          // --- 1. ESTADO DE CARREGAMENTO ---
-          if (tagState is TagsLoading) {
+            if (tagState is TagsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // --- 2. ESTADO CARREGADO ---
-          if (tagState is TagsLoaded) {
+         if (tagState is TagsLoaded) {
             final availableTags = tagState.tags;
             final theme = Theme.of(context);
             final colorScheme = theme.colorScheme;
-            // Tenta pegar as cores customizadas, senão usa null
-            // final noteColors = theme.extension<NoteColors>();
 
-            // --- 2.1 CASO LISTA VAZIA (Mantive sua lógica, ajustei levemente o visual) ---
-            if (availableTags.isEmpty) {
+             if (availableTags.isEmpty) {
               return Dialog(
                 backgroundColor: colorScheme.surface,
                 surfaceTintColor: Colors.transparent,
@@ -571,8 +542,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
 
-            // --- LÓGICA DE PREPARAÇÃO DOS DADOS (Mantida igual) ---
-            final noteState = context.read<HomeCubit>().state;
+              final noteState = context.read<HomeCubit>().state;
             List<NoteModel> notes = [];
             if (noteState is HomeLoaded) {
               notes = noteState.notes;
@@ -587,13 +557,11 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             final Set<String> selectedTagIds = Set.from(currentTags);
-
-            // --- 3. DIÁLOGO PRINCIPAL COM VISUAL NOVO ---
-            return StatefulBuilder(
+       return StatefulBuilder(
               builder: (context, setDialogState) {
                 return Dialog(
                   backgroundColor: colorScheme.surface,
-                  surfaceTintColor: Colors.transparent, // Remove o tint padrão do Material 3
+                  surfaceTintColor: Colors.transparent, 
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   insetPadding: const EdgeInsets.all(16),
                   child: Padding(
@@ -601,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // --- CABEÇALHO ---
+     
                         Row(
                           children: [
                             Icon(MdiIcons.tagOutline, size: 24, color: colorScheme.primary),
@@ -616,7 +584,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 16),
 
-                        // --- CONTADOR (Pílula Cinza) ---
+                   
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -645,15 +613,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 20),
 
-                        // --- LISTA DE MARCADORES (Estilo Pílula) ---
                         Flexible(
                           child: SingleChildScrollView(
                             child: Column(
                               children: availableTags.map((tag) {
                                 final isSelected = selectedTagIds.contains(tag.id);
 
-                                // TODO: Se seu TagModel tiver cor, use tag.color.
-                                // Se não, estou usando uma cor padrão.
                                 final tagColor = colorScheme.tertiary;
 
                                 return GestureDetector(
@@ -681,14 +646,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     child: Row(
                                       children: [
-                                        // Bolinha colorida da Tag
-                                        Container(
+                                            Container(
                                           width: 10,
                                           height: 10,
                                           decoration: BoxDecoration(color: tagColor, shape: BoxShape.circle),
                                         ),
                                         const SizedBox(width: 12),
-                                        // Nome da Tag
+                            
                                         Expanded(
                                           child: Text(
                                             tag.name,
@@ -697,7 +661,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                         ),
-                                        // Check Icon ou Círculo vazio
+                      
                                         if (isSelected)
                                           Container(
                                             padding: const EdgeInsets.all(2),
@@ -727,15 +691,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Texto de ajuda
-                        Text(
+                          Text(
                           "Selecione um ou mais marcadores",
                           style: AppTextStyles.bodyMedium.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
 
                         const SizedBox(height: 16),
 
-                        // --- BOTÕES DE AÇÃO (Lado a Lado) ---
+     
                         Row(
                           children: [
                             Expanded(
@@ -777,18 +740,15 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // Default Loading
           return const Center(child: CircularProgressIndicator());
         },
       ),
     );
   }
 
-  // 🏷️ APLICAR TAGS NAS NOTAS SELECIONADAS
   Future<void> _applyTagsToSelectedNotes(List<String> tagIds) async {
     if (_selectedNoteIds.isEmpty) return;
 
-    // Pegue as notas do estado atual do Cubit
     final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return;
 
@@ -798,7 +758,6 @@ class _HomeScreenState extends State<HomeScreen> {
         .map((note) => note.copyWith(tags: tagIds.isEmpty ? [] : tagIds, updatedAt: DateTime.now()))
         .toList();
 
-    // Atualiza em lote via Cubit
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
     _clearSelection();
@@ -823,33 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 📭 ESTADO VAZIO (SEM TAGS)
-  Widget _buildEmptyTagsState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.label_off_outlined, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
-          SizedBox(height: 12),
-          Text(
-            'Nenhum marcador criado',
-            style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-          ),
-          SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () {
-              Get.back();
-              Get.to(() => EditTagsScreen());
-            },
-            icon: Icon(Icons.add),
-            label: Text('Criar primeiro marcador'),
-          ),
-        ],
-      ),
-    );
-  }
 
-  // 🗑️ DIÁLOGO DE CONFIRMAÇÃO DE EXCLUSÃO
   void _showDeleteConfirmationDialog(BuildContext context) {
     final count = _selectedNoteIds.length;
 
@@ -886,7 +819,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : _buildListView(context, notesFromDb: notesFromDb);
   }
 
-  // 🌟 TELA VAZIA
+  
   Widget _buildEmptyState(BuildContext context, ViewModeState state) {
     return Center(
       child: Column(
@@ -910,8 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {
-              //Get.snackbar('Nova Nota', 'Funcionalidade em breve! ✨', snackPosition: SnackPosition.BOTTOM);
-
+           
               _showCreateNoteSheet(context);
             },
             icon: Icon(Icons.add),
@@ -921,8 +853,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  // 📊 GRID VIEW COM SEÇÕES (FIXADOS + OUTROS)
   Widget _buildGridView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     final pinnedNotes = notesFromDb.where((n) => n.isPinned).toList();
     final otherNotes = notesFromDb.where((n) => !n.isPinned).toList();
@@ -936,17 +866,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildListView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     final pinnedNotes = notesFromDb.where((n) => n.isPinned).toList();
     final otherNotes = notesFromDb.where((n) => !n.isPinned).toList();
-    // ✅ Se não tem notas fixadas, usa layout simples
     if (pinnedNotes.isEmpty) {
       return _buildSIMPLEListView(context, notesFromDb: notesFromDb);
     }
 
-    // ✅ Se tem fixadas, usa layout com seções
     return _buildSECTIONEDListView(context, pinnedNotes: pinnedNotes, otherNotes: otherNotes);
   }
 
-  // 📊 GRID VIEW SIMPLES (SEM FIXADOS)
-  // ✅ SUBSTITUIR O MÉTODO _buildSimpleGridView
   Widget _buildSimpleGridView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     final generatedChildren = List.generate(
       notesFromDb.length,
@@ -984,7 +910,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final reorderedNotes = reorderedListFunction(notesFromDb) as List<NoteModel>;
           context.read<HomeCubit>().reorderNotes(List<NoteModel>.from(reorderedNotes));
           setState(() {
-            _isDragging = true; // <-- Marque que houve drag real!
+            _isDragging = true; 
           });
         },
 
@@ -1000,8 +926,7 @@ class _HomeScreenState extends State<HomeScreen> {
           HapticFeedback.lightImpact();
           Future.delayed(Duration(milliseconds: 100), () {
             if (!_isDragging && _longPressedIndex != null) {
-              // Use notesFromDb para pegar o noteId
-              final noteId = notesFromDb[_longPressedIndex!].id;
+                 final noteId = notesFromDb[_longPressedIndex!].id;
               setState(() {
                 _toggleNoteSelection(noteId);
                 _longPressedIndex = null;
@@ -1034,8 +959,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📊 GRID VIEW COM SEÇÕES (FIXADOS + OUTROS) - CORRIGIDO
-  Widget _buildSectionedGridView(
+ Widget _buildSectionedGridView(
     BuildContext context, {
     required List<NoteModel> pinnedNotes,
     required List<NoteModel> otherNotes,
@@ -1046,26 +970,26 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 📌 SEÇÃO DE FIXADOS
+          
           if (pinnedNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, '📌 FIXADOS', pinnedNotes.length),
+            _buildSectionHeader(context, 'FIXADOS', pinnedNotes.length),
             SizedBox(height: 12),
             _buildReorderableGridSection(
               context,
               pinnedNotes,
-              isPinnedSection: true, // ✅ Flag para identificar seção
+              isPinnedSection: true, 
             ),
             SizedBox(height: 24),
           ],
 
-          // 📋 SEÇÃO DE OUTRAS NOTAS
+          
           if (otherNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, '📋 OUTRAS NOTAS', otherNotes.length),
+            _buildSectionHeader(context, 'OUTRAS', otherNotes.length),
             SizedBox(height: 12),
             _buildReorderableGridSection(
               context,
               otherNotes,
-              isPinnedSection: false, // ✅ Flag para identificar seção
+              isPinnedSection: false, 
             ),
           ],
         ],
@@ -1073,21 +997,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  //gpt
+ 
   Widget _buildSECTIONEDListView(
     BuildContext context, {
     required List<NoteModel> pinnedNotes,
     required List<NoteModel> otherNotes,
   }) {
-    // Helper para criar cada item com gesture + aparência similar ao proxyDecorator
-    Widget buildDraggableItem(BuildContext ctx, NoteModel note, int sectionIndex, int indexInSection) {
-      // Variáveis locais por item — recreated a cada build, correto
-      Offset? pointerDownPos;
+     Widget buildDraggableItem(BuildContext ctx, NoteModel note, int sectionIndex, int indexInSection) {
+       Offset? pointerDownPos;
       bool tapLock = false;
       bool didMove = false;
       late DateTime pointerDownTime;
-      const double moveThreshold = 6.0; // px
-      const int longPressThresholdMs = 220; // ms (ajuste se quiser)
+      const double moveThreshold = 6.0; 
+      const int longPressThresholdMs = 220; 
 
       final isSelected = _isNoteSelected(note.id);
 
@@ -1098,9 +1020,7 @@ class _HomeScreenState extends State<HomeScreen> {
           pointerDownPos = ev.position;
           didMove = false;
           pointerDownTime = DateTime.now();
-          // marcaremos longPressedIndex quando o long press for confirmado por tempo
-          // mas NÃO chamaremos seleção aqui.
-          _longPressedIndex = indexInSection;
+             _longPressedIndex = indexInSection;
         },
 
         onPointerMove: (PointerMoveEvent ev) {
@@ -1108,8 +1028,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final distance = (ev.position - pointerDownPos!).distance;
             if (!didMove && distance > moveThreshold) {
               didMove = true;
-              // sinalizamos que houve movimento real (arrasto)
-              _isDragging = true;
+               _isDragging = true;
               _longPressedIndex = null;
             }
           }
@@ -1117,37 +1036,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
         onPointerUp: (PointerUpEvent ev) {
           final pressDuration = DateTime.now().difference(pointerDownTime).inMilliseconds;
-
-          // Caso: não houve movimento e o tempo excedeu o threshold -> é long press sem mover => selecionar
           if (!didMove && pressDuration >= longPressThresholdMs) {
-            // Toggle selection (long press sem movimento)
-            final noteId = note.id;
+                final noteId = note.id;
             setState(() {
               _toggleNoteSelection(noteId);
               _longPressedIndex = null;
             });
             HapticFeedback.selectionClick();
           } else {
-            // Caso: tap rápido (pressDuration < threshold) -> abrir nota
-            if (!didMove && pressDuration < longPressThresholdMs) {
+                if (!didMove && pressDuration < longPressThresholdMs) {
               if (_isSelectionMode) {
                 setState(() => _toggleNoteSelection(note.id));
               } else {
-                // TAP NORMAL → ABRIR NOTA (com proteção contra duplo disparo)
-                if (!tapLock) {
+                     if (!tapLock) {
                   tapLock = true;
                   _openNote(context, note);
-
-                  // libera após um pequeno intervalo
-                  Future.delayed(Duration(milliseconds: 120), () {
+                Future.delayed(Duration(milliseconds: 120), () {
                     tapLock = false;
                   });
                 }
               }
             }
-
-            // Reset flags
-            Future.delayed(Duration(milliseconds: 100), () {
+          Future.delayed(Duration(milliseconds: 100), () {
               _isDragging = false;
               _longPressedIndex = null;
             });
@@ -1165,16 +1075,12 @@ class _HomeScreenState extends State<HomeScreen> {
             _longPressedIndex = null;
           });
         },
-
-        // Mantemos o visual do item por baixo do Listener
         child: Padding(
           padding: const EdgeInsets.only(bottom: 4.0),
           child: _buildListNoteCard(context, note, isSelected),
         ),
       );
     }
-
-    // Gera os children para cada seção
     final pinnedChildren = List<Widget>.generate(
       pinnedNotes.length,
       (i) => KeyedSubtree(key: ValueKey(pinnedNotes[i].id), child: buildDraggableItem(context, pinnedNotes[i], 0, i)),
@@ -1186,36 +1092,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     return SingleChildScrollView(
-      //  controller: _scrollController,
+
       padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------- FIXADOS ----------
+       
           if (pinnedNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, '📌 FIXADOS', pinnedNotes.length),
+            _buildSectionHeader(context, 'FIXADOS', pinnedNotes.length),
             SizedBox(height: 12),
 
             ReorderableColumn(
-              // mantém  o layout como lista vertical
-              crossAxisAlignment: CrossAxisAlignment.start,
-              needsLongPressDraggable: true, // exige long press para arrastar (comportamento do grid)
+               crossAxisAlignment: CrossAxisAlignment.start,
+              needsLongPressDraggable: true, 
               children: pinnedChildren,
               onReorder: (oldIndex, newIndex) {
-                // 1. Reordena apenas a seção de fixados
-                final reorderedPinned = List<NoteModel>.from(pinnedNotes);
+                 final reorderedPinned = List<NoteModel>.from(pinnedNotes);
                 final movedNote = reorderedPinned.removeAt(oldIndex);
                 reorderedPinned.insert(newIndex, movedNote);
 
-                // 2. Junta com as outras notas
+            
                 final newOrder = [...reorderedPinned, ...otherNotes];
 
-                // 3. Atualiza posições
+                
                 for (int i = 0; i < newOrder.length; i++) {
                   newOrder[i] = newOrder[i].copyWith(position: i);
                 }
 
-                // 4. Salva no banco via Cubit
+               
                 context.read<HomeCubit>().reorderNotes(newOrder);
 
                 HapticFeedback.lightImpact();
@@ -1225,9 +1129,9 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 24),
           ],
 
-          // ---------- OUTRAS NOTAS ----------
+          
           if (otherNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, '📋 OUTRAS NOTAS', otherNotes.length),
+            _buildSectionHeader(context, 'OUTRAS', otherNotes.length),
             SizedBox(height: 12),
 
             ReorderableColumn(
@@ -1235,21 +1139,15 @@ class _HomeScreenState extends State<HomeScreen> {
               needsLongPressDraggable: true,
               children: otherChildren,
               onReorder: (oldIndex, newIndex) {
-                // 1. Reordena apenas a seção de não fixados
-                final reorderedOthers = List<NoteModel>.from(otherNotes);
+                  final reorderedOthers = List<NoteModel>.from(otherNotes);
                 final movedNote = reorderedOthers.removeAt(oldIndex);
                 reorderedOthers.insert(newIndex, movedNote);
-
-                // 2. Junta com as fixadas
-                final newOrder = [...pinnedNotes, ...reorderedOthers];
-
-                // 3. Atualiza posições
-                for (int i = 0; i < newOrder.length; i++) {
+     final newOrder = [...pinnedNotes, ...reorderedOthers];
+       for (int i = 0; i < newOrder.length; i++) {
                   newOrder[i] = newOrder[i].copyWith(position: i);
                 }
 
-                // 4. Salva no banco via Cubit
-                context.read<HomeCubit>().reorderNotes(newOrder);
+                      context.read<HomeCubit>().reorderNotes(newOrder);
 
                 HapticFeedback.lightImpact();
               },
@@ -1260,8 +1158,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📊 GRID REORDENÁVEL DE UMA SEÇÃO (COM DRAG & DROP)
-  // ✅ SUBSTITUIR O MÉTODO _buildReorderableGridSection
   Widget _buildReorderableGridSection(
     BuildContext context,
     List<NoteModel> tratedNotes, {
@@ -1297,35 +1193,25 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       onReorder: (ReorderedListFunction reorderedListFunction) {
-        // 1. Reordena apenas a seção (fixadas ou não)
-        final reorderedSection = reorderedListFunction(tratedNotes) as List<NoteModel>;
+        
+         final reorderedSection = reorderedListFunction(tratedNotes) as List<NoteModel>;
 
-        // 2. Monte a lista global reordenada (fixadas + não fixadas)
-        final homeCubit = context.read<HomeCubit>();
+     final homeCubit = context.read<HomeCubit>();
         final state = homeCubit.state;
         if (state is HomeLoaded) {
           final allNotes = List<NoteModel>.from(state.notes);
-
-          // Separe as outras notas
-          final otherSection = isPinnedSection
+      final otherSection = isPinnedSection
               ? allNotes.where((n) => !n.isPinned).toList()
               : allNotes.where((n) => n.isPinned).toList();
 
-          // Junte as seções na ordem correta
-          final newOrder = isPinnedSection
+            final newOrder = isPinnedSection
               ? [...reorderedSection, ...otherSection]
               : [...otherSection, ...reorderedSection];
-
-          // Atualize as posições
           for (int i = 0; i < newOrder.length; i++) {
             newOrder[i] = newOrder[i].copyWith(position: i);
           }
-
-          // 3. Chame o Cubit para salvar no banco
-          homeCubit.reorderNotes(newOrder);
+        homeCubit.reorderNotes(newOrder);
         }
-
-        // Marque que houve drag real para evitar seleção indevida no onDragEnd
         setState(() {
           _isDragging = true;
         });
@@ -1343,7 +1229,7 @@ class _HomeScreenState extends State<HomeScreen> {
         HapticFeedback.lightImpact();
         Future.delayed(Duration(milliseconds: 100), () {
           if (!_isDragging && _longPressedIndex != null) {
-            // Use a lista da seção (tratedNotes) para pegar o noteId
+            
             final noteId = tratedNotes[_longPressedIndex!].id;
             setState(() {
               _toggleNoteSelection(noteId);
@@ -1376,18 +1262,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🏷️ HEADER DE SEÇÃO
   Widget _buildSectionHeader(BuildContext context, String title, int count) {
     return Row(
       children: [
-        Text(
-          title,
-          style: AppTextStyles.bodyLarge.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
+        Expanded(child: Divider(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        )),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Text(
+            title,
+            style: AppTextStyles.bodyLarge.copyWith(
+              //fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
-        SizedBox(width: 8),
+         Expanded(child: Divider( color: Theme.of(context).colorScheme.onSurfaceVariant,)),
+        /* SizedBox(width: 8),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
@@ -1401,19 +1293,16 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
-        ),
+        ), */
       ],
     );
   }
 
-  // 📋 LIST VIEW COM DRAG & DROP - VERSÃO PREMIUM
-  // ✅ SUBSTITUIR O MÉTODO _buildSIMPLEListView
   Widget _buildSIMPLEListView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     List<Widget> children = List.generate(notesFromDb.length, (index) {
       final note = notesFromDb[index];
       final isSelected = _isNoteSelected(note.id);
 
-      // Controle de toque e seleção
       Offset? pointerDownPos;
       bool didMove = false;
       DateTime? pointerDownTime;
@@ -1443,15 +1332,13 @@ class _HomeScreenState extends State<HomeScreen> {
           if (pointerDownTime == null) return;
           final pressDuration = DateTime.now().difference(pointerDownTime!).inMilliseconds;
           if (!didMove && pressDuration >= longPressThresholdMs) {
-            // Long press sem mover: ativa seleção
             setState(() {
               _toggleNoteSelection(note.id);
               _longPressedIndex = null;
             });
             HapticFeedback.selectionClick();
           } else if (!didMove && pressDuration < longPressThresholdMs) {
-            // Tap rápido: abre nota
-            if (_isSelectionMode) {
+           if (_isSelectionMode) {
               setState(() => _toggleNoteSelection(note.id));
             } else {
               _openNote(context, note);
@@ -1502,21 +1389,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🎯 CARD PARA GRID VIEW COM VISUAL DE SELEÇÃO
-  Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
+  
+   Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
     final isSelected = _isNoteSelected(note.id);
 
     return GestureDetector(
-      key: Key(note.id), // ✅ KEY MOVIDA PARA O WIDGET MAIS EXTERNO!
-      // ✅ TAP SIMPLES: Abre nota OU adiciona à seleção
+      key: Key(note.id), 
       onTap: () {
         if (_isSelectionMode) {
-          // Se já está em modo seleção, adiciona/remove da seleção
-          _toggleNoteSelection(note.id);
+           _toggleNoteSelection(note.id);
           HapticFeedback.selectionClick();
         } else {
-          // Abre a nota para editar
-          _openNote(context, note);
+             _openNote(context, note);
         }
       },
 
@@ -1524,8 +1408,7 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: Duration(milliseconds: 200),
         curve: Curves.easeOut,
 
-        // ✅ DECORAÇÃO QUANDO SELECIONADO
-        decoration: BoxDecoration(
+            decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 3),
           boxShadow: isSelected
@@ -1552,8 +1435,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Row(
                   children: [
-                    // ✅ ÍCONE DE CHECK QUANDO SELECIONADO
-                    if (isSelected)
+                      if (isSelected)
                       Container(
                         padding: EdgeInsets.all(4),
                         margin: EdgeInsets.only(right: 8),
@@ -1572,17 +1454,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-
-                    // ✅ ÍCONE DE DRAG (só aparece se NÃO estiver selecionado)
-                    /*  if (!isSelected)
-                      Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Icon(Icons.drag_indicator, size: 14, color: Theme.of(context).colorScheme.primary),
-                      ), */
                   ],
                 ),
                 SizedBox(height: 8),
@@ -1608,7 +1479,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🆕 WIDGET PARA EXIBIR TAGS NO CARD
+
   Widget _buildTagsRow(BuildContext context, NoteModel note) {
     if (note.tags == null || note.tags!.isEmpty) {
       return SizedBox(height: 20);
@@ -1651,7 +1522,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       tagName,
                       style: AppTextStyles.bodySmall.copyWith(
-                        //fontSize: 9,
+                        
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                         fontWeight: FontWeight.w500,
                       ),
@@ -1682,14 +1553,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🎯 CARD PARA LIST VIEW (Draggable)
+
+
   Widget _buildListNoteCard(BuildContext context, NoteModel note, bool isSelected, {Key? key}) {
     final cardElevation = isSelected ? 6.0 : 2.0;
     var realceColor = NoteColorsHelper.getAvailableColors(context).contains(note.color);
-    print(realceColor);
+    debugPrint(realceColor.toString());
     var listaColors = NoteColorsHelper.getAvailableColors(context);
-    print(listaColors.first);
-    print(note.color);
+    debugPrint(listaColors.first.toString());
+    debugPrint(note.color.toString());
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: AnimatedContainer(
@@ -1702,7 +1574,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Card(
           key: key ?? ValueKey(note.id),
-          //margin: EdgeInsets.only(bottom: 12),
+          
           elevation: cardElevation,
           shadowColor: Theme.of(context).colorScheme.shadow,
           color: note.color,
@@ -1743,7 +1615,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📖 FUNÇÃO PARA ABRIR NOTA PARA EDIÇÃO
+ 
   void _openNote(BuildContext context, NoteModel note) {
     showModalBottomSheet(
       context: context,
@@ -1759,58 +1631,15 @@ class _HomeScreenState extends State<HomeScreen> {
       if (result != null) {
         final homeCubit = context.read<HomeCubit>();
         if (result == 'delete') {
-          // Chama o Cubit para deletar a nota
-          homeCubit.deleteNote(note.id);
+         homeCubit.deleteNote(note.id);
         } else if (result is NoteModel) {
-          // Chama o Cubit para atualizar a nota
-          homeCubit.updateNote(result);
+         homeCubit.updateNote(result);
         }
       }
     });
   }
 
-  // 🎨 DIÁLOGO DE TEMAS
-  void _showThemeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Escolher Tema'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.brightness_auto),
-              title: Text('Automático'),
-              subtitle: Text('Segue o sistema'),
-              onTap: () {
-                //Get.changeThemeMode(ThemeMode.system);
 
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.light_mode),
-              title: Text('Claro'),
-              onTap: () {
-                Get.changeThemeMode(ThemeMode.light);
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.dark_mode),
-              title: Text('Escuro'),
-              onTap: () {
-                Get.changeThemeMode(ThemeMode.dark);
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ℹ️ DIÁLOGO SOBRE O APP
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(
       context: context,
@@ -1827,7 +1656,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📝 FUNÇÃO PARA MOSTRAR BOTTOMSHEET DE CRIAR NOTA
   void _showCreateNoteSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -1845,7 +1673,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void _changeColorOfSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
-    // Pegue as notas do estado atual do Cubit
     final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return;
 
@@ -1854,10 +1681,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (selectedNotes.isEmpty) return;
 
-    // Cor inicial da primeira selecionada
     final firstSelectedNote = selectedNotes.first;
 
-    // Abre o dialog de seleção de cor
     final Color? selectedColor = await Get.dialog<Color>(
       ColorPickerDialog(
         initialColor: firstSelectedNote.color,
@@ -1869,12 +1694,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (selectedColor != null) {
       final count = _selectedNoteIds.length;
 
-      // Cria as notas atualizadas
       final updatedNotes = selectedNotes
           .map((note) => note.copyWith(color: selectedColor, updatedAt: DateTime.now()))
           .toList();
 
-      // Chama o Cubit para atualizar em lote
       await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
       _clearSelection();
@@ -1892,13 +1715,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 🎨 CALCULAR COR DE CONTRASTE (helper)
   Color _getContrastColor(Color backgroundColor) {
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
-  // 🆕 ADICIONAR SEÇÃO DE MARCADORES NO DRAWER
   Widget _buildTagsSection(BuildContext context) {
     final ScrollController tagsScrollController = ScrollController();
     return BlocBuilder<TagsCubit, TagsState>(
@@ -1916,7 +1737,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🏷️ HEADER DA SEÇÃO
+
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -1929,14 +1750,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurface /* .withOpacity(0.6) */,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // 📋 LISTA DE MARCADORES
               if (hasTags)
                 if (tags.length > 4)
                   SizedBox(
@@ -1960,13 +1780,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     (tag) => _buildTagItem(
                       context,
                       tag,
-                      //_getIconForTag(tag.name),
                     ),
                   ),
 
               SizedBox(height: 8),
 
-              // ➕ BOTÃO CRIAR NOVO MARCADOR
               ListTile(
                 leading: Icon(
                   tags.isEmpty ? MdiIcons.tagPlusOutline : MdiIcons.tagSearchOutline,
@@ -1986,26 +1804,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
 
-              // Divider(height: 24),
             ],
           );
         }
-        // Estado inicial ou erro
         return SizedBox.shrink();
       },
     );
   }
 
-  // 🏷️ ITEM DE MARCADOR (ATUALIZADO COM PASSAGEM DE NOTAS)
-  Widget _buildTagItem(BuildContext context, TagModel tag /*  IconData icon */) {
-    // Busca as notas do estado atual do Cubit
+  Widget _buildTagItem(BuildContext context, TagModel tag) {
+    
     final noteState = context.read<HomeCubit>().state;
     List<NoteModel> notes = [];
     if (noteState is HomeLoaded) {
       notes = noteState.notes;
     }
 
-    // Conta quantas notas têm este marcador
     final noteCount = notes.where((note) {
       return note.tags != null && note.tags!.contains(tag.id);
     }).length;
@@ -2030,45 +1844,25 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           : null,
       onTap: () {
-        Get.back(); // Fecha drawer
-        // Passa a lista de notas atual para a tela do marcador
+        Get.back(); 
         Get.to(() => TagViewScreen(tag: tag));
       },
     );
   }
 
-  // 🆕 FUNÇÃO AUXILIAR PARA ÍCONES DINÂMICOS
-  /* IconData _getIconForTag(String tagName) {
-    switch (tagName.toLowerCase()) {
-      case 'trabalho':
-        return Icons.work_outline;
-      case 'pessoal':
-        return Icons.person_outline;
-      case 'ideias':
-        return Icons.lightbulb_outline;
-      case 'estudo':
-        return Icons.school_outlined;
-      case 'compras':
-        return Icons.shopping_cart_outlined;
-      default:
-        return Icons.label_outline;
-    }
-  }
- */
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // 🎨 HEADER DO DRAWER
-          SizedBox(
+           SizedBox(
             height: 120,
             child: DrawerHeader(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12), // metade do tamanho
+                    borderRadius: BorderRadius.circular(12), 
                     child: Image.asset('assets/clipstick-logo.png', width: 54, height: 54, fit: BoxFit.cover),
                   ),
                   SizedBox(width: 8),
@@ -2097,16 +1891,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Divider(),
 
           ThemeToggleButton(),
-
-          /*   ListTile(
-            leading: Icon(Icons.palette_outlined),
-            title: Text('Temas'),
-            onTap: () {
-              Navigator.pop(context);
-              _showThemeDialog(context);
-            },
-          ), */
-          ListTile(
+ ListTile(
             leading: Icon(Icons.settings_outlined),
             title: Text('Configurações'),
             onTap: () {
@@ -2139,7 +1924,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
 
-          // Divider(),
+          
           ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Sobre'),

@@ -13,8 +13,7 @@ import 'package:clipstick/core/di/service_locator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   // ✅ CONFIGURAR INJEÇÃO DE DEPENDÊNCIAS
-  await setupServiceLocator();
+ await setupServiceLocator();
   await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());

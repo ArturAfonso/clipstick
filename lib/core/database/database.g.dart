@@ -1,14 +1,17 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+
+
+
+// ignore_for_file: library_private_types_in_public_api, non_constant_identifier_names
 
 part of 'database.dart';
 
-// ignore_for_file: type=lint
+
 class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $NotesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _idMeta =  VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
@@ -17,7 +20,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  static const VerificationMeta _titleMeta = VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
     'title',
@@ -27,7 +30,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _contentMeta = const VerificationMeta(
+  static const VerificationMeta _contentMeta = VerificationMeta(
     'content',
   );
   @override
@@ -47,7 +50,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
         type: DriftSqlType.int,
         requiredDuringInsert: true,
       ).withConverter<Color>($NotesTable.$convertercolor);
-  static const VerificationMeta _isPinnedMeta = const VerificationMeta(
+  static const VerificationMeta _isPinnedMeta = VerificationMeta(
     'isPinned',
   );
   @override
@@ -62,7 +65,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
+  static const VerificationMeta _positionMeta = VerificationMeta(
     'position',
   );
   @override
@@ -73,7 +76,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+  static const VerificationMeta _createdAtMeta = VerificationMeta(
     'createdAt',
   );
   @override
@@ -84,7 +87,7 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+  static const VerificationMeta _updatedAtMeta = VerificationMeta(
     'updatedAt',
   );
   @override
@@ -222,63 +225,60 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, NoteEntity> {
 }
 
 class NoteEntity extends DataClass implements Insertable<NoteEntity> {
-  /// 🔑 PRIMARY KEY - Identificador único da nota
-  ///
-  /// Será gerado usando UUID (ex: "550e8400-e29b-41d4-a716-446655440000")
+  
+  
+  
   final String id;
 
-  /// 📌 TÍTULO DA NOTA
-  ///
-  /// - Pode ser vazio (default: '')
-  /// - Tipo TEXT no SQLite
+  
+  
+  
+  
   final String title;
 
-  /// 📄 CONTEÚDO DA NOTA
-  ///
-  /// - Não pode ser nulo
-  /// - Armazena o texto completo da nota
+  
+  
+  
+  
   final String content;
 
-  /// 🎨 COR DE FUNDO
-  ///
-  /// - Usa ColorConverter para converter Color ↔ int
-  /// - Armazenado como INTEGER no SQLite (ex: 4294934323)
-  /// - Ao ler, Drift converte automaticamente para Color
-  ///
-  /// **Exemplo:**
-  /// ```dart
-  /// Color(0xFFFF5733) → 4294934323 (toSql)
-  /// 4294934323 → Color(0xFFFF5733) (fromSql)
-  /// ```
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   final Color color;
 
-  /// 📌 SE ESTÁ FIXADA NO TOPO
-  ///
-  /// - Default: false (0)
-  /// - SQLite armazena como INTEGER (0 = false, 1 = true)
-  /// - Drift converte automaticamente para bool
+  
+  
+  
+  
+  
   final bool isPinned;
 
-  /// 🔢 POSIÇÃO NA LISTA
-  ///
-  /// - Define a ordem de exibição
-  /// - Menor número = aparece primeiro
-  /// - Importante para drag & drop
+  
+  
+  
+  
+  
   final int position;
 
-  /// 📅 DATA DE CRIAÇÃO
-  ///
-  /// - Armazenada como UNIX timestamp (milliseconds)
-  /// - Drift converte automaticamente para DateTime
-  ///
-  /// **SQLite:** 1699999999999 (int)
-  /// **Dart:**    DateTime(2023, 11, 15, 10, 46, 39)
+  
+  
+  
+  
+  
+  
+  
   final DateTime createdAt;
 
-  /// 🕐 DATA DA ÚLTIMA EDIÇÃO
-  ///
-  /// - Atualizada sempre que a nota for modificada
-  /// - Útil para sincronização futura
+ 
   final DateTime updatedAt;
   const NoteEntity({
     required this.id,
@@ -371,14 +371,14 @@ class NoteEntity extends DataClass implements Insertable<NoteEntity> {
   );
   NoteEntity copyWithCompanion(NotesCompanion data) {
     return NoteEntity(
-      id: data.id.present ? data.id.value : this.id,
-      title: data.title.present ? data.title.value : this.title,
-      content: data.content.present ? data.content.value : this.content,
-      color: data.color.present ? data.color.value : this.color,
-      isPinned: data.isPinned.present ? data.isPinned.value : this.isPinned,
-      position: data.position.present ? data.position.value : this.position,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      id: data.id.present ? data.id.value : id,
+      title: data.title.present ? data.title.value : title,
+      content: data.content.present ? data.content.value : content,
+      color: data.color.present ? data.color.value : color,
+      isPinned: data.isPinned.present ? data.isPinned.value : isPinned,
+      position: data.position.present ? data.position.value : position,
+      createdAt: data.createdAt.present ? data.createdAt.value : createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : updatedAt,
     );
   }
 
@@ -412,14 +412,14 @@ class NoteEntity extends DataClass implements Insertable<NoteEntity> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is NoteEntity &&
-          other.id == this.id &&
-          other.title == this.title &&
-          other.content == this.content &&
-          other.color == this.color &&
-          other.isPinned == this.isPinned &&
-          other.position == this.position &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.id == id &&
+          other.title == title &&
+          other.content == content &&
+          other.color == color &&
+          other.isPinned == isPinned &&
+          other.position == position &&
+          other.createdAt == createdAt &&
+          other.updatedAt == updatedAt);
 }
 
 class NotesCompanion extends UpdateCompanion<NoteEntity> {
@@ -564,7 +564,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $TagsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _idMeta = VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
@@ -573,7 +573,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  static const VerificationMeta _nameMeta = VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -582,7 +582,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+  static const VerificationMeta _createdAtMeta = VerificationMeta(
     'createdAt',
   );
   @override
@@ -593,7 +593,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+  static const VerificationMeta _updatedAtMeta = VerificationMeta(
     'updatedAt',
   );
   @override
@@ -682,28 +682,28 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
 }
 
 class TagEntity extends DataClass implements Insertable<TagEntity> {
-  /// 🔑 PRIMARY KEY - Identificador único da tag
-  ///
-  /// Será gerado usando UUID (ex: "tag-550e8400-e29b-41d4-a716-446655440000")
+  
+  
+  
   final String id;
 
-  /// 🏷️ NOME DA TAG
-  ///
-  /// - Não pode ser vazio
-  /// - Exemplos: "Trabalho", "Urgente", "Ideias"
-  /// - Tipo TEXT no SQLite
+  
+  
+  
+  
+  
   final String name;
 
-  /// 📅 DATA DE CRIAÇÃO
-  ///
-  /// - Armazenada como UNIX timestamp (milliseconds)
-  /// - Drift converte automaticamente para DateTime
+  
+  
+  
+  
   final DateTime createdAt;
 
-  /// 🕐 DATA DA ÚLTIMA EDIÇÃO
-  ///
-  /// - Atualizada quando o nome da tag for modificado
-  /// - Útil para auditoria e sincronização futura
+  
+  
+  
+  
   final DateTime updatedAt;
   const TagEntity({
     required this.id,
@@ -766,10 +766,10 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
   );
   TagEntity copyWithCompanion(TagsCompanion data) {
     return TagEntity(
-      id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      id: data.id.present ? data.id.value : id,
+      name: data.name.present ? data.name.value : name,
+      createdAt: data.createdAt.present ? data.createdAt.value : createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : updatedAt,
     );
   }
 
@@ -790,10 +790,10 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TagEntity &&
-          other.id == this.id &&
-          other.name == this.name &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.id == id &&
+          other.name == name &&
+          other.createdAt == createdAt &&
+          other.updatedAt == updatedAt);
 }
 
 class TagsCompanion extends UpdateCompanion<TagEntity> {
@@ -891,7 +891,7 @@ class $NoteTagsTable extends NoteTags
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $NoteTagsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _noteIdMeta = const VerificationMeta('noteId');
+  static const VerificationMeta _noteIdMeta = VerificationMeta('noteId');
   @override
   late final GeneratedColumn<String> noteId = GeneratedColumn<String>(
     'note_id',
@@ -903,7 +903,7 @@ class $NoteTagsTable extends NoteTags
       'REFERENCES notes (id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _tagIdMeta = const VerificationMeta('tagId');
+  static const VerificationMeta _tagIdMeta = VerificationMeta('tagId');
   @override
   late final GeneratedColumn<String> tagId = GeneratedColumn<String>(
     'tag_id',
@@ -972,28 +972,28 @@ class $NoteTagsTable extends NoteTags
 }
 
 class NoteTagRelation extends DataClass implements Insertable<NoteTagRelation> {
-  /// 🔑 REFERÊNCIA PARA NOTES
-  ///
-  /// - Foreign Key para Notes.id
-  /// - ON DELETE CASCADE: Se deletar a nota, remove este relacionamento
-  /// - Tipo TEXT (UUID da nota)
-  ///
-  /// **Exemplo:**
-  /// ```dart
-  /// noteId = "550e8400-e29b-41d4-a716-446655440000"
-  /// ```
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   final String noteId;
 
-  /// 🏷️ REFERÊNCIA PARA TAGS
-  ///
-  /// - Foreign Key para Tags.id
-  /// - ON DELETE CASCADE: Se deletar a tag, remove este relacionamento
-  /// - Tipo TEXT (UUID da tag)
-  ///
-  /// **Exemplo:**
-  /// ```dart
-  /// tagId = "tag-550e8400-e29b-41d4-a716-446655440000"
-  /// ```
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   final String tagId;
   const NoteTagRelation({required this.noteId, required this.tagId});
   @override
@@ -1033,8 +1033,8 @@ class NoteTagRelation extends DataClass implements Insertable<NoteTagRelation> {
   );
   NoteTagRelation copyWithCompanion(NoteTagsCompanion data) {
     return NoteTagRelation(
-      noteId: data.noteId.present ? data.noteId.value : this.noteId,
-      tagId: data.tagId.present ? data.tagId.value : this.tagId,
+      noteId: data.noteId.present ? data.noteId.value : noteId,
+      tagId: data.tagId.present ? data.tagId.value : tagId,
     );
   }
 
@@ -1053,8 +1053,8 @@ class NoteTagRelation extends DataClass implements Insertable<NoteTagRelation> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is NoteTagRelation &&
-          other.noteId == this.noteId &&
-          other.tagId == this.tagId);
+          other.noteId == noteId &&
+          other.tagId == tagId);
 }
 
 class NoteTagsCompanion extends UpdateCompanion<NoteTagRelation> {
@@ -1123,7 +1123,7 @@ class NoteTagsCompanion extends UpdateCompanion<NoteTagRelation> {
 }
 
 abstract class _$AppDatabase extends GeneratedDatabase {
-  _$AppDatabase(QueryExecutor e) : super(e);
+  _$AppDatabase(super.e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $NotesTable notes = $NotesTable(this);
   late final $TagsTable tags = $TagsTable(this);

@@ -13,7 +13,7 @@ class ColorPickerWidget extends StatelessWidget {
     required this.onColorSelected,
   });
 
-  // 🎨 ABRIR SELETOR DE COR PERSONALIZADA
+  
   void _showCustomColorPicker(BuildContext context) {
     Color tempColor = selectedColor;
     
@@ -58,7 +58,7 @@ class ColorPickerWidget extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          // 🚫 OPÇÃO "SEM COR"
+          
           _buildColorOption(
             context: context,
             color: neutralColor,
@@ -68,7 +68,7 @@ class ColorPickerWidget extends StatelessWidget {
           
           SizedBox(width: 12),
 
-          // 🎨 CORES PADRÃO
+          
           ...availableColors.map((color) => Padding(
             padding: EdgeInsets.only(right: 12),
             child: _buildColorOption(
@@ -78,14 +78,14 @@ class ColorPickerWidget extends StatelessWidget {
             ),
           )),
 
-          // 🌈 OPÇÃO "COR PERSONALIZADA"
+          
           _buildCustomColorOption(context),
         ],
       ),
     );
   }
 
-  // 🎨 WIDGET PARA CADA OPÇÃO DE COR
+  
   Widget _buildColorOption({
     required BuildContext context,
     required Color color,
@@ -118,7 +118,7 @@ class ColorPickerWidget extends StatelessWidget {
         ),
         child: isNeutral
           ? Icon(
-              Icons.format_color_reset, // ✅ Ícone de "sem cor"
+              Icons.format_color_reset, 
               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               size: 24,
             )
@@ -133,7 +133,7 @@ class ColorPickerWidget extends StatelessWidget {
     );
   }
 
-  // 🌈 WIDGET PARA COR PERSONALIZADA
+  
   Widget _buildCustomColorOption(BuildContext context) {
     final isCustomSelected = !NoteColorsHelper.getAvailableColors(context).contains(selectedColor) 
       && selectedColor != NoteColorsHelper.getNeutralColor(context);
@@ -166,15 +166,7 @@ class ColorPickerWidget extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
           color: isCustomSelected ? selectedColor : null,
-          boxShadow: /* isCustomSelected
-            ? [
-                BoxShadow(
-                  color: selectedColor.withOpacity(0.4),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ]
-            : */ null,
+          boxShadow: null,
         ),
         child: Icon(
           Icons.palette,
@@ -187,9 +179,9 @@ class ColorPickerWidget extends StatelessWidget {
     );
   }
 
-  // 🎨 RETORNA COR DE CONTRASTE PARA O ÍCONE
+  
   Color _getContrastColor(Color backgroundColor) {
-    // Calcula luminância
+    
     final luminance = backgroundColor.computeLuminance();
     return luminance > 0.5 ? Colors.black : Colors.white;
   }

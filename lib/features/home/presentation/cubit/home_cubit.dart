@@ -28,15 +28,15 @@ class HomeCubit extends Cubit<HomeState> {
   emit(HomeLoading());
   try {
     await _noteRepository.createNote(note);
-    await loadNotes(); // Atualiza a lista após adicionar
+    await loadNotes(); 
   } catch (e) {
     emit(HomeError(message: e.toString()));
   }
 }
 
 
-//adcioanr nota em lote
-// No HomeCubit
+
+
 Future<void> addNotesBatch(List<NoteModel> notes) async {
   emit(HomeLoading());
   try {
@@ -51,13 +51,13 @@ Future<void> updateNote(NoteModel note) async {
   emit(HomeLoading());
   try {
     await _noteRepository.updateNote(note);
-    await loadNotes(); // Atualiza a lista após editar
+    await loadNotes(); 
   } catch (e) {
     emit(HomeError(message: e.toString()));
   }
 }
 
-//para atualizar várias notas de uma vez:
+
 Future<void> updateNotesBatch(List<NoteModel> notes) async {
   emit(HomeLoading());
   try {
@@ -72,7 +72,7 @@ Future<void> deleteNote(String id) async {
   emit(HomeLoading());
   try {
     await _noteRepository.deleteNote(id);
-    await loadNotes(); // Atualiza a lista após deletar
+    await loadNotes(); 
   } catch (e) {
     emit(HomeError(message: e.toString()));
   }
@@ -82,7 +82,7 @@ Future<void> deleteNotesBatch(List<String> ids) async {
   emit(HomeLoading());
   try {
     await _noteRepository.deleteNotes(ids);
-    await loadNotes(); // Atualiza a lista após deletar
+    await loadNotes(); 
   } catch (e) {
     emit(HomeError(message: e.toString()));
   }
@@ -101,13 +101,13 @@ Future<void> searchNotes(String query) async {
 Future<void> reorderNotes(List<NoteModel> reorderedNotes) async {
   emit(HomeLoading());
   try {
-    // Atualiza a posição de cada nota
+    
     for (int i = 0; i < reorderedNotes.length; i++) {
       reorderedNotes[i] = reorderedNotes[i].copyWith(position: i);
     }
-    // Salva no banco 
+    
     await _noteRepository.updateNotesPositions(reorderedNotes);
-    await loadNotes(); // Recarrega as notas atualizadas
+    await loadNotes(); 
   } catch (e) {
     emit(HomeError(message: e.toString()));
   }
