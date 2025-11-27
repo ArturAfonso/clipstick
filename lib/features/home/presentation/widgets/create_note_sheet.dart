@@ -218,14 +218,7 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                       height: 52,
                       child: ElevatedButton(
                         onPressed: _createNote,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
+                      
                         child: Text(
                           'Criar nota',
                           style: AppTextStyles.bodyMedium.copyWith(

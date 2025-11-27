@@ -18,6 +18,7 @@ class AppTextStyles {
     fontSize: 12,
     fontWeight: FontWeight.normal,
     height: 1.4,
+    
   );
 
   static TextStyle get bodyMedium => const TextStyle(

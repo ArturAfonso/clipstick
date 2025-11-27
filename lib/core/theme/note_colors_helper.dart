@@ -6,11 +6,14 @@ class NoteColorsHelper {
 
   // 🎨 COR NEUTRA PARA "SEM COR"
   static Color getNeutralColor(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    //por enquanto irei retorar uma unica cor que verifiquei nao confklitar com os temas
+    //no futuro irei implementar o colorpicker para o text e isso ira resolver
+   /*  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     // Cinza suave que funciona em ambos os temas
     return isDarkMode 
-      ? Color(0xFF2D2D2D) // Cinza escuro suave
-      : Color(0xFFF5F5F5); // Cinza claro suave
+      ? Color.fromARGB(255, 165, 162, 162) // Cinza claro suave
+      : Color.fromARGB(255, 165, 162, 162); // Cinza claro suave */
+      return Color.fromARGB(255, 165, 162, 162); // Cinza claro suave
   }
 
   // 🎨 Retorna lista de cores baseada no tema atual

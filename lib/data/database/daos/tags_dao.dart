@@ -317,21 +317,35 @@ Future<String> insertTag(TagsCompanion tag) async {
     required List<String> tagIds,
   }) async {
     await transaction(() async {
-      // 1. Remove todas as tags antigas
+      // 1. Remove todas as tags antigas desse relacionamento
       await removeAllTagsFromNote(noteId);
 
-      // 2. Adiciona as novas tags
+      // 2. Se houver tags para adicionar
       if (tagIds.isNotEmpty) {
+        
+        // 🛡️ SEGURANÇA: Busca no banco quais desses IDs ainda existem.
+        // Isso previne o erro "Foreign Key Constraint Failed" se a UI 
+        // tentar salvar uma tag que acabou de ser excluída.
+        final validTags = await (select(tags)
+          ..where((t) => t.id.isIn(tagIds))
+        ).get();
+        
+        // Cria um Set apenas com os IDs que o banco confirmou que existem
+        final existingTagIds = validTags.map((t) => t.id).toSet();
+
         await batch((batch) {
           for (final tagId in tagIds) {
-            batch.insert(
-              noteTags,
-              NoteTagsCompanion(
-                noteId: Value(noteId),
-                tagId: Value(tagId),
-              ),
-              mode: InsertMode.insertOrIgnore,
-            );
+            // 🚀 Só insere se o ID existir de verdade
+            if (existingTagIds.contains(tagId)) {
+              batch.insert(
+                noteTags,
+                NoteTagsCompanion(
+                  noteId: Value(noteId),
+                  tagId: Value(tagId),
+                ),
+                mode: InsertMode.insertOrIgnore,
+              );
+            }
           }
         });
       }

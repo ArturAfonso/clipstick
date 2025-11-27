@@ -3,7 +3,9 @@ import 'package:clipstick/features/tags/presentation/widgets/notelistitem.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/tag_model.dart';
 import '../../../../data/models/note_model.dart';
@@ -169,112 +171,121 @@ class _TagViewScreenState extends State<TagViewScreen> {
       create: (context) => ViewModeCubit(),
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Get.back(),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.label,
-                color: Theme.of(context).colorScheme.primary,
-                size: 22,
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _currentTag.name,
-                  style: AppTextStyles.headingMedium.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+        appBar: PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+          child: SafeArea(
+            child: Material(
+              elevation: 0.5,
+              child: AppBar(
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                  
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () => Get.back(),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                Get.snackbar(
-                  'Em Breve',
-                  'Função de busca será implementada',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              },
-              tooltip: 'Buscar',
-            ),
-            BlocBuilder<ViewModeCubit, ViewModeState>(
-              builder: (context, viewMode) {
-                return IconButton(
-                  icon: Icon(
-                    viewMode == ViewMode.grid
-                        ? Icons.view_list
-                        : Icons.grid_view,
-                  ),
-                  onPressed: () {
-                    context.read<ViewModeCubit>().toggleViewMode();
-                    HapticFeedback.selectionClick();
-                  },
-                  tooltip: viewMode == ViewMode.grid
-                      ? 'Visualização em Lista'
-                      : 'Visualização em Grade',
-                );
-              },
-            ),
-            PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert),
-              tooltip: 'Mais opções',
-              onSelected: (value) {
-                if (value == 'rename') {
-                  _showRenameDialog();
-                } else if (value == 'delete') {
-                  _showDeleteDialog();
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'rename',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.edit_outlined,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onSurface,
+                title: Row(
+                  children: [
+                    Icon(
+                      MdiIcons.tagOutline,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 22,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _currentTag.name,
+                        style: AppTextStyles.headingMedium.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Renomear marcador',
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete_outline,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.error,
+                actions: [
+                  /* IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      Get.snackbar(
+                        'Em Breve',
+                        'Função de busca será implementada',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                    },
+                    tooltip: 'Buscar',
+                  ), */
+                 /*  BlocBuilder<ViewModeCubit, ViewModeState>(
+                    builder: (context, viewMode) {
+                      return IconButton(
+                        icon: Icon(
+                          viewMode.isListView
+                              ? Icons.view_list
+                              : Icons.grid_view,
+                              
+                        ),
+                        onPressed: () {
+                          context.read<ViewModeCubit>().toggleViewMode();
+                          HapticFeedback.selectionClick();
+                        },
+                        tooltip: viewMode == ViewMode.grid
+                            ? 'Visualização em Lista'
+                            : 'Visualização em Grade',
+                      );
+                    },
+                  ), */
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert),
+                    tooltip: 'Mais opções',
+                    onSelected: (value) {
+                      if (value == 'rename') {
+                        _showRenameDialog();
+                      } else if (value == 'delete') {
+                        _showDeleteDialog();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'rename',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Renomear marcador',
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                          ],
+                        ),
                       ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Excluir marcador',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: Theme.of(context).colorScheme.error,
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(
+                            FontAwesomeIcons.trashCan, 
+                              size: 20,
+                              //color: Theme.of(context).colorScheme.error,
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Excluir marcador',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                               // color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
+          ),
         ),
         body: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, noteState) {

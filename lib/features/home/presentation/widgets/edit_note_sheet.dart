@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/note_colors_helper.dart';
 import '../../../../data/models/note_model.dart';
 import 'color_picker_widget.dart';
 
@@ -262,14 +261,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
                       height: 52,
                       child: ElevatedButton(
                         onPressed: _saveChanges,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
+                       
                         child: Text(
                           'Salvar alterações',
                           style: AppTextStyles.bodyMedium.copyWith(

@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
          BlocProvider<ViewModeCubit>(
-          create: (context) => ViewModeCubit(),
+          create: (context) => ViewModeCubit()..initializeViewMode(),
           lazy: false, 
         ),
 

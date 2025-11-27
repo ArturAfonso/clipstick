@@ -379,13 +379,13 @@ Future<void> updateNotesBatch(List<NoteEntity> notesToUpdate) async {
         notes,
         NotesCompanion.insert(
           id: note.id,
-          title: note.title as Value<String>,
+          title:  Value(note.title),
           content: note.content,
           color: note.color,
           position: note.position,
-          isPinned: note.isPinned as Value<bool>,
-          createdAt: note.createdAt ?? DateTime.now(),
-          updatedAt: note.updatedAt ?? DateTime.now(),
+          isPinned: Value(note.isPinned),
+          createdAt: note.createdAt ,
+          updatedAt: note.updatedAt ,
         ),
         mode: InsertMode.insertOrIgnore,
       );
