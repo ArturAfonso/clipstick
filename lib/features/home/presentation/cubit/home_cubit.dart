@@ -48,6 +48,8 @@ Future<void> addNotesBatch(List<NoteModel> notes) async {
 }
 
 Future<void> updateNote(NoteModel note) async {
+
+  
   emit(HomeLoading());
   try {
     await _noteRepository.updateNote(note);

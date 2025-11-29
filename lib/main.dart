@@ -11,11 +11,20 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:clipstick/core/di/service_locator.dart';
 
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
- await setupServiceLocator();
-  await dotenv.load(fileName: ".env");
+  const env = String.fromEnvironment('env', defaultValue: 'dev');
+  debugPrint('Environment: $env');
+  
+    await dotenv.load(fileName: env == 'prod' ? '.env.prod' : '.env.dev');
 
+
+ await setupServiceLocator();
+
+  
+MobileAds.instance.initialize();
   runApp(const MyApp());
 }
 

@@ -2,16 +2,20 @@ import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/note_model.dart';
 import 'color_picker_widget.dart';
+// ignore_for_file: deprecated_member_use
 
 class EditNoteSheet extends StatefulWidget {
   final NoteModel note; 
-
-  const EditNoteSheet({
+   final BannerAd? bannerAd;
+  
+   const EditNoteSheet({
     super.key,
     required this.note,
+    this.bannerAd,
   });
 
   @override
@@ -52,6 +56,12 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
         content: _contentController.text,
         color: _selectedColor,
         updatedAt: DateTime.now(),
+        createdAt: widget.note.createdAt,
+        id: widget.note.id,
+        isPinned: widget.note.isPinned,
+        position: widget.note.position,
+        tags: widget.note.tags,
+        
       );
 
       
@@ -271,6 +281,19 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 16),
+
+                     widget.bannerAd != null
+                       ? Container(
+                           alignment: Alignment.center,
+                           margin: EdgeInsets.only(top: 8),
+                           child: SizedBox(
+                             width: widget.bannerAd!.size.width.toDouble(),
+                             height: widget.bannerAd!.size.height.toDouble(),
+                             child: AdWidget(ad: widget.bannerAd!),
+                           ),
+                         )
+                       : SizedBox.shrink(),
                   ],
                 ),
               ),

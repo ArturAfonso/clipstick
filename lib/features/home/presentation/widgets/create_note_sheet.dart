@@ -3,12 +3,15 @@ import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'color_picker_widget.dart';
 import '../../../../core/theme/note_colors_helper.dart';
+// ignore_for_file: deprecated_member_use
 
 class CreateNoteSheet extends StatefulWidget {
-  const CreateNoteSheet({super.key});
+   final BannerAd? bannerAd;
+   const CreateNoteSheet({super.key, required this.bannerAd});
 
   @override
   State<CreateNoteSheet> createState() => _CreateNoteSheetState();
@@ -227,6 +230,18 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 16),
+                   widget.bannerAd != null
+                       ? Container(
+                           alignment: Alignment.center,
+                           margin: EdgeInsets.only(top: 8),
+                           child: SizedBox(
+                             width: widget.bannerAd!.size.width.toDouble(),
+                             height: widget.bannerAd!.size.height.toDouble(),
+                             child: AdWidget(ad: widget.bannerAd!),
+                           ),
+                         )
+                       : SizedBox.shrink(),
                   ],
                 ),
               ),

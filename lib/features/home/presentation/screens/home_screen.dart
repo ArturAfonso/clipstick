@@ -1,6 +1,6 @@
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
-
-
+import 'package:clipstick/config/app_config.dart';
 import 'package:clipstick/core/theme/app_colors.dart';
 import 'package:clipstick/core/theme/note_colors_helper.dart';
 import 'package:clipstick/core/theme/themetoggle_button.dart';
@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:reorderables/reorderables.dart';
 import 'package:share_plus/share_plus.dart';
@@ -39,30 +40,37 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _gridViewKey = GlobalKey();
 
-  
   final Set<String> _selectedNoteIds = {};
   bool _isDragging = false;
   int? _longPressedIndex;
 
-  
   Future<void> _togglePinSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
-    
     final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return;
 
     final notes = noteState.notes;
-    
+
     final allPinned = _selectedNoteIds.every((id) => notes.firstWhere((n) => n.id == id).isPinned);
 
-    
     final updatedNotes = notes
         .where((n) => _selectedNoteIds.contains(n.id))
-        .map((note) => note.copyWith(isPinned: !allPinned, updatedAt: DateTime.now()))
+        .map((note) => note.copyWith(
+          isPinned: !allPinned,
+           updatedAt: DateTime.now(),
+           color: note.color,
+           content: note.content,
+            title: note.title,
+          position: note.position,
+          tags: note.tags,
+          createdAt: note.createdAt,
+          id: note.id,
+
+           ),
+           )
         .toList();
 
-    
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
     _clearSelection();
@@ -81,15 +89,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _myBannerHome.load();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _myBannerHome.dispose();
     super.dispose();
   }
 
-  
   bool get _isSelectionMode => _selectedNoteIds.isNotEmpty;
 
   bool _isNoteSelected(String noteId) {
@@ -117,7 +126,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final count = _selectedNoteIds.length;
 
-    
     await context.read<HomeCubit>().deleteNotesBatch(_selectedNoteIds.toList());
 
     _clearSelection();
@@ -130,21 +138,50 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
   Future<bool> _onWillPop() async {
     if (_isSelectionMode) {
       _clearSelection();
-      return false; 
+      return false;
     }
-    return true; 
+    return true;
   }
+
+  final BannerAd _myBannerHome = BannerAd(
+    adUnitId: AppConfig.getAdmobBannerUnitId(), //'ca-app-pub-3940256099942544/9214589741', // Test Ad Unit ID
+    size: AdSize.banner,
+    request: AdRequest(),
+    listener: BannerAdListener(
+      onAdOpened: (Ad ad) {
+        debugPrint("Ad was opened.");
+      },
+      onAdFailedToLoad: (Ad ad, LoadAdError error) {
+        debugPrint('Ad failed to load: $error');
+        ad.dispose();
+      },
+      onAdClosed: (Ad ad) {
+        // Called when an ad removes an overlay that covers the screen.
+        debugPrint("Ad was closed.");
+      },
+      onAdImpression: (Ad ad) {
+        // Called when an impression occurs on the ad.
+        debugPrint("Ad recorded an impression.");
+      },
+      onAdClicked: (Ad ad) {
+        // Called when an a click event occurs on the ad.
+        debugPrint("Ad was clicked.");
+      },
+      onAdWillDismissScreen: (Ad ad) {
+        // iOS only. Called before dismissing a full screen view.
+        debugPrint("Ad will be dismissed.");
+      },
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
           child: SafeArea(
@@ -155,42 +192,62 @@ class _HomeScreenState extends State<HomeScreen> {
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 transitionBuilder: (child, animation) {
-                 return ScaleTransition(
+                  return ScaleTransition(
                     scale: animation,
                     alignment: Alignment.center,
                     child: FadeTransition(opacity: animation, child: child),
                   );
                 },
-                child: _isSelectionMode
-                    ? _buildSelectionAppBar(context) 
-                    : _buildNormalAppBar(context), 
+                child: _isSelectionMode ? _buildSelectionAppBar(context) : _buildNormalAppBar(context),
               ),
             ),
           ),
         ),
-       
+
         drawer: _buildDrawer(context),
 
-        body: BlocBuilder<HomeCubit, HomeState>(
-          builder: (context, noteState) {
-            if (noteState is HomeError) {
-              return Center(child: Text(noteState.message));
-            }
-            if (noteState is HomeLoading) {
-              return Center(child: CircularProgressIndicator());
-            }
-            List<NoteModel> notesFromDatabase = [];
-            if (noteState is HomeLoaded) {
-              notesFromDatabase = noteState.notes;
-            }
+        body: Column(
+          children: [
+            Expanded(
+              child: BlocBuilder<HomeCubit, HomeState>(
+                builder: (context, noteState) {
+                  if (noteState is HomeError) {
+                    return Center(child: Text(noteState.message));
+                  }
+                  if (noteState is HomeLoading) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  List<NoteModel> notesFromDatabase = [];
+                  if (noteState is HomeLoaded) {
+                    notesFromDatabase = noteState.notes;
+                  }
 
-            return BlocBuilder<ViewModeCubit, ViewModeState>(
-              builder: (context, state) {
-                return _buildNotesView(context, state, notesFromDb: notesFromDatabase);
-              },
-            );
-          },
+                  return BlocBuilder<ViewModeCubit, ViewModeState>(
+                    builder: (context, state) {
+                      return _buildNotesView(context, state, notesFromDb: notesFromDatabase);
+                    },
+                  );
+                },
+              ),
+            ),
+            /*   SizedBox(height: 10,),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 90.0,),
+              child: SizedBox(
+                 width: _myBanner.size.width.toDouble() ,
+                height: _myBanner.size.height.toDouble(), 
+                child: AdWidget(ad: _myBanner),
+              ),
+            ), 
+            */
+          ],
         ),
+        bottomNavigationBar: SizedBox(
+          width: _myBannerHome.size.width.toDouble(),
+          height: _myBannerHome.size.height.toDouble(),
+          child: AdWidget(ad: _myBannerHome),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: _isSelectionMode
             ? null
             : BlocBuilder<HomeCubit, HomeState>(
@@ -211,7 +268,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- 
   Widget _buildNormalAppBar(BuildContext context) {
     return AppBar(
       elevation: 10,
@@ -228,7 +284,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       title: Text('Minhas notas', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.bold)),
       actions: [
-       
         BlocBuilder<ViewModeCubit, ViewModeState>(
           builder: (context, state) {
             return AnimatedSwitcher(
@@ -247,7 +302,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 onPressed: () {
                   context.read<ViewModeCubit>().toggleViewMode();
-                
                 },
                 tooltip: state.isGridView ? 'Visualização em Lista' : 'Visualização em Grade',
                 style: IconButton.styleFrom(
@@ -266,8 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSelectionAppBar(BuildContext context) {
-   
-      final noteState = context.read<HomeCubit>().state;
+    final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return Container();
 
     final notes = noteState.notes;
@@ -291,7 +344,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       actions: [
-        
         IconButton(
           icon: Icon(
             allPinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -301,14 +353,12 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: allPinned ? 'Desfixar' : 'Fixar',
         ),
 
-        
         IconButton(
           icon: Icon(MdiIcons.tagOutline, color: Theme.of(context).colorScheme.surface),
           onPressed: _showTagSelectionDialog,
           tooltip: 'Adicionar marcadores',
         ),
 
-        
         IconButton(
           icon: Icon(Icons.palette_outlined),
           color: Theme.of(context).colorScheme.surface,
@@ -316,7 +366,6 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: 'Alterar cor',
         ),
 
-        
         IconButton(
           icon: Icon(FontAwesomeIcons.trashCan, size: 20),
           color: Theme.of(context).colorScheme.surface,
@@ -324,7 +373,6 @@ class _HomeScreenState extends State<HomeScreen> {
           tooltip: 'Excluir selecionadas',
         ),
 
-        
         PopupMenuButton<String>(
           icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.secondary),
           color: Theme.of(context).colorScheme.onSecondary,
@@ -340,7 +388,6 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           },
           itemBuilder: (context) => [
-            
             PopupMenuItem(
               value: 'copy',
               child: Row(
@@ -355,7 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            
             PopupMenuItem(
               value: 'share',
               child: Row(
@@ -380,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _duplicateSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
-     final noteState = context.read<HomeCubit>().state;
+    final noteState = context.read<HomeCubit>().state;
     if (noteState is! HomeLoaded) return;
 
     final notes = noteState.notes;
@@ -388,13 +434,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (final noteId in _selectedNoteIds) {
       final originalNote = notes.firstWhere((n) => n.id == noteId);
-     final duplicatedNote = NoteModel(
+      final duplicatedNote = NoteModel(
         id: Uuid().v4(),
         title: originalNote.title.isEmpty ? 'Sem título (cópia)' : '${originalNote.title} (cópia)',
         content: originalNote.content,
         color: originalNote.color,
         isPinned: false,
-        position: notes.length + newNotes.length, 
+        position: notes.length + newNotes.length,
         tags: originalNote.tags != null ? List<String>.from(originalNote.tags!) : null,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -403,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
       newNotes.add(duplicatedNote);
     }
 
-  await context.read<HomeCubit>().addNotesBatch(newNotes);
+    await context.read<HomeCubit>().addNotesBatch(newNotes);
 
     _clearSelection();
 
@@ -417,7 +463,8 @@ class _HomeScreenState extends State<HomeScreen> {
       duration: Duration(seconds: 2),
     );
   }
- void _shareSelectedNotes() async {
+
+  void _shareSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
 
     final noteState = context.read<HomeCubit>().state;
@@ -464,8 +511,8 @@ class _HomeScreenState extends State<HomeScreen> {
         'Erro ao Compartilhar',
         'Não foi possível compartilhar as notas',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.isDarkMode ?  AppColors.darkDestructive : AppColors.lightDestructive,
-        colorText:   AppColors.lightPrimaryForeground,
+        backgroundColor: Get.isDarkMode ? AppColors.darkDestructive : AppColors.lightDestructive,
+        colorText: AppColors.lightPrimaryForeground,
       );
     }
   }
@@ -476,16 +523,16 @@ class _HomeScreenState extends State<HomeScreen> {
     await Get.dialog(
       BlocBuilder<TagsCubit, TagsState>(
         builder: (context, tagState) {
-            if (tagState is TagsLoading) {
+          if (tagState is TagsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-         if (tagState is TagsLoaded) {
+          if (tagState is TagsLoaded) {
             final availableTags = tagState.tags;
             final theme = Theme.of(context);
             final colorScheme = theme.colorScheme;
 
-             if (availableTags.isEmpty) {
+            if (availableTags.isEmpty) {
               return Dialog(
                 backgroundColor: colorScheme.surface,
                 surfaceTintColor: Colors.transparent,
@@ -542,7 +589,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             }
 
-              final noteState = context.read<HomeCubit>().state;
+            final noteState = context.read<HomeCubit>().state;
             List<NoteModel> notes = [];
             if (noteState is HomeLoaded) {
               notes = noteState.notes;
@@ -557,11 +604,11 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             final Set<String> selectedTagIds = Set.from(currentTags);
-       return StatefulBuilder(
+            return StatefulBuilder(
               builder: (context, setDialogState) {
                 return Dialog(
                   backgroundColor: colorScheme.surface,
-                  surfaceTintColor: Colors.transparent, 
+                  surfaceTintColor: Colors.transparent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   insetPadding: const EdgeInsets.all(16),
                   child: Padding(
@@ -569,7 +616,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-     
                         Row(
                           children: [
                             Icon(MdiIcons.tagOutline, size: 24, color: colorScheme.primary),
@@ -584,7 +630,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 16),
 
-                   
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -646,13 +691,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     child: Row(
                                       children: [
-                                            Container(
+                                        Container(
                                           width: 10,
                                           height: 10,
                                           decoration: BoxDecoration(color: tagColor, shape: BoxShape.circle),
                                         ),
                                         const SizedBox(width: 12),
-                            
+
                                         Expanded(
                                           child: Text(
                                             tag.name,
@@ -661,7 +706,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                         ),
-                      
+
                                         if (isSelected)
                                           Container(
                                             padding: const EdgeInsets.all(2),
@@ -691,14 +736,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         const SizedBox(height: 24),
 
-                          Text(
+                        Text(
                           "Selecione um ou mais marcadores",
                           style: AppTextStyles.bodyMedium.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
 
                         const SizedBox(height: 16),
 
-     
                         Row(
                           children: [
                             Expanded(
@@ -755,7 +799,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final notes = noteState.notes;
     final updatedNotes = notes
         .where((n) => _selectedNoteIds.contains(n.id))
-        .map((note) => note.copyWith(tags: tagIds.isEmpty ? [] : tagIds, updatedAt: DateTime.now()))
+        .map((note) => note.copyWith(
+          tags: tagIds.isEmpty ? [] : tagIds, 
+          updatedAt: DateTime.now(),
+         color: note.color, 
+         content: note.content,
+          title: note.title,  
+          position: note.position,  
+          createdAt: note.createdAt,
+          id: note.id,  
+          isPinned: note.isPinned,
+
+                  ),
+          )
         .toList();
 
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
@@ -781,7 +837,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
-
 
   void _showDeleteConfirmationDialog(BuildContext context) {
     final count = _selectedNoteIds.length;
@@ -819,7 +874,6 @@ class _HomeScreenState extends State<HomeScreen> {
         : _buildListView(context, notesFromDb: notesFromDb);
   }
 
-  
   Widget _buildEmptyState(BuildContext context, ViewModeState state) {
     return Center(
       child: Column(
@@ -843,7 +897,6 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {
-           
               _showCreateNoteSheet(context);
             },
             icon: Icon(Icons.add),
@@ -853,6 +906,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
   Widget _buildGridView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     final pinnedNotes = notesFromDb.where((n) => n.isPinned).toList();
     final otherNotes = notesFromDb.where((n) => !n.isPinned).toList();
@@ -910,7 +964,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final reorderedNotes = reorderedListFunction(notesFromDb) as List<NoteModel>;
           context.read<HomeCubit>().reorderNotes(List<NoteModel>.from(reorderedNotes));
           setState(() {
-            _isDragging = true; 
+            _isDragging = true;
           });
         },
 
@@ -926,7 +980,7 @@ class _HomeScreenState extends State<HomeScreen> {
           HapticFeedback.lightImpact();
           Future.delayed(Duration(milliseconds: 100), () {
             if (!_isDragging && _longPressedIndex != null) {
-                 final noteId = notesFromDb[_longPressedIndex!].id;
+              final noteId = notesFromDb[_longPressedIndex!].id;
               setState(() {
                 _toggleNoteSelection(noteId);
                 _longPressedIndex = null;
@@ -959,7 +1013,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- Widget _buildSectionedGridView(
+  Widget _buildSectionedGridView(
     BuildContext context, {
     required List<NoteModel> pinnedNotes,
     required List<NoteModel> otherNotes,
@@ -970,46 +1024,35 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
           if (pinnedNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, 'FIXADOS', pinnedNotes.length),
+            _buildSectionHeader(context, 'FIXADAS', pinnedNotes.length),
             SizedBox(height: 12),
-            _buildReorderableGridSection(
-              context,
-              pinnedNotes,
-              isPinnedSection: true, 
-            ),
+            _buildReorderableGridSection(context, pinnedNotes, isPinnedSection: true),
             SizedBox(height: 24),
           ],
 
-          
           if (otherNotes.isNotEmpty) ...[
             _buildSectionHeader(context, 'OUTRAS', otherNotes.length),
             SizedBox(height: 12),
-            _buildReorderableGridSection(
-              context,
-              otherNotes,
-              isPinnedSection: false, 
-            ),
+            _buildReorderableGridSection(context, otherNotes, isPinnedSection: false),
           ],
         ],
       ),
     );
   }
 
- 
   Widget _buildSECTIONEDListView(
     BuildContext context, {
     required List<NoteModel> pinnedNotes,
     required List<NoteModel> otherNotes,
   }) {
-     Widget buildDraggableItem(BuildContext ctx, NoteModel note, int sectionIndex, int indexInSection) {
-       Offset? pointerDownPos;
+    Widget buildDraggableItem(BuildContext ctx, NoteModel note, int sectionIndex, int indexInSection) {
+      Offset? pointerDownPos;
       bool tapLock = false;
       bool didMove = false;
       late DateTime pointerDownTime;
-      const double moveThreshold = 6.0; 
-      const int longPressThresholdMs = 220; 
+      const double moveThreshold = 6.0;
+      const int longPressThresholdMs = 220;
 
       final isSelected = _isNoteSelected(note.id);
 
@@ -1020,7 +1063,7 @@ class _HomeScreenState extends State<HomeScreen> {
           pointerDownPos = ev.position;
           didMove = false;
           pointerDownTime = DateTime.now();
-             _longPressedIndex = indexInSection;
+          _longPressedIndex = indexInSection;
         },
 
         onPointerMove: (PointerMoveEvent ev) {
@@ -1028,7 +1071,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final distance = (ev.position - pointerDownPos!).distance;
             if (!didMove && distance > moveThreshold) {
               didMove = true;
-               _isDragging = true;
+              _isDragging = true;
               _longPressedIndex = null;
             }
           }
@@ -1037,27 +1080,27 @@ class _HomeScreenState extends State<HomeScreen> {
         onPointerUp: (PointerUpEvent ev) {
           final pressDuration = DateTime.now().difference(pointerDownTime).inMilliseconds;
           if (!didMove && pressDuration >= longPressThresholdMs) {
-                final noteId = note.id;
+            final noteId = note.id;
             setState(() {
               _toggleNoteSelection(noteId);
               _longPressedIndex = null;
             });
             HapticFeedback.selectionClick();
           } else {
-                if (!didMove && pressDuration < longPressThresholdMs) {
+            if (!didMove && pressDuration < longPressThresholdMs) {
               if (_isSelectionMode) {
                 setState(() => _toggleNoteSelection(note.id));
               } else {
-                     if (!tapLock) {
+                if (!tapLock) {
                   tapLock = true;
                   _openNote(context, note);
-                Future.delayed(Duration(milliseconds: 120), () {
+                  Future.delayed(Duration(milliseconds: 120), () {
                     tapLock = false;
                   });
                 }
               }
             }
-          Future.delayed(Duration(milliseconds: 100), () {
+            Future.delayed(Duration(milliseconds: 100), () {
               _isDragging = false;
               _longPressedIndex = null;
             });
@@ -1081,6 +1124,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+
     final pinnedChildren = List<Widget>.generate(
       pinnedNotes.length,
       (i) => KeyedSubtree(key: ValueKey(pinnedNotes[i].id), child: buildDraggableItem(context, pinnedNotes[i], 0, i)),
@@ -1092,34 +1136,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     return SingleChildScrollView(
-
       padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-       
           if (pinnedNotes.isNotEmpty) ...[
             _buildSectionHeader(context, 'FIXADOS', pinnedNotes.length),
             SizedBox(height: 12),
 
             ReorderableColumn(
-               crossAxisAlignment: CrossAxisAlignment.start,
-              needsLongPressDraggable: true, 
+              crossAxisAlignment: CrossAxisAlignment.start,
+              needsLongPressDraggable: true,
               children: pinnedChildren,
               onReorder: (oldIndex, newIndex) {
-                 final reorderedPinned = List<NoteModel>.from(pinnedNotes);
+                final reorderedPinned = List<NoteModel>.from(pinnedNotes);
                 final movedNote = reorderedPinned.removeAt(oldIndex);
                 reorderedPinned.insert(newIndex, movedNote);
 
-            
                 final newOrder = [...reorderedPinned, ...otherNotes];
 
-                
                 for (int i = 0; i < newOrder.length; i++) {
                   newOrder[i] = newOrder[i].copyWith(position: i);
                 }
 
-               
                 context.read<HomeCubit>().reorderNotes(newOrder);
 
                 HapticFeedback.lightImpact();
@@ -1129,7 +1168,6 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 24),
           ],
 
-          
           if (otherNotes.isNotEmpty) ...[
             _buildSectionHeader(context, 'OUTRAS', otherNotes.length),
             SizedBox(height: 12),
@@ -1139,15 +1177,15 @@ class _HomeScreenState extends State<HomeScreen> {
               needsLongPressDraggable: true,
               children: otherChildren,
               onReorder: (oldIndex, newIndex) {
-                  final reorderedOthers = List<NoteModel>.from(otherNotes);
+                final reorderedOthers = List<NoteModel>.from(otherNotes);
                 final movedNote = reorderedOthers.removeAt(oldIndex);
                 reorderedOthers.insert(newIndex, movedNote);
-     final newOrder = [...pinnedNotes, ...reorderedOthers];
-       for (int i = 0; i < newOrder.length; i++) {
+                final newOrder = [...pinnedNotes, ...reorderedOthers];
+                for (int i = 0; i < newOrder.length; i++) {
                   newOrder[i] = newOrder[i].copyWith(position: i);
                 }
 
-                      context.read<HomeCubit>().reorderNotes(newOrder);
+                context.read<HomeCubit>().reorderNotes(newOrder);
 
                 HapticFeedback.lightImpact();
               },
@@ -1193,24 +1231,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       onReorder: (ReorderedListFunction reorderedListFunction) {
-        
-         final reorderedSection = reorderedListFunction(tratedNotes) as List<NoteModel>;
+        final reorderedSection = reorderedListFunction(tratedNotes) as List<NoteModel>;
 
-     final homeCubit = context.read<HomeCubit>();
+        final homeCubit = context.read<HomeCubit>();
         final state = homeCubit.state;
         if (state is HomeLoaded) {
           final allNotes = List<NoteModel>.from(state.notes);
-      final otherSection = isPinnedSection
+          final otherSection = isPinnedSection
               ? allNotes.where((n) => !n.isPinned).toList()
               : allNotes.where((n) => n.isPinned).toList();
 
-            final newOrder = isPinnedSection
+          final newOrder = isPinnedSection
               ? [...reorderedSection, ...otherSection]
               : [...otherSection, ...reorderedSection];
           for (int i = 0; i < newOrder.length; i++) {
             newOrder[i] = newOrder[i].copyWith(position: i);
           }
-        homeCubit.reorderNotes(newOrder);
+          homeCubit.reorderNotes(newOrder);
         }
         setState(() {
           _isDragging = true;
@@ -1229,7 +1266,6 @@ class _HomeScreenState extends State<HomeScreen> {
         HapticFeedback.lightImpact();
         Future.delayed(Duration(milliseconds: 100), () {
           if (!_isDragging && _longPressedIndex != null) {
-            
             final noteId = tratedNotes[_longPressedIndex!].id;
             setState(() {
               _toggleNoteSelection(noteId);
@@ -1265,9 +1301,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSectionHeader(BuildContext context, String title, int count) {
     return Row(
       children: [
-        Expanded(child: Divider(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        )),
+        Expanded(child: Divider(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Text(
@@ -1278,7 +1312,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-         Expanded(child: Divider( color: Theme.of(context).colorScheme.onSurfaceVariant,)),
+        Expanded(child: Divider(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         /* SizedBox(width: 8),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1338,7 +1372,7 @@ class _HomeScreenState extends State<HomeScreen> {
             });
             HapticFeedback.selectionClick();
           } else if (!didMove && pressDuration < longPressThresholdMs) {
-           if (_isSelectionMode) {
+            if (_isSelectionMode) {
               setState(() => _toggleNoteSelection(note.id));
             } else {
               _openNote(context, note);
@@ -1389,18 +1423,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
-   Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
+  Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
     final isSelected = _isNoteSelected(note.id);
 
+     
+
     return GestureDetector(
-      key: Key(note.id), 
+      key: Key(note.id),
       onTap: () {
         if (_isSelectionMode) {
-           _toggleNoteSelection(note.id);
+          _toggleNoteSelection(note.id);
           HapticFeedback.selectionClick();
         } else {
-             _openNote(context, note);
+          _openNote(context, note);
         }
       },
 
@@ -1408,7 +1443,7 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: Duration(milliseconds: 200),
         curve: Curves.easeOut,
 
-            decoration: BoxDecoration(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 3),
           boxShadow: isSelected
@@ -1435,7 +1470,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Row(
                   children: [
-                      if (isSelected)
+                    if (isSelected)
                       Container(
                         padding: EdgeInsets.all(4),
                         margin: EdgeInsets.only(right: 8),
@@ -1448,7 +1483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         note.title,
                         style: AppTextStyles.bodyLarge.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: AppColors.getTextColor(note.color),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1461,7 +1496,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     note.content,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                      color: AppColors.getTextColor(note.color),
                     ),
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
@@ -1478,7 +1513,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   Widget _buildTagsRow(BuildContext context, NoteModel note) {
     if (note.tags == null || note.tags!.isEmpty) {
@@ -1516,14 +1550,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     Icon(
                       MdiIcons.tagOutline,
                       size: 10,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color:  AppColors.getTextColor(note.color).withOpacity(0.6),
                     ),
                     SizedBox(width: 3),
                     Text(
                       tagName,
                       style: AppTextStyles.bodySmall.copyWith(
-                        
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        color:  AppColors.getTextColor(note.color).withOpacity(0.7),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1553,8 +1586,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-
   Widget _buildListNoteCard(BuildContext context, NoteModel note, bool isSelected, {Key? key}) {
     final cardElevation = isSelected ? 6.0 : 2.0;
     var realceColor = NoteColorsHelper.getAvailableColors(context).contains(note.color);
@@ -1574,7 +1605,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Card(
           key: key ?? ValueKey(note.id),
-          
+
           elevation: cardElevation,
           shadowColor: Theme.of(context).colorScheme.shadow,
           color: note.color,
@@ -1586,7 +1617,7 @@ class _HomeScreenState extends State<HomeScreen> {
               note.title,
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.bold,
-                color:  Theme.of(context).colorScheme.onSurface,
+                color:  AppColors.getTextColor(note.color),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1599,7 +1630,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     note.content,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                      color:  AppColors.getTextColor(note.color).withOpacity(0.8),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -1615,8 +1646,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- 
   void _openNote(BuildContext context, NoteModel note) {
+    BannerAd? myBannerEditNote = BannerAd(
+      adUnitId: AppConfig.getAdmobBannerUnitId(),
+      size: AdSize.largeBanner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdFailedToLoad: (ad, error) {
+          debugPrint("Modal banner failed: $error");
+          ad.dispose();
+        },
+      ),
+    )..load();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1625,20 +1667,22 @@ class _HomeScreenState extends State<HomeScreen> {
         initialChildSize: 0.75,
         minChildSize: 0.5,
         maxChildSize: 0.95,
-        builder: (context, scrollController) => EditNoteSheet(note: note),
+        builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote),
       ),
     ).then((result) {
       if (result != null) {
         final homeCubit = context.read<HomeCubit>();
         if (result == 'delete') {
-         homeCubit.deleteNote(note.id);
+          homeCubit.deleteNote(note.id);
         } else if (result is NoteModel) {
-         homeCubit.updateNote(result);
+          homeCubit.loadNotes();
         }
       }
+    }).whenComplete(() {
+      myBannerEditNote?.dispose();
+      myBannerEditNote = null;
     });
   }
-
 
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(
@@ -1657,6 +1701,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCreateNoteSheet(BuildContext context) {
+    BannerAd? myBannerCreateNote = BannerAd(
+      adUnitId: AppConfig.getAdmobBannerUnitId(),
+      size: AdSize.largeBanner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdFailedToLoad: (ad, error) {
+          debugPrint("Modal banner failed: $error");
+          ad.dispose();
+        },
+      ),
+    )..load();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1665,9 +1721,12 @@ class _HomeScreenState extends State<HomeScreen> {
         initialChildSize: 0.75,
         minChildSize: 0.5,
         maxChildSize: 0.95,
-        builder: (context, scrollController) => CreateNoteSheet(),
+        builder: (context, scrollController) => CreateNoteSheet(bannerAd: myBannerCreateNote),
       ),
-    );
+    ).whenComplete(() {
+      myBannerCreateNote?.dispose();
+      myBannerCreateNote = null;
+    });
   }
 
   void _changeColorOfSelectedNotes() async {
@@ -1695,7 +1754,16 @@ class _HomeScreenState extends State<HomeScreen> {
       final count = _selectedNoteIds.length;
 
       final updatedNotes = selectedNotes
-          .map((note) => note.copyWith(color: selectedColor, updatedAt: DateTime.now()))
+          .map((note) => note.copyWith(
+            content: note.content,
+            title: note.title,  
+            position: note.position,    
+            createdAt: note.createdAt,  
+            id: note.id,
+            isPinned: note.isPinned,
+            tags: note.tags,  
+
+            color: selectedColor, updatedAt: DateTime.now()))
           .toList();
 
       await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
@@ -1737,7 +1805,6 @@ class _HomeScreenState extends State<HomeScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -1776,12 +1843,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 else
-                  ...tags.map(
-                    (tag) => _buildTagItem(
-                      context,
-                      tag,
-                    ),
-                  ),
+                  ...tags.map((tag) => _buildTagItem(context, tag)),
 
               SizedBox(height: 8),
 
@@ -1803,7 +1865,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   Get.to(() => EditTagsScreen());
                 },
               ),
-
             ],
           );
         }
@@ -1813,7 +1874,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTagItem(BuildContext context, TagModel tag) {
-    
     final noteState = context.read<HomeCubit>().state;
     List<NoteModel> notes = [];
     if (noteState is HomeLoaded) {
@@ -1844,7 +1904,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           : null,
       onTap: () {
-        Get.back(); 
+        Get.back();
         Get.to(() => TagViewScreen(tag: tag));
       },
     );
@@ -1855,76 +1915,90 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-           SizedBox(
-            height: 120,
-            child: DrawerHeader(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12), 
-                    child: Image.asset('assets/clipstick-logo.png', width: 54, height: 54, fit: BoxFit.cover),
-                  ),
-                  SizedBox(width: 8),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ClipStick',
-                        style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Suas notas organizadas',
-                        style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          Padding(
+      padding: const EdgeInsets.only(
+        top: 40, 
+        left: 16,
+        bottom: 16, 
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset('assets/clipstick-logo.png', width: 54, height: 54, fit: BoxFit.cover),
           ),
+          SizedBox(width: 8),
+          Column(
+           
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ClipStick',
+                style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Suas notas organizadas',
+                style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+     Divider(
+      height: 1, 
+      thickness: 1, 
+      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3), 
+    ),
 
           _buildTagsSection(context),
 
-          Divider(),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
+          ),
 
           ThemeToggleButton(),
- ListTile(
+            //funcionalidade sera implementada no futuro
+          /* ListTile(
             leading: Icon(Icons.settings_outlined),
             title: Text('Configurações'),
             onTap: () {
               Navigator.pop(context);
               Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
-          ),
-          ListTile(
+          ), */
+            //funcionalidade sera implementada no futuro
+         /*  ListTile(
             leading: Icon(MdiIcons.databaseArrowDownOutline),
             title: Text('Backup Local'),
             onTap: () {
               Navigator.pop(context);
               Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
-          ),
-          ListTile(
+          ), */
+            //funcionalidade sera implementada no futuro
+         /*  ListTile(
             leading: Icon(Icons.login_outlined),
             title: Text('Entrar'),
             onTap: () {
               Navigator.pop(context);
               Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
-          ),
-          ListTile(
+          ), */
+          //funcionalidade sera implementada no futuro
+          /* ListTile(
             leading: Icon(Icons.person_add_outlined),
             title: Text('Cadastrar'),
             onTap: () {
               Navigator.pop(context);
               Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
-          ),
+          ), */
 
-          
           ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Sobre'),

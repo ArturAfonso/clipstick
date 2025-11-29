@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_text_styles.dart';
-
+// ignore_for_file: deprecated_member_use
 class TagInputField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode focusNode;

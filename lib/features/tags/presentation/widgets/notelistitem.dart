@@ -1,4 +1,6 @@
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:clipstick/data/models/tag_model.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
@@ -73,7 +75,7 @@ class NoteListItem extends StatelessWidget {
                     Expanded(
                       child: Text(
                         note.title.isEmpty ? 'Sem título' : note.title,
-                        style: AppTextStyles.headingSmall.copyWith(
+                        style: AppTextStyles.headingMedium.copyWith(
                           color: _getTextColor(noteColor),
                           fontStyle: note.title.isEmpty ? FontStyle.italic : FontStyle.normal,
                         ),
@@ -165,13 +167,13 @@ class NoteListItem extends StatelessWidget {
                 ],
 
                 
-                SizedBox(height: 12),
+               /*  SizedBox(height: 12),
                 Text(
                   _formatDate(note.updatedAt!),
                   style: AppTextStyles.bodySmall.copyWith(
                     color: _getTextColor(noteColor).withOpacity(0.6),
                   ),
-                ),
+                ), */
               ],
             ),
           ),
@@ -187,7 +189,7 @@ class NoteListItem extends StatelessWidget {
   }
 
   
-  String _formatDate(DateTime date) {
+ /*  String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
@@ -202,5 +204,5 @@ class NoteListItem extends StatelessWidget {
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }
-  }
+  } */
 }

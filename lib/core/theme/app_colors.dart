@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+static Color getTextColor(Color backgroundColor) {
+    final luminance = backgroundColor.computeLuminance();
+    return luminance > 0.5 ? Colors.black : Colors.white;
+  }
+
+
   // ============================================
   // 🌞 LIGHT THEME - BASEADO NO FIGMA 
   // ============================================

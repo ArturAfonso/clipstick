@@ -9,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/tag_model.dart';
 import '../widgets/tag_input_field.dart';
 import '../widgets/tag_item_widget.dart';
+// ignore_for_file: deprecated_member_use
 
 class EditTagsScreen extends StatefulWidget {
   const EditTagsScreen({super.key});

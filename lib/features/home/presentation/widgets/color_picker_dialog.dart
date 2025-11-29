@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_text_styles.dart';
+// ignore_for_file: deprecated_member_use
 
 class ColorPickerDialog extends StatefulWidget {
   final Color? initialColor;

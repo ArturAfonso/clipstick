@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
@@ -119,7 +121,9 @@ class ColorPickerWidget extends StatelessWidget {
         child: isNeutral
           ? Icon(
               Icons.format_color_reset, 
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: isSelected 
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline,
               size: 24,
             )
           : isSelected
