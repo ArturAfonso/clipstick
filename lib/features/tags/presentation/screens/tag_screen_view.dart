@@ -68,7 +68,7 @@ class _TagViewScreenState extends State<TagViewScreen> {
   }
 
   void _renameTag(String newName) {
-    context.read<TagsCubit>().updateTag(_currentTag.copyWith(name: newName, updatedAt: DateTime.now()));
+    context.read<TagsCubit>().updateTag(_currentTag.copyWith(name: newName, updatedAt: DateTime.now()), context);
     setState(() {
       _currentTag = _currentTag.copyWith(name: newName, updatedAt: DateTime.now());
     });
@@ -143,7 +143,7 @@ class _TagViewScreenState extends State<TagViewScreen> {
       }
     }
 
-    context.read<TagsCubit>().deleteTag(_currentTag.id);
+    context.read<TagsCubit>().deleteTag(_currentTag.id, context);
 
     HapticFeedback.heavyImpact();
 

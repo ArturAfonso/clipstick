@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:clipstick/config/app_config.dart';
+import 'package:clipstick/core/database/database.dart';
+import 'package:clipstick/core/routes/app_routes.dart';
 import 'package:clipstick/core/theme/app_colors.dart';
 import 'package:clipstick/core/theme/note_colors_helper.dart';
 import 'package:clipstick/core/theme/themetoggle_button.dart';
@@ -14,6 +16,7 @@ import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
 import 'package:clipstick/features/tags/presentation/screens/edit_tags_screen.dart';
 import 'package:clipstick/features/tags/presentation/screens/tag_screen_view.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,6 +24,7 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:reorderables/reorderables.dart';
+import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -28,6 +32,10 @@ import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
 import '../widgets/create_note_sheet.dart';
 import '../widgets/edit_note_sheet.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:clipstick/core/di/service_locator.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,19 +64,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final updatedNotes = notes
         .where((n) => _selectedNoteIds.contains(n.id))
-        .map((note) => note.copyWith(
-          isPinned: !allPinned,
-           updatedAt: DateTime.now(),
-           color: note.color,
-           content: note.content,
+        .map(
+          (note) => note.copyWith(
+            isPinned: !allPinned,
+            updatedAt: DateTime.now(),
+            color: note.color,
+            content: note.content,
             title: note.title,
-          position: note.position,
-          tags: note.tags,
-          createdAt: note.createdAt,
-          id: note.id,
-
-           ),
-           )
+            position: note.position,
+            tags: note.tags,
+            createdAt: note.createdAt,
+            id: note.id,
+          ),
+        )
         .toList();
 
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
@@ -799,19 +807,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final notes = noteState.notes;
     final updatedNotes = notes
         .where((n) => _selectedNoteIds.contains(n.id))
-        .map((note) => note.copyWith(
-          tags: tagIds.isEmpty ? [] : tagIds, 
-          updatedAt: DateTime.now(),
-         color: note.color, 
-         content: note.content,
-          title: note.title,  
-          position: note.position,  
-          createdAt: note.createdAt,
-          id: note.id,  
-          isPinned: note.isPinned,
-
-                  ),
-          )
+        .map(
+          (note) => note.copyWith(
+            tags: tagIds.isEmpty ? [] : tagIds,
+            updatedAt: DateTime.now(),
+            color: note.color,
+            content: note.content,
+            title: note.title,
+            position: note.position,
+            createdAt: note.createdAt,
+            id: note.id,
+            isPinned: note.isPinned,
+          ),
+        )
         .toList();
 
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
@@ -1426,8 +1434,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
     final isSelected = _isNoteSelected(note.id);
 
-     
-
     return GestureDetector(
       key: Key(note.id),
       onTap: () {
@@ -1495,9 +1501,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Text(
                     note.content,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.getTextColor(note.color),
-                    ),
+                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextColor(note.color)),
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1547,16 +1551,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      MdiIcons.tagOutline,
-                      size: 10,
-                      color:  AppColors.getTextColor(note.color).withOpacity(0.6),
-                    ),
+                    Icon(MdiIcons.tagOutline, size: 10, color: AppColors.getTextColor(note.color).withOpacity(0.6)),
                     SizedBox(width: 3),
                     Text(
                       tagName,
                       style: AppTextStyles.bodySmall.copyWith(
-                        color:  AppColors.getTextColor(note.color).withOpacity(0.7),
+                        color: AppColors.getTextColor(note.color).withOpacity(0.7),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1617,7 +1617,7 @@ class _HomeScreenState extends State<HomeScreen> {
               note.title,
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.bold,
-                color:  AppColors.getTextColor(note.color),
+                color: AppColors.getTextColor(note.color),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1630,7 +1630,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     note.content,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color:  AppColors.getTextColor(note.color).withOpacity(0.8),
+                      color: AppColors.getTextColor(note.color).withOpacity(0.8),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -1660,28 +1660,30 @@ class _HomeScreenState extends State<HomeScreen> {
     )..load();
 
     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote),
-      ),
-    ).then((result) {
-      if (result != null) {
-        final homeCubit = context.read<HomeCubit>();
-        if (result == 'delete') {
-          homeCubit.deleteNote(note.id);
-        } else if (result is NoteModel) {
-          homeCubit.loadNotes();
-        }
-      }
-    }).whenComplete(() {
-      myBannerEditNote?.dispose();
-      myBannerEditNote = null;
-    });
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => DraggableScrollableSheet(
+            initialChildSize: 0.75,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote),
+          ),
+        )
+        .then((result) {
+          if (result != null) {
+            final homeCubit = context.read<HomeCubit>();
+            if (result == 'delete') {
+              homeCubit.deleteNote(note.id);
+            } else if (result is NoteModel) {
+              homeCubit.loadNotes();
+            }
+          }
+        })
+        .whenComplete(() {
+          myBannerEditNote?.dispose();
+          myBannerEditNote = null;
+        });
   }
 
   void _showAboutDialog(BuildContext context) {
@@ -1754,16 +1756,20 @@ class _HomeScreenState extends State<HomeScreen> {
       final count = _selectedNoteIds.length;
 
       final updatedNotes = selectedNotes
-          .map((note) => note.copyWith(
-            content: note.content,
-            title: note.title,  
-            position: note.position,    
-            createdAt: note.createdAt,  
-            id: note.id,
-            isPinned: note.isPinned,
-            tags: note.tags,  
+          .map(
+            (note) => note.copyWith(
+              content: note.content,
+              title: note.title,
+              position: note.position,
+              createdAt: note.createdAt,
+              id: note.id,
+              isPinned: note.isPinned,
+              tags: note.tags,
 
-            color: selectedColor, updatedAt: DateTime.now()))
+              color: selectedColor,
+              updatedAt: DateTime.now(),
+            ),
+          )
           .toList();
 
       await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
@@ -1916,53 +1922,41 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: EdgeInsets.zero,
         children: [
           Padding(
-      padding: const EdgeInsets.only(
-        top: 40, 
-        left: 16,
-        bottom: 16, 
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset('assets/clipstick-logo.png', width: 54, height: 54, fit: BoxFit.cover),
+            padding: const EdgeInsets.only(top: 40, left: 16, bottom: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset('assets/clipstick-logo.png', width: 54, height: 54, fit: BoxFit.cover),
+                ),
+                SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ClipStick',
+                      style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Suas notas organizadas',
+                      style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
+                    Text(String.fromEnvironment('env', defaultValue: 'dev')),
+                  ],
+                ),
+              ],
+            ),
           ),
-          SizedBox(width: 8),
-          Column(
-           
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'ClipStick',
-                style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Suas notas organizadas',
-                style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-     Divider(
-      height: 1, 
-      thickness: 1, 
-      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3), 
-    ),
+          Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
 
           _buildTagsSection(context),
 
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3),
-          ),
+          Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
 
           ThemeToggleButton(),
-            //funcionalidade sera implementada no futuro
+          //funcionalidade sera implementada no futuro
           /* ListTile(
             leading: Icon(Icons.settings_outlined),
             title: Text('Configurações'),
@@ -1971,17 +1965,28 @@ class _HomeScreenState extends State<HomeScreen> {
               Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
           ), */
-            //funcionalidade sera implementada no futuro
-         /*  ListTile(
-            leading: Icon(MdiIcons.databaseArrowDownOutline),
-            title: Text('Backup Local'),
+          //funcionalidade sera implementada no futuro
+          ListTile(
+            leading: Icon(MdiIcons.databaseArrowUpOutline),
+            title: Text('Fazer Backup Local'),
             onTap: () {
               Navigator.pop(context);
-              Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
+              backupDatabase();
+              //  Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
-          ), */
-            //funcionalidade sera implementada no futuro
-         /*  ListTile(
+          ),
+          ListTile(
+            leading: Icon(MdiIcons.databaseArrowDownOutline),
+            title: Text('Restaurar Backup'),
+            onTap: () {
+              Navigator.pop(context);
+              restoreDatabase();
+              //  Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
+            },
+          ),
+
+          //funcionalidade sera implementada no futuro
+          /*  ListTile(
             leading: Icon(Icons.login_outlined),
             title: Text('Entrar'),
             onTap: () {
@@ -1998,7 +2003,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
           ), */
-
           ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Sobre'),
@@ -2010,5 +2014,99 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> showLoadingDialog(BuildContext context, {String? message}) async {
+  return showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => WillPopScope(
+      onWillPop: () async => false,
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            if (message != null) ...[
+              SizedBox(height: 16),
+              Text(message, style: TextStyle(color: Colors.white)),
+            ]
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+  Future<void> backupDatabase() async {
+    await sl<AppDatabase>().close();
+
+  final dbDir = await getApplicationDocumentsDirectory();
+  final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
+  final dbBytes = await dbFile.readAsBytes();
+
+  String? outputPath = await FilePicker.platform.saveFile(
+    dialogTitle: 'Salvar backup do ClipStick',
+    fileName: 'clipstick_backup.sqlite',
+    type: FileType.custom,
+    allowedExtensions: ['sqlite'],
+    bytes: dbBytes,
+  );
+
+  if (outputPath != null) {
+    // Mostra o loading (não use await aqui!)
+    showLoadingDialog(context, message: 'Realizando backup...');
+
+    // Simula tempo de processamento (opcional)
+    await Future.delayed(Duration(seconds: 2));
+
+    // Fecha o loading
+    Navigator.of(context, rootNavigator: true).pop();
+
+    print('Backup salvo em: $outputPath');
+    Get.snackbar('Backup', 'Backup salvo em: $outputPath');
+  } else {
+    print('Backup cancelado');
+  }
+
+  await cleanupServiceLocator();
+  await setupServiceLocator();
+  Restart.restartApp();
+  }
+
+  Future<void> restoreDatabase() async { 
+     await sl<AppDatabase>().close();
+
+  FilePickerResult? result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['sqlite'],
+  );
+
+  if (result != null && result.files.single.path != null) {
+    final backupFile = File(result.files.single.path!);
+
+    // Mostra o loading (não use await aqui!)
+    showLoadingDialog(context, message: 'Restaurando backup...');
+
+    await Future.delayed(Duration(seconds: 1));
+
+    final dbDir = await getApplicationDocumentsDirectory();
+    final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
+    await backupFile.copy(dbFile.path);
+
+    // Fecha o loading
+    Navigator.of(context, rootNavigator: true).pop();
+
+    print('Banco restaurado com sucesso!');
+    Get.snackbar('Backup', 'Banco restaurado com sucesso!');
+  } else {
+    print('Restauração cancelada');
+  }
+
+  await cleanupServiceLocator();
+  await setupServiceLocator();
+  Restart.restartApp();
   }
 }
