@@ -39,8 +39,11 @@ dependencies:
   #banco de dados
   drift: ^2.29.0
   sqlite3_flutter_libs: ^0.5.0
+  sqlite3: ^2.4.0
   path_provider: ^2.1.1
   path: ^1.9.0
+  saf: 1.0.4
+  permission_handler: ^12.0.1
   get_it: ^9.0.5
   font_awesome_flutter: ^10.12.0
   material_design_icons_flutter: 6.0.7296

@@ -19,29 +19,29 @@ class AppTheme {
     colorScheme:  ColorScheme.light(
       brightness: Brightness.light,
       
-       primary: _hsl(220, 15, 20), // --primary - preto
-      onPrimary: _hsl(0, 0, 100), // --primary-foreground - branco
+       primary: hsl(220, 15, 20), // --primary - preto
+      onPrimary: hsl(0, 0, 100), // --primary-foreground - branco
 
       
-      secondary: _hsl(210, 15, 92), // --secondary - branco
-      onSecondary: _hsl(220, 15, 20), // --secondary-foreground  - preto
+      secondary: hsl(210, 15, 92), // --secondary - branco
+      onSecondary: hsl(220, 15, 20), // --secondary-foreground  - preto
 
-      tertiary: _hsl(45, 100, 65), // Usando --accent como Tertiary - amarelo
-      onTertiary: _hsl(220, 15, 20), // --accent-foreground - preto
+      tertiary: hsl(45, 100, 65), // Usando --accent como Tertiary - amarelo
+      onTertiary: hsl(220, 15, 20), // --accent-foreground - preto
       
-       error: _hsl(0, 85, 60), // --destructive - vermelho
-      onError: _hsl(0, 0, 100), // --destructive-foreground- branco
+       error: hsl(0, 85, 60), // --destructive - vermelho
+      onError: hsl(0, 0, 100), // --destructive-foreground- branco
 
       
-       surface: _hsl(0, 0, 100), // --card  - branco
-      onSurface: _hsl(220, 15, 20), // --card-foreground - preto
+       surface: hsl(0, 0, 100), // --card  - branco
+      onSurface: hsl(220, 15, 20), // --card-foreground - preto
 
       
      
 
-      outline: _hsl(210, 15, 88), // --border - cinza
- surfaceContainerHighest: _hsl(210, 15, 95), // --input / --muted - cinza claro
-      onSurfaceVariant: _hsl(220, 10, 50), // --muted-foreground - cinza escuro
+      outline: hsl(210, 15, 88), // --border - cinza
+ surfaceContainerHighest: hsl(210, 15, 95), // --input / --muted - cinza claro
+      onSurfaceVariant: hsl(220, 10, 50), // --muted-foreground - cinza escuro
 
       
       
@@ -50,8 +50,8 @@ class AppTheme {
     ),
       elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: _hsl(220, 15, 20), // --primary - preto claro
-        foregroundColor: _hsl(210, 20, 95), // --primary (Branco)  
+        backgroundColor: hsl(220, 15, 20), // --primary - preto claro
+        foregroundColor: hsl(210, 20, 95), // --primary (Branco)  
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -117,45 +117,45 @@ class AppTheme {
     // Color Scheme - EXATAMENTE DO FIGMA
     colorScheme:  ColorScheme.dark(
       brightness: Brightness.dark,
-       primary: _hsl(210, 20, 95), // --primary (Branco no dark mode)
-      onPrimary: _hsl(220, 20, 12), // --primary-foreground preto
+       primary: hsl(210, 20, 95), // --primary (Branco no dark mode)
+      onPrimary: hsl(220, 20, 12), // --primary-foreground preto
       
-      secondary: _hsl(220, 15, 20), // --secondary - preto claro
-      onSecondary: _hsl(210, 20, 95), // --secondary-foreground - branco
+      secondary: hsl(220, 15, 20), // --secondary - preto claro
+      onSecondary: hsl(210, 20, 95), // --secondary-foreground - branco
       
-      tertiary: _hsl(45, 95, 60), // --accent - amarelo
-      onTertiary: _hsl(220, 20, 12), // --accent-foreground - preto
+      tertiary: hsl(45, 95, 60), // --accent - amarelo
+      onTertiary: hsl(220, 20, 12), // --accent-foreground - preto
       
-      error: _hsl(0, 75, 55), // --destructive
-      onError: _hsl(210, 20, 95), // --destructive-foreground
+      error: hsl(0, 75, 55), // --destructive
+      onError: hsl(210, 20, 95), // --destructive-foreground
       
-      surface: _hsl(220, 18, 15), // --card  - preto escuro
-      onSurface: _hsl(210, 20, 95), // --card-foreground  - branco
+      surface: hsl(220, 18, 15), // --card  - preto escuro
+      onSurface: hsl(210, 20, 95), // --card-foreground  - branco
 
-      outline: _hsl(220, 15, 22), // --border - cinza escuro
-      surfaceContainerHighest: _hsl(220, 15, 20), // --input / --muted - preto claro
-      onSurfaceVariant: _hsl(215, 15, 65), // --muted-foreground - cinza claro
+      outline: hsl(220, 15, 22), // --border - cinza escuro
+      surfaceContainerHighest: hsl(220, 15, 20), // --input / --muted - preto claro
+      onSurfaceVariant: hsl(215, 15, 65), // --muted-foreground - cinza claro
     ),
 
     
     
     appBarTheme: AppBarTheme(
-      backgroundColor: _hsl(220, 15, 20), // --input / --muted - preto claro
-      foregroundColor: _hsl(210, 20, 95), // --secondary-foreground - branco
-      surfaceTintColor: _hsl(220, 15, 20), // --input / --muted - preto claro
+      backgroundColor: hsl(220, 15, 20), // --input / --muted - preto claro
+      foregroundColor: hsl(210, 20, 95), // --secondary-foreground - branco
+      surfaceTintColor: hsl(220, 15, 20), // --input / --muted - preto claro
       elevation: 0,
       scrolledUnderElevation: 1,
       centerTitle: false,
       titleTextStyle: AppTextStyles.headingMedium.copyWith(
-        color:  _hsl(210, 20, 95), // --secondary-foreground - branco
+        color:  hsl(210, 20, 95), // --secondary-foreground - branco
         fontWeight: FontWeight.w600,
       ),
       iconTheme: IconThemeData(
-        color:   _hsl(210, 20, 95), // --secondary-foreground - branco
+        color:   hsl(210, 20, 95), // --secondary-foreground - branco
         size: 24,
       ),
       actionsIconTheme: IconThemeData(
-        color:  _hsl(210, 20, 95), // --secondary-foreground - branco
+        color:  hsl(210, 20, 95), // --secondary-foreground - branco
         size: 24,
       ),
       systemOverlayStyle: const SystemUiOverlayStyle(
@@ -166,7 +166,7 @@ class AppTheme {
     ),
     
    
-    scaffoldBackgroundColor: _hsl(220, 18, 15), //  - preto escuro
+    scaffoldBackgroundColor: hsl(220, 18, 15), //  - preto escuro
     
   
     cardTheme: CardThemeData(
@@ -180,16 +180,16 @@ class AppTheme {
     
 
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: _hsl(45, 95, 60), // --accent - amarelo
-      foregroundColor: _hsl(220, 20, 12), // --accent-foreground - preto
+      backgroundColor: hsl(45, 95, 60), // --accent - amarelo
+      foregroundColor: hsl(220, 20, 12), // --accent-foreground - preto
       elevation: 4,
       shape: const CircleBorder(),
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: _hsl(210, 20, 95), // --primary (Branco no dark mode)
-        foregroundColor: _hsl(220, 20, 12), // --primary-foreground preto
+        backgroundColor: hsl(210, 20, 95), // --primary (Branco no dark mode)
+        foregroundColor: hsl(220, 20, 12), // --primary-foreground preto
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -199,7 +199,7 @@ class AppTheme {
   );
 
   
-  static Color _hsl(double h, double s, double l) {
+  static Color hsl(double h, double s, double l) {
     return HSLColor.fromAHSL(1.0, h, s / 100, l / 100).toColor();
   }
 } 

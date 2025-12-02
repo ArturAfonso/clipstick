@@ -6,6 +6,7 @@ import 'package:clipstick/core/routes/app_routes.dart';
 import 'package:clipstick/core/theme/app_colors.dart';
 import 'package:clipstick/core/theme/note_colors_helper.dart';
 import 'package:clipstick/core/theme/themetoggle_button.dart';
+import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/data/models/tag_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
@@ -36,6 +37,9 @@ import 'package:clipstick/core/di/service_locator.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:sqlite3/sqlite3.dart' as sqlite3;
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1980,7 +1984,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Restaurar Backup'),
             onTap: () {
               Navigator.pop(context);
-              restoreDatabase();
+                restoreDatabaseComInstrucao();
               //  Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
             },
           ),
@@ -2041,7 +2045,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
   Future<void> backupDatabase() async {
-    await sl<AppDatabase>().close();
+    
 
   final dbDir = await getApplicationDocumentsDirectory();
   final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
@@ -2056,19 +2060,23 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   if (outputPath != null) {
-    // Mostra o loading (não use await aqui!)
-    showLoadingDialog(context, message: 'Realizando backup...');
+    await sl<AppDatabase>().close();
+  
+    showLoadingDialog(context, message: 'Realizando backup...').then((_) {
+ print('Backup salvo em: $outputPath');
+    Utils.normalSucess(message: 'Backup salvo em: $outputPath');
+    });
 
-    // Simula tempo de processamento (opcional)
+   
     await Future.delayed(Duration(seconds: 2));
 
-    // Fecha o loading
-    Navigator.of(context, rootNavigator: true).pop();
+   
+    //Navigator.of(context, rootNavigator: true).pop();
 
-    print('Backup salvo em: $outputPath');
-    Get.snackbar('Backup', 'Backup salvo em: $outputPath');
+   
   } else {
     print('Backup cancelado');
+    return;
   }
 
   await cleanupServiceLocator();
@@ -2076,37 +2084,198 @@ class _HomeScreenState extends State<HomeScreen> {
   Restart.restartApp();
   }
 
-  Future<void> restoreDatabase() async { 
-     await sl<AppDatabase>().close();
+  
+Widget _itemInstrucao(String numero, String texto) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Text(
+            numero,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+      SizedBox(width: 8),
+      Expanded(child: Text(texto,style: AppTextStyles.bodyMedium,)),
+    ],
+  );
+}
 
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
-    type: FileType.custom,
-    allowedExtensions: ['sqlite'],
+  Future<void> restoreDatabaseComInstrucao() async {
+  
+  final bool? continuar = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.lightbulb_outline, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Dica'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Se não conseguir selecionar o arquivo:',
+              style:  AppTextStyles.bodyLarge,
+            ),
+            SizedBox(height: 12),
+            _itemInstrucao('1', 'Toque no menu ☰ no canto superior'),
+            SizedBox(height: 12),
+            _itemInstrucao('2', 'Selecione o nome do seu dispositivo'),
+            SizedBox(height: 12),
+            _itemInstrucao('3', 'Navegue até a pasta do backup'),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.folder, color: Colors.blue, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Geralmente em Downloads ou Documentos',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Entendi'),
+          ),
+        ],
+      );
+    },
   );
 
-  if (result != null && result.files.single.path != null) {
-    final backupFile = File(result.files.single.path!);
+  if (continuar != true) return;
 
-    // Mostra o loading (não use await aqui!)
+  await restoreDatabase();
+}
+
+  Future<void> restoreDatabase() async { 
+    
+    
+  try {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['sqlite'],
+      allowMultiple: false,
+    );
+
+    if (result == null || result.files.single.path == null) {
+      print('Restauração cancelada pelo usuário');
+      return;
+    }
+
+    final backupFile = File(result.files.single.path!);
+    
+    
+    if (!backupFile.path.toLowerCase().endsWith('.sqlite')) {
+      Utils.normalException(message: "Selecione um arquivo com extensão .sqlite");
+      return;
+    }
+
+    
+    bool isValid = await isValidBackupSchema(backupFile);
+    if (!isValid) {
+      Utils.normalException(message: "Arquivo de backup inválido ou incompatível com esta versão do app.");
+      return;
+    }
+
+   
+    await sl<AppDatabase>().close();
+
+   
     showLoadingDialog(context, message: 'Restaurando backup...');
 
     await Future.delayed(Duration(seconds: 1));
 
+    // Copia o arquivo para o diretório do app
     final dbDir = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
+    
+    // Copia o backup para o local do banco
     await backupFile.copy(dbFile.path);
 
-    // Fecha o loading
-    Navigator.of(context, rootNavigator: true).pop();
+  
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
 
     print('Banco restaurado com sucesso!');
     Get.snackbar('Backup', 'Banco restaurado com sucesso!');
-  } else {
-    print('Restauração cancelada');
+
+
+    await cleanupServiceLocator();
+    await setupServiceLocator();
+    Restart.restartApp();
+    
+  } catch (e) {
+    
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+    
+    print('Erro ao restaurar backup: $e');
+    Utils.normalException(message: "Erro ao restaurar backup: ${e.toString()}");
   }
 
-  await cleanupServiceLocator();
-  await setupServiceLocator();
-  Restart.restartApp();
   }
+
+  Future<bool> isValidBackupSchema(File backupFile) async {
+  // Copia para um local temporário
+  final tempDir = await getTemporaryDirectory();
+  final tempDbFile = File('${tempDir.path}/temp_restore_check.sqlite');
+  await backupFile.copy(tempDbFile.path);
+
+  // Abre conexão direta 
+  final db = sqlite3.sqlite3.open(tempDbFile.path);
+
+  try {
+    
+    final tables = db.select(
+      "SELECT name FROM sqlite_master WHERE type='table';"
+    ).map((row) => row['name'] as String).toList();
+
+    
+    if (tables.contains('notes') && tables.contains('tags')) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  } finally {
+    db.dispose();
+    await tempDbFile.delete();
+  }
+}
 }
