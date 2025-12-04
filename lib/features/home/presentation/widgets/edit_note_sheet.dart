@@ -1,3 +1,4 @@
+import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,14 +10,10 @@ import 'color_picker_widget.dart';
 // ignore_for_file: deprecated_member_use
 
 class EditNoteSheet extends StatefulWidget {
-  final NoteModel note; 
-   final BannerAd? bannerAd;
-  
-   const EditNoteSheet({
-    super.key,
-    required this.note,
-    this.bannerAd,
-  });
+  final NoteModel note;
+  final BannerAd? bannerAd;
+
+  const EditNoteSheet({super.key, required this.note, this.bannerAd});
 
   @override
   State<EditNoteSheet> createState() => _EditNoteSheetState();
@@ -32,9 +29,8 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     if (!_isInitialized) {
-      
       _titleController = TextEditingController(text: widget.note.title);
       _contentController = TextEditingController(text: widget.note.content);
       _selectedColor = widget.note.color;
@@ -49,7 +45,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
     super.dispose();
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     if (_formKey.currentState!.validate()) {
       final updatedNote = widget.note.copyWith(
         title: _titleController.text,
@@ -61,21 +57,20 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
         isPinned: widget.note.isPinned,
         position: widget.note.position,
         tags: widget.note.tags,
-        
       );
 
-      
-      context.read<HomeCubit>().updateNote(updatedNote);
+      var result = await context.read<HomeCubit>().updateNote(updatedNote);
+      if (result) {
+        Get.back();
 
-      Get.back(); 
-      Get.snackbar(
-        'Nota Atualizada',
-        '${_titleController.text} foi atualizada com sucesso! ✏️',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: _selectedColor.withOpacity(0.9),
-        colorText: Theme.of(context).colorScheme.onSurface,
-        duration: Duration(seconds: 2),
-      );
+        Utils.normalSucess(
+          title: 'Nota Atualizada',
+          message: '${_titleController.text} foi atualizada com sucesso! ✏️',
+        );
+      } else {
+       Utils.normalException(title: 'Erro ao Atualizar', message: 'Não foi possível atualizar esta nota.');
+
+      }
     }
   }
 
@@ -85,28 +80,20 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
         title: Text('Excluir nota?'),
         content: Text('Esta ação não pode ser desfeita.'),
         actions: [
+          TextButton(onPressed: () => Get.back(), child: Text('Cancelar')),
           TextButton(
-            onPressed: () => Get.back(),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              
-              context.read<HomeCubit>().deleteNote(widget.note.id);
+            onPressed: () async {
+              var result = await context.read<HomeCubit>().deleteNote(widget.note.id);
+              Get.back();
+              Get.back();
 
-              Get.back(); 
-              Get.back(); 
-
-              Get.snackbar(
-                'Nota Excluída',
-                '${widget.note.title} foi excluída! 🗑️',
-                snackPosition: SnackPosition.BOTTOM,
-                duration: Duration(seconds: 2),
-              );
+              if (result) {
+                Utils.normalSucess(title: 'Nota Excluída', message: '${widget.note.title} excluída com sucesso! 🗑️');
+              } else {
+                Utils.normalException(title: 'Erro ao Excluir', message: 'Não foi possível excluir esta nota.');
+              }
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: Text('Excluir'),
           ),
         ],
@@ -124,7 +111,6 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          
           Container(
             margin: EdgeInsets.only(top: 12),
             width: 40,
@@ -135,7 +121,6 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
             ),
           ),
 
-          
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -149,30 +134,22 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Editar nota',
-                          style: AppTextStyles.headingMedium.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
                         ),
                         Row(
                           children: [
-                            
                             IconButton(
                               icon: Icon(Icons.delete_outline, color: Colors.red),
                               onPressed: _deleteNote,
                               tooltip: 'Excluir nota',
                             ),
-                            
-                            IconButton(
-                              icon: Icon(Icons.close),
-                              onPressed: () => Get.back(),
-                              tooltip: 'Fechar',
-                            ),
+
+                            IconButton(icon: Icon(Icons.close), onPressed: () => Get.back(), tooltip: 'Fechar'),
                           ],
                         ),
                       ],
@@ -180,7 +157,6 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 24),
 
-                    
                     Text(
                       'Título',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -212,7 +188,6 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    
                     Text(
                       'Conteúdo',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -245,7 +220,6 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    
                     Text(
                       'Cor da nota',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -265,35 +239,31 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
                     SizedBox(height: 32),
 
-                    
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
                         onPressed: _saveChanges,
-                       
+
                         child: Text(
                           'Salvar alterações',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
                         ),
                       ),
                     ),
                     SizedBox(height: 16),
 
-                     widget.bannerAd != null
-                       ? Container(
-                           alignment: Alignment.center,
-                           margin: EdgeInsets.only(top: 8),
-                           child: SizedBox(
-                             width: widget.bannerAd!.size.width.toDouble(),
-                             height: widget.bannerAd!.size.height.toDouble(),
-                             child: AdWidget(ad: widget.bannerAd!),
-                           ),
-                         )
-                       : SizedBox.shrink(),
+                    widget.bannerAd != null
+                        ? Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(top: 8),
+                            child: SizedBox(
+                              width: widget.bannerAd!.size.width.toDouble(),
+                              height: widget.bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: widget.bannerAd!),
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ],
                 ),
               ),

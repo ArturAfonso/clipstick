@@ -85,17 +85,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
-    _clearSelection();
-
     HapticFeedback.mediumImpact();
 
     final count = _selectedNoteIds.length;
-    Get.snackbar(
-      count > 1 ? (allPinned ? 'Notas Desfixadas' : 'Notas Fixadas') : (allPinned ? 'Nota Desfixada' : 'Nota Fixada'),
-      '$count nota${count > 1 ? 's' : ''} ${allPinned ? 'desfixada' : 'fixada'}${count > 1 ? 's' : ''} 📌',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
+
+    Utils.normalSucess(
+      title: count > 1
+          ? (allPinned ? 'Notas Desfixadas' : 'Notas Fixadas')
+          : (allPinned ? 'Nota Desfixada' : 'Nota Fixada'),
+      message: '$count nota${count > 1 ? 's' : ''} ${allPinned ? 'desfixada' : 'fixada'}${count > 1 ? 's' : ''} 📌',
     );
+    _clearSelection();
   }
 
   @override
@@ -138,16 +138,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final count = _selectedNoteIds.length;
 
-    await context.read<HomeCubit>().deleteNotesBatch(_selectedNoteIds.toList());
+    var result = await context.read<HomeCubit>().deleteNotesBatch(_selectedNoteIds.toList());
+    if (result) {
+      Utils.normalSucess(
+        title: count > 1 ? 'Notas Excluídas' : 'Nota Excluída',
+        message: '$count nota${count > 1 ? 's' : ''} excluída${count > 1 ? 's' : ''} com sucesso! 🗑️',
+      );
+    } else {
+      Utils.normalException(title: 'Erro ao Excluir', message: 'Não foi possível excluir as notas selecionadas.');
+    }
 
     _clearSelection();
-
-    Get.snackbar(
-      'Notas Excluídas',
-      '$count nota${count > 1 ? 's' : ''} excluída${count > 1 ? 's' : ''} com sucesso! 🗑️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
-    );
   }
 
   Future<bool> _onWillPop() async {
@@ -461,19 +462,27 @@ class _HomeScreenState extends State<HomeScreen> {
       newNotes.add(duplicatedNote);
     }
 
-    await context.read<HomeCubit>().addNotesBatch(newNotes);
-
-    _clearSelection();
-
-    HapticFeedback.mediumImpact();
-
+    var result = await context.read<HomeCubit>().addNotesBatch(newNotes);
     final count = _selectedNoteIds.length;
-    Get.snackbar(
-      'Cópia${count > 1 ? 's' : ''} Criada${count > 1 ? 's' : ''}',
-      '$count nota${count > 1 ? 's' : ''} duplicada${count > 1 ? 's' : ''} com sucesso! 📋',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
-    );
+    if (result) {
+      Utils.normalSucess(
+        title: count > 1 ? 'Cópias Criadas' : 'Cópia Criada',
+        message: '$count nota${count > 1 ? 's' : ''} duplicada${count > 1 ? 's' : ''} com sucesso! 📋',
+      );
+      _clearSelection();
+
+      HapticFeedback.mediumImpact();
+    } else {
+      Utils.normalException(
+        title: 'Erro ao Duplicar',
+        message: count > 1
+            ? 'Não foi possível duplicar as notas selecionadas.'
+            : 'Não foi possível duplicar a nota selecionada.',
+      );
+      _clearSelection();
+
+      HapticFeedback.mediumImpact();
+    }
   }
 
   void _shareSelectedNotes() async {
@@ -510,22 +519,17 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (result.status == ShareResultStatus.success) {
-        Get.snackbar(
-          'Compartilhado!',
-          '$count nota${count > 1 ? 's' : ''} compartilhada${count > 1 ? 's' : ''} 🔗',
-          snackPosition: SnackPosition.BOTTOM,
-          duration: Duration(seconds: 2),
+        Utils.normalSucess(
+          title: 'Compartilhado!',
+          message: '$count nota${count > 1 ? 's' : ''} compartilhada${count > 1 ? 's' : ''} 🔗',
         );
         _clearSelection();
+        HapticFeedback.mediumImpact();
       }
     } catch (e) {
-      Get.snackbar(
-        'Erro ao Compartilhar',
-        'Não foi possível compartilhar as notas',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.isDarkMode ? AppColors.darkDestructive : AppColors.lightDestructive,
-        colorText: AppColors.lightPrimaryForeground,
-      );
+      Utils.normalException(title: 'Erro ao Compartilhar', message: 'Não foi possível compartilhar as notas.');
+      _clearSelection();
+      HapticFeedback.mediumImpact();
     }
   }
 
@@ -826,28 +830,29 @@ class _HomeScreenState extends State<HomeScreen> {
         )
         .toList();
 
-    await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
+    var result = await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
+    final count = _selectedNoteIds.length;
+
+    if (result) {
+      if (tagIds.isEmpty) {
+        Utils.normalSucess(
+          title: 'Marcadores Removidos',
+          message: '$count nota${count > 1 ? 's' : ''} sem marcadores 🏷️',
+        );
+      } else {
+        Utils.normalSucess(
+          title: 'Marcadores Aplicados',
+          message:
+              '${tagIds.length} marcador${tagIds.length > 1 ? 'es' : ''} adicionado${tagIds.length > 1 ? 's' : ''} a $count nota${count > 1 ? 's' : ''} 🏷️',
+        );
+      }
+    } else {
+      Utils.normalException(message: 'Não foi possível aplicar esta ação às notas selecionadas.');
+    }
 
     _clearSelection();
 
     HapticFeedback.mediumImpact();
-
-    final count = _selectedNoteIds.length;
-    if (tagIds.isEmpty) {
-      Get.snackbar(
-        'Marcadores Removidos',
-        '$count nota${count > 1 ? 's' : ''} sem marcadores 🏷️',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: Duration(seconds: 2),
-      );
-    } else {
-      Get.snackbar(
-        'Marcadores Aplicados',
-        '${tagIds.length} marcador${tagIds.length > 1 ? 'es' : ''} adicionado${tagIds.length > 1 ? 's' : ''} a $count nota${count > 1 ? 's' : ''} 🏷️',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: Duration(seconds: 2),
-      );
-    }
   }
 
   void _showDeleteConfirmationDialog(BuildContext context) {
@@ -1776,27 +1781,25 @@ class _HomeScreenState extends State<HomeScreen> {
           )
           .toList();
 
-      await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
+      var result = await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
+
+      if (result) {
+        Utils.normalSucess(
+          title: count > 1 ? "Cores alteradas" : "Cor alterada",
+          message: '$count nota${count > 1 ? 's' : ''} atualizada${count > 1 ? 's' : ''} 🎨',
+        );
+      } else {
+        Utils.normalException(message: 'Não foi possível aplicar esta ação às notas selecionadas.');
+      }
 
       _clearSelection();
 
       HapticFeedback.mediumImpact();
 
-      Get.snackbar(
-        'Cor Alterada',
-        '$count nota${count > 1 ? 's' : ''} atualizada${count > 1 ? 's' : ''} 🎨',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: Duration(seconds: 2),
-        backgroundColor: selectedColor,
-        colorText: _getContrastColor(selectedColor),
-      );
     }
   }
 
-  Color _getContrastColor(Color backgroundColor) {
-    final luminance = backgroundColor.computeLuminance();
-    return luminance > 0.5 ? Colors.black : Colors.white;
-  }
+ 
 
   Widget _buildTagsSection(BuildContext context) {
     final ScrollController tagsScrollController = ScrollController();
@@ -1947,7 +1950,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Suas notas organizadas',
                       style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
-                    Text(String.fromEnvironment('env', defaultValue: 'dev')),
+                    
                   ],
                 ),
               ],
@@ -1966,8 +1969,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Configurações'),
             onTap: () {
               Navigator.pop(context);
-              Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
-            },
+              },
           ), */
           //funcionalidade sera implementada no futuro
           ListTile(
@@ -1976,7 +1978,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.pop(context);
               backupDatabase();
-              //  Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
+             
             },
           ),
           ListTile(
@@ -1984,8 +1986,8 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Restaurar Backup'),
             onTap: () {
               Navigator.pop(context);
-                restoreDatabaseComInstrucao();
-              //  Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
+              restoreDatabaseComInstrucao();
+              
             },
           ),
 
@@ -1995,7 +1997,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Entrar'),
             onTap: () {
               Navigator.pop(context);
-              Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
+             
             },
           ), */
           //funcionalidade sera implementada no futuro
@@ -2004,7 +2006,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: Text('Cadastrar'),
             onTap: () {
               Navigator.pop(context);
-              Get.snackbar('Configurações', 'Funcionalidade em breve!', snackPosition: SnackPosition.BOTTOM);
+              
             },
           ), */
           ListTile(
@@ -2021,261 +2023,210 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> showLoadingDialog(BuildContext context, {String? message}) async {
-  return showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => WillPopScope(
-      onWillPop: () async => false,
-      child: Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            if (message != null) ...[
-              SizedBox(height: 16),
-              Text(message, style: TextStyle(color: Colors.white)),
-            ]
-          ],
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => WillPopScope(
+        onWillPop: () async => false,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              if (message != null) ...[SizedBox(height: 16), Text(message, style: TextStyle(color: Colors.white))],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Future<void> backupDatabase() async {
-    
-
-  final dbDir = await getApplicationDocumentsDirectory();
-  final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
-  final dbBytes = await dbFile.readAsBytes();
-
-  String? outputPath = await FilePicker.platform.saveFile(
-    dialogTitle: 'Salvar backup do ClipStick',
-    fileName: 'clipstick_backup.sqlite',
-    type: FileType.custom,
-    allowedExtensions: ['sqlite'],
-    bytes: dbBytes,
-  );
-
-  if (outputPath != null) {
-    await sl<AppDatabase>().close();
-  
-    showLoadingDialog(context, message: 'Realizando backup...').then((_) {
- print('Backup salvo em: $outputPath');
-    Utils.normalSucess(message: 'Backup salvo em: $outputPath');
-    });
-
-   
-    await Future.delayed(Duration(seconds: 2));
-
-   
-    //Navigator.of(context, rootNavigator: true).pop();
-
-   
-  } else {
-    print('Backup cancelado');
-    return;
-  }
-
-  await cleanupServiceLocator();
-  await setupServiceLocator();
-  Restart.restartApp();
-  }
-
-  
-Widget _itemInstrucao(String numero, String texto) {
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            numero,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ),
-      SizedBox(width: 8),
-      Expanded(child: Text(texto,style: AppTextStyles.bodyMedium,)),
-    ],
-  );
-}
-
-  Future<void> restoreDatabaseComInstrucao() async {
-  
-  final bool? continuar = await showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.lightbulb_outline, color: Colors.amber),
-            SizedBox(width: 8),
-            Text('Dica'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Se não conseguir selecionar o arquivo:',
-              style:  AppTextStyles.bodyLarge,
-            ),
-            SizedBox(height: 12),
-            _itemInstrucao('1', 'Toque no menu ☰ no canto superior'),
-            SizedBox(height: 12),
-            _itemInstrucao('2', 'Selecione o nome do seu dispositivo'),
-            SizedBox(height: 12),
-            _itemInstrucao('3', 'Navegue até a pasta do backup'),
-            SizedBox(height: 16),
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.folder, color: Colors.blue, size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Geralmente em Downloads ou Documentos',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Entendi'),
-          ),
-        ],
-      );
-    },
-  );
-
-  if (continuar != true) return;
-
-  await restoreDatabase();
-}
-
-  Future<void> restoreDatabase() async { 
-    
-    
-  try {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['sqlite'],
-      allowMultiple: false,
-    );
-
-    if (result == null || result.files.single.path == null) {
-      print('Restauração cancelada pelo usuário');
-      return;
-    }
-
-    final backupFile = File(result.files.single.path!);
-    
-    
-    if (!backupFile.path.toLowerCase().endsWith('.sqlite')) {
-      Utils.normalException(message: "Selecione um arquivo com extensão .sqlite");
-      return;
-    }
-
-    
-    bool isValid = await isValidBackupSchema(backupFile);
-    if (!isValid) {
-      Utils.normalException(message: "Arquivo de backup inválido ou incompatível com esta versão do app.");
-      return;
-    }
-
-   
-    await sl<AppDatabase>().close();
-
-   
-    showLoadingDialog(context, message: 'Restaurando backup...');
-
-    await Future.delayed(Duration(seconds: 1));
-
-    // Copia o arquivo para o diretório do app
     final dbDir = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
-    
-    // Copia o backup para o local do banco
-    await backupFile.copy(dbFile.path);
+    final dbBytes = await dbFile.readAsBytes();
 
-  
-    if (context.mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
-    }
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Salvar backup do ClipStick',
+      fileName: 'clipstick_backup.sqlite',
+      type: FileType.custom,
+      allowedExtensions: ['sqlite'],
+      bytes: dbBytes,
+    );
 
-    print('Banco restaurado com sucesso!');
-    Get.snackbar('Backup', 'Banco restaurado com sucesso!');
+    await sl<AppDatabase>().close();
 
+    showLoadingDialog(context, message: 'Realizando backup...').then((_) {
+      print('Backup salvo em: $outputPath');
+      Utils.normalSucess(message: 'Backup salvo em: $outputPath');
+    });
+
+    await Future.delayed(Duration(seconds: 2));
+
+    //Navigator.of(context, rootNavigator: true).pop();
 
     await cleanupServiceLocator();
     await setupServiceLocator();
     Restart.restartApp();
-    
-  } catch (e) {
-    
-    if (context.mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
-    }
-    
-    print('Erro ao restaurar backup: $e');
-    Utils.normalException(message: "Erro ao restaurar backup: ${e.toString()}");
   }
 
+  Widget _itemInstrucao(String numero, String texto) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+          child: Center(
+            child: Text(
+              numero,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(child: Text(texto, style: AppTextStyles.bodyMedium)),
+      ],
+    );
+  }
+
+  Future<void> restoreDatabaseComInstrucao() async {
+    final bool? continuar = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.lightbulb_outline, color: Colors.amber),
+              SizedBox(width: 8),
+              Text('Dica'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Se não conseguir selecionar o arquivo:', style: AppTextStyles.bodyLarge),
+              SizedBox(height: 12),
+              _itemInstrucao('1', 'Toque no menu ☰ no canto superior'),
+              SizedBox(height: 12),
+              _itemInstrucao('2', 'Selecione o nome do seu dispositivo'),
+              SizedBox(height: 12),
+              _itemInstrucao('3', 'Navegue até a pasta do backup'),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  children: [
+                    Icon(Icons.folder, color: Colors.blue, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(child: Text('Geralmente em Downloads ou Documentos', style: TextStyle(fontSize: 12))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('Cancelar')),
+            ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: Text('Entendi')),
+          ],
+        );
+      },
+    );
+
+    if (continuar != true) return;
+
+    await restoreDatabase();
+  }
+
+  Future<void> restoreDatabase() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['sqlite'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.single.path == null) {
+        print('Restauração cancelada pelo usuário');
+        return;
+      }
+
+      final backupFile = File(result.files.single.path!);
+
+      if (!backupFile.path.toLowerCase().endsWith('.sqlite')) {
+        Utils.normalException(message: "Selecione um arquivo com extensão .sqlite");
+        return;
+      }
+
+      bool isValid = await isValidBackupSchema(backupFile);
+      if (!isValid) {
+        Utils.normalException(message: "Arquivo de backup inválido ou incompatível com esta versão do app.");
+        return;
+      }
+
+      await sl<AppDatabase>().close();
+
+      showLoadingDialog(context, message: 'Restaurando backup...');
+
+      await Future.delayed(Duration(seconds: 1));
+
+      // Copia o arquivo para o diretório do app
+      final dbDir = await getApplicationDocumentsDirectory();
+      final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
+
+      // Copia o backup para o local do banco
+      await backupFile.copy(dbFile.path);
+
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      print('Banco restaurado com sucesso!');
+     
+      Utils.normalSucess(message: 'Banco restaurado com sucesso!');
+
+      await cleanupServiceLocator();
+      await setupServiceLocator();
+      Restart.restartApp();
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      print('Erro ao restaurar backup: $e');
+      Utils.normalException(message: "Erro ao restaurar backup: ${e.toString()}");
+    }
   }
 
   Future<bool> isValidBackupSchema(File backupFile) async {
-  // Copia para um local temporário
-  final tempDir = await getTemporaryDirectory();
-  final tempDbFile = File('${tempDir.path}/temp_restore_check.sqlite');
-  await backupFile.copy(tempDbFile.path);
+    // Copia para um local temporário
+    final tempDir = await getTemporaryDirectory();
+    final tempDbFile = File('${tempDir.path}/temp_restore_check.sqlite');
+    await backupFile.copy(tempDbFile.path);
 
-  // Abre conexão direta 
-  final db = sqlite3.sqlite3.open(tempDbFile.path);
+    // Abre conexão direta
+    final db = sqlite3.sqlite3.open(tempDbFile.path);
 
-  try {
-    
-    final tables = db.select(
-      "SELECT name FROM sqlite_master WHERE type='table';"
-    ).map((row) => row['name'] as String).toList();
+    try {
+      final tables = db
+          .select("SELECT name FROM sqlite_master WHERE type='table';")
+          .map((row) => row['name'] as String)
+          .toList();
 
-    
-    if (tables.contains('notes') && tables.contains('tags')) {
-      return true;
+      if (tables.contains('notes') && tables.contains('tags')) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    } finally {
+      db.dispose();
+      await tempDbFile.delete();
     }
-    return false;
-  } catch (e) {
-    return false;
-  } finally {
-    db.dispose();
-    await tempDbFile.delete();
   }
-}
 }

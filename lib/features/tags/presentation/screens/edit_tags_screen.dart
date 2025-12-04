@@ -1,3 +1,4 @@
+import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
@@ -43,13 +44,7 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
     if (tagName.isEmpty) return;
 
     if (tags.any((tag) => tag.name.toLowerCase() == tagName.toLowerCase())) {
-      Get.snackbar(
-        'Marcador Duplicado',
-        'Já existe um marcador com esse nome',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        colorText: Theme.of(context).colorScheme.onErrorContainer,
-      );
+      Utils.normalWarning(message: 'Já existe um marcador com esse nome');
       return;
     }
 
@@ -80,13 +75,7 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
     }
 
     if (tags.any((t) => t.id != tag.id && t.name.toLowerCase() == newName.toLowerCase())) {
-      Get.snackbar(
-        'Nome Duplicado',
-        'Já existe um marcador com esse nome',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        colorText: Theme.of(context).colorScheme.onErrorContainer,
-      );
+      Utils.normalWarning(message: 'Já existe um marcador com esse nome');
       _cancelEditingTag();
       return;
     }
@@ -127,20 +116,25 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
                 }
               }
 
-              context.read<TagsCubit>().deleteTag(tag.id, context);
+              var result = await context.read<TagsCubit>().deleteTag(tag.id, context);
+
+              if (result) {
+                Utils.normalSucess(
+                title: 'Marcador Excluído',
+                message: '"${tag.name}" foi removido de todas as notas 🗑️',
+              );
+              } else {
+                Utils.normalException(
+                  title: 'Erro',
+                  message: 'Não foi possível excluir o marcador. Tente novamente mais tarde.',
+                );  
+              }
 
               HapticFeedback.heavyImpact();
 
               Get.back();
 
-              Get.snackbar(
-                'Marcador Excluído',
-                '"${tag.name}" foi removido de todas as notas 🗑️',
-                snackPosition: SnackPosition.BOTTOM,
-                duration: Duration(seconds: 3),
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                colorText: Theme.of(context).colorScheme.onErrorContainer,
-              );
+             
 
               Future.delayed(Duration(milliseconds: 400), () {
                 if (mounted) Get.back();

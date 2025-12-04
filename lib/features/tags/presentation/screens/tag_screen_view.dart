@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:clipstick/config/app_config.dart';
+import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/features/home/presentation/widgets/edit_note_sheet.dart';
 import 'package:clipstick/features/tags/presentation/widgets/notelistitem.dart';
 import 'package:flutter/material.dart';
@@ -30,17 +31,17 @@ class TagViewScreen extends StatefulWidget {
 class _TagViewScreenState extends State<TagViewScreen> {
   late TagModel _currentTag;
 
-    BannerAd? myBannerTagScreenView = BannerAd(
-      adUnitId: AppConfig.getAdmobBannerUnitId(),
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdFailedToLoad: (ad, error) {
-          debugPrint("Modal banner failed: $error");
-          ad.dispose();
-        },
-      ),
-    );
+  BannerAd? myBannerTagScreenView = BannerAd(
+    adUnitId: AppConfig.getAdmobBannerUnitId(),
+    size: AdSize.banner,
+    request: const AdRequest(),
+    listener: BannerAdListener(
+      onAdFailedToLoad: (ad, error) {
+        debugPrint("Modal banner failed: $error");
+        ad.dispose();
+      },
+    ),
+  );
 
   @override
   void initState() {
@@ -51,7 +52,6 @@ class _TagViewScreenState extends State<TagViewScreen> {
 
   @override
   void dispose() {
-   
     myBannerTagScreenView?.dispose();
     super.dispose();
   }
@@ -67,20 +67,25 @@ class _TagViewScreenState extends State<TagViewScreen> {
     );
   }
 
-  void _renameTag(String newName) {
-    context.read<TagsCubit>().updateTag(_currentTag.copyWith(name: newName, updatedAt: DateTime.now()), context);
-    setState(() {
-      _currentTag = _currentTag.copyWith(name: newName, updatedAt: DateTime.now());
-    });
+  void _renameTag(String newName) async {
+    var result = await context.read<TagsCubit>().updateTag(
+      _currentTag.copyWith(name: newName, updatedAt: DateTime.now()),
+      context,
+    );
+
+    if (result) {
+      Utils.normalSucess(title: 'Marcador Renomeado', message: '"${widget.tag.name}" → "$newName" ✏️');
+      setState(() {
+        _currentTag = _currentTag.copyWith(name: newName, updatedAt: DateTime.now());
+      });
+    } else {
+      Utils.normalException(
+        title: 'Erro',
+        message: 'Não foi possível renomear o marcador. Tente novamente mais tarde.',
+      );
+    }
 
     HapticFeedback.mediumImpact();
-
-    Get.snackbar(
-      'Marcador Renomeado',
-      '"${widget.tag.name}" → "$newName" ✏️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
-    );
   }
 
   void _showDeleteDialog() {
@@ -143,20 +148,21 @@ class _TagViewScreenState extends State<TagViewScreen> {
       }
     }
 
-    context.read<TagsCubit>().deleteTag(_currentTag.id, context);
+    var result = await context.read<TagsCubit>().deleteTag(_currentTag.id, context);
+
+    if (result) {
+      Utils.normalSucess(title: 'Marcador Excluído', message: '"${_currentTag.name}" foi removido de todas as notas 🗑️');
+    } else {
+      Utils.normalException(
+        title: 'Erro',
+        message: 'Não foi possível excluir o marcador. Tente novamente mais tarde.',
+      );
+    }
 
     HapticFeedback.heavyImpact();
 
     Get.back();
 
-    Get.snackbar(
-      'Marcador Excluído',
-      '"${_currentTag.name}" foi removido de todas as notas 🗑️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 3),
-      backgroundColor: Theme.of(context).colorScheme.errorContainer,
-      colorText: Theme.of(context).colorScheme.onErrorContainer,
-    );
 
     Future.delayed(Duration(milliseconds: 400), () {
       if (mounted) Get.back();
@@ -230,27 +236,26 @@ class _TagViewScreenState extends State<TagViewScreen> {
             ),
           ),
         ),
-      
+
         body: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, noteState) {
             List<NoteModel> notesWithTag = [];
             if (noteState is HomeLoading) {
               return Center(child: CircularProgressIndicator());
             } else if (noteState is HomeLoaded) {
-              notesWithTag = noteState.notes.where(
-              (note) => note.tags != null && note.tags!.contains(_currentTag.id),
-            ).toList()
-              ..sort((a, b) {
-                if (a.isPinned && !b.isPinned) return -1;
-                if (!a.isPinned && b.isPinned) return 1;
-                return a.position.compareTo(b.position);
-              });
-        
-            if (notesWithTag.isEmpty) {
-              return _buildEmptyState(context);
+              notesWithTag =
+                  noteState.notes.where((note) => note.tags != null && note.tags!.contains(_currentTag.id)).toList()
+                    ..sort((a, b) {
+                      if (a.isPinned && !b.isPinned) return -1;
+                      if (!a.isPinned && b.isPinned) return 1;
+                      return a.position.compareTo(b.position);
+                    });
+
+              if (notesWithTag.isEmpty) {
+                return _buildEmptyState(context);
+              }
             }
-            }
-        
+
             return BlocBuilder<ViewModeCubit, ViewModeState>(
               builder: (context, viewMode) {
                 return Padding(
@@ -265,14 +270,14 @@ class _TagViewScreenState extends State<TagViewScreen> {
             );
           },
         ),
-       bottomNavigationBar: myBannerTagScreenView == null
-    ? SizedBox.shrink() : SizedBox(
-      width: myBannerTagScreenView!.size.width.toDouble(),
-      height: myBannerTagScreenView!.size.height.toDouble(),
-      child: AdWidget(ad: myBannerTagScreenView!),
-    ), 
+        bottomNavigationBar: myBannerTagScreenView == null
+            ? SizedBox.shrink()
+            : SizedBox(
+                width: myBannerTagScreenView!.size.width.toDouble(),
+                height: myBannerTagScreenView!.size.height.toDouble(),
+                child: AdWidget(ad: myBannerTagScreenView!),
+              ),
       ),
-      
     );
   }
 
@@ -349,28 +354,30 @@ class _TagViewScreenState extends State<TagViewScreen> {
       ),
     )..load();
     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote  ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        final homeCubit = context.read<HomeCubit>();
-        if (result == 'delete') {
-          homeCubit.deleteNote(note.id);
-        } else if (result is NoteModel) {
-          homeCubit.loadNotes();
-        }
-      }
-    }).whenComplete(() {
-      myBannerEditNote?.dispose();
-      myBannerEditNote = null;
-    });
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => DraggableScrollableSheet(
+            initialChildSize: 0.75,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote),
+          ),
+        )
+        .then((result) {
+          if (result != null) {
+            final homeCubit = context.read<HomeCubit>();
+            if (result == 'delete') {
+              homeCubit.deleteNote(note.id);
+            } else if (result is NoteModel) {
+              homeCubit.loadNotes();
+            }
+          }
+        })
+        .whenComplete(() {
+          myBannerEditNote?.dispose();
+          myBannerEditNote = null;
+        });
   }
 }
 

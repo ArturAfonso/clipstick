@@ -32,26 +32,29 @@ class TagsCubit extends Cubit<TagsState> {
     }
   }
 
-  Future<void> updateTag(TagModel tag, BuildContext context) async {
+  Future<bool> updateTag(TagModel tag, BuildContext context) async {
     try {
       await _tagRepository.updateTag(tag);
       await loadTags().then((_) {
         context.read<HomeCubit>().refreshNotes();
       });
+      return true;
     } catch (e) {
-      emit(TagsError(message: e.toString()));
+      //emit(TagsError(message: e.toString()));
+      return false;
     }
   }
 
-  Future<void> deleteTag(String tagId, BuildContext context) async {
+  Future<bool> deleteTag(String tagId, BuildContext context) async {
     try {
       await _tagRepository.deleteTag(tagId);
       await loadTags().then((_) {
         context.read<HomeCubit>().refreshNotes();
       });
-       
+      return true;
     } catch (e) {
-      emit(TagsError(message: e.toString()));
+     // emit(TagsError(message: e.toString()));
+      return false;
     }
   }
 }

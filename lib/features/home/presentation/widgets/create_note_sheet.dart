@@ -1,3 +1,4 @@
+import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +11,8 @@ import '../../../../core/theme/note_colors_helper.dart';
 // ignore_for_file: deprecated_member_use
 
 class CreateNoteSheet extends StatefulWidget {
-   final BannerAd? bannerAd;
-   const CreateNoteSheet({super.key, required this.bannerAd});
+  final BannerAd? bannerAd;
+  const CreateNoteSheet({super.key, required this.bannerAd});
 
   @override
   State<CreateNoteSheet> createState() => _CreateNoteSheetState();
@@ -24,17 +25,15 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   late Color _selectedColor;
   bool _isInitialized = false;
 
- @override
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
-    
+
     if (!_isInitialized) {
       _selectedColor = NoteColorsHelper.getNeutralColor(context);
-    _isInitialized = true;
+      _isInitialized = true;
     }
   }
-
 
   @override
   void dispose() {
@@ -43,35 +42,29 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
     super.dispose();
   }
 
-  void _createNote() {
-    
-  if (_formKey.currentState!.validate()) {
-    
-    final newNote = NoteModel(
-      id: UniqueKey().toString(), 
-      title: _titleController.text.trim(),
-      content: _contentController.text.trim(),
-      color: _selectedColor,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isPinned: false,
-      position: 0,
-      tags: [],
-    );
+  Future<void> _createNote() async {
+    if (_formKey.currentState!.validate()) {
+      final newNote = NoteModel(
+        id: UniqueKey().toString(),
+        title: _titleController.text.trim(),
+        content: _contentController.text.trim(),
+        color: _selectedColor,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isPinned: false,
+        position: 0,
+        tags: [],
+      );
 
-    
-    context.read<HomeCubit>().addNote(newNote);
+      var result = await context.read<HomeCubit>().addNote(newNote);
 
-    Get.back(); 
-    Get.snackbar(
-      'Nota Criada',
-      '${_titleController.text} foi criada com sucesso! 📝',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: _selectedColor.withOpacity(0.9),
-      colorText: Theme.of(context).colorScheme.onSurface,
-      duration: Duration(seconds: 2),
-    );
-  }
+      if (result) {
+        Get.back();
+        Utils.normalSucess(title: 'Nota Criada', message: '${_titleController.text} foi criada com sucesso! 📝');
+      } else {
+        Utils.normalException(title: 'Erro', message: 'Não foi possível criar a nota. Tente novamente mais tarde.');  
+      }
+    }
   }
 
   @override
@@ -84,7 +77,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          
           Container(
             margin: EdgeInsets.only(top: 12),
             width: 40,
@@ -95,7 +87,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
             ),
           ),
 
-          
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -109,27 +100,19 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Nova nota',
-                          style: AppTextStyles.headingMedium.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                          style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.close),
-                          onPressed: () => Get.back(),
-                          tooltip: 'Fechar',
-                        ),
+                        IconButton(icon: Icon(Icons.close), onPressed: () => Get.back(), tooltip: 'Fechar'),
                       ],
                     ),
 
                     SizedBox(height: 24),
 
-                    
                     Text(
                       'Título',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -161,7 +144,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    
                     Text(
                       'Conteúdo',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -194,7 +176,6 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 20),
 
-                    
                     Text(
                       'Cor da nota',
                       style: AppTextStyles.bodyMedium.copyWith(
@@ -214,34 +195,30 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
 
                     SizedBox(height: 32),
 
-                    
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
                         onPressed: _createNote,
-                      
+
                         child: Text(
                           'Criar nota',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
                         ),
                       ),
                     ),
                     SizedBox(height: 16),
-                   widget.bannerAd != null
-                       ? Container(
-                           alignment: Alignment.center,
-                           margin: EdgeInsets.only(top: 8),
-                           child: SizedBox(
-                             width: widget.bannerAd!.size.width.toDouble(),
-                             height: widget.bannerAd!.size.height.toDouble(),
-                             child: AdWidget(ad: widget.bannerAd!),
-                           ),
-                         )
-                       : SizedBox.shrink(),
+                    widget.bannerAd != null
+                        ? Container(
+                            alignment: Alignment.center,
+                            margin: EdgeInsets.only(top: 8),
+                            child: SizedBox(
+                              width: widget.bannerAd!.size.width.toDouble(),
+                              height: widget.bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: widget.bannerAd!),
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ],
                 ),
               ),
