@@ -14,6 +14,7 @@ import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
 import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
+import 'package:clipstick/features/home/presentation/widgets/empty_state_widget.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
 import 'package:clipstick/features/tags/presentation/screens/edit_tags_screen.dart';
@@ -792,7 +793,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNotesView(BuildContext context, ViewModeState state, {required List<NoteModel> notesFromDb}) {
     if (notesFromDb.isEmpty) {
-      return _buildEmptyState(context, state);
+      return buildEmptyState(context, state, () => _showCreateNoteSheet(context));
     }
 
     return state.isGridView
@@ -800,38 +801,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : _buildListView(context, notesFromDb: notesFromDb);
   }
 
-  Widget _buildEmptyState(BuildContext context, ViewModeState state) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(FontAwesomeIcons.noteSticky, size: 120, color: Theme.of(context).colorScheme.primary),
-          SizedBox(height: 24),
-          Text(
-            'Bem-vindo ao ClipStick!',
-            style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.primary),
-          ),
-          SizedBox(height: 12),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              'Suas notas auto adesivas digitais.\nApós criar suas primeiras notas, você pode organizá-las como quiser pressionando-as e as arrastando!',
-              style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              _showCreateNoteSheet(context);
-            },
-            icon: Icon(Icons.add),
-            label: Text('Criar primeira nota'),
-          ),
-        ],
-      ),
-    );
-  }
+  
 
   Widget _buildGridView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     final pinnedNotes = notesFromDb.where((n) => n.isPinned).toList();

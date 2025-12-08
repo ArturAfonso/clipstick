@@ -115,7 +115,7 @@ class HomeAppbar extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           icon: Icon(FontAwesomeIcons.trashCan, size: 20),
           color: Theme.of(context).colorScheme.surface,
-          onPressed: () => showDeleteConfirmationDialog,
+          onPressed: showDeleteConfirmationDialog,
           tooltip: 'Excluir selecionadas',
         ),
 
