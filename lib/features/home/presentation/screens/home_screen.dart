@@ -2,7 +2,6 @@
 
 import 'package:clipstick/config/app_config.dart';
 import 'package:clipstick/core/database/database.dart';
-import 'package:clipstick/core/routes/app_routes.dart';
 import 'package:clipstick/core/theme/app_colors.dart';
 import 'package:clipstick/core/theme/note_colors_helper.dart';
 import 'package:clipstick/core/theme/themetoggle_button.dart';
@@ -15,8 +14,10 @@ import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart'
 import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/build_tagsrow_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/buildgride_notes_card.dart';
+import 'package:clipstick/features/home/presentation/widgets/buildlist_notes_card_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
 import 'package:clipstick/features/home/presentation/widgets/empty_state_widget.dart';
+import 'package:clipstick/features/home/presentation/widgets/sectionHeader_widget.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
 import 'package:clipstick/features/tags/presentation/screens/edit_tags_screen.dart';
@@ -307,16 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            /*   SizedBox(height: 10,),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 90.0,),
-              child: SizedBox(
-                 width: _myBanner.size.width.toDouble() ,
-                height: _myBanner.size.height.toDouble(), 
-                child: AdWidget(ad: _myBanner),
-              ),
-            ), 
-            */
+          
           ],
         ),
         bottomNavigationBar: SizedBox(
@@ -935,14 +927,14 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (pinnedNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, 'FIXADAS', pinnedNotes.length),
+            sectionHeader(context, 'FIXADAS', pinnedNotes.length),
             SizedBox(height: 12),
             _buildReorderableGridSection(context, pinnedNotes, isPinnedSection: true),
             SizedBox(height: 24),
           ],
 
           if (otherNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, 'OUTRAS', otherNotes.length),
+            sectionHeader(context, 'OUTRAS', otherNotes.length),
             SizedBox(height: 12),
             _buildReorderableGridSection(context, otherNotes, isPinnedSection: false),
           ],
@@ -1030,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Padding(
           padding: const EdgeInsets.only(bottom: 4.0),
-          child: _buildListNoteCard(context, note, isSelected),
+          child: buildListNoteCard(context, note, isSelected),
         ),
       );
     }
@@ -1051,7 +1043,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (pinnedNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, 'FIXADOS', pinnedNotes.length),
+            sectionHeader(context, 'FIXADOS', pinnedNotes.length),
             SizedBox(height: 12),
 
             ReorderableColumn(
@@ -1079,7 +1071,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
 
           if (otherNotes.isNotEmpty) ...[
-            _buildSectionHeader(context, 'OUTRAS', otherNotes.length),
+            sectionHeader(context, 'OUTRAS', otherNotes.length),
             SizedBox(height: 12),
 
             ReorderableColumn(
@@ -1220,39 +1212,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, int count) {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(
-            title,
-            style: AppTextStyles.bodyLarge.copyWith(
-              //fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-        /* SizedBox(width: 8),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            '$count',
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
-          ),
-        ), */
-      ],
-    );
-  }
+  
 
   Widget _buildSIMPLEListView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     List<Widget> children = List.generate(notesFromDb.length, (index) {
@@ -1317,7 +1277,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _longPressedIndex = null;
           });
         },
-        child: _buildListNoteCard(context, note, isSelected, key: ValueKey(note.id)),
+        child: buildListNoteCard(context, note, isSelected, key: ValueKey(note.id)),
       );
     });
 
@@ -1349,65 +1309,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   
 
-  Widget _buildListNoteCard(BuildContext context, NoteModel note, bool isSelected, {Key? key}) {
-    final cardElevation = isSelected ? 6.0 : 2.0;
-    var realceColor = NoteColorsHelper.getAvailableColors(context).contains(note.color);
-    debugPrint(realceColor.toString());
-    var listaColors = NoteColorsHelper.getAvailableColors(context);
-    debugPrint(listaColors.first.toString());
-    debugPrint(note.color.toString());
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: AnimatedContainer(
-        key: key ?? ValueKey(note.id),
-        duration: Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: isSelected ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3) : null,
-        ),
-        child: Card(
-          key: key ?? ValueKey(note.id),
-
-          elevation: cardElevation,
-          shadowColor: Theme.of(context).colorScheme.shadow,
-          color: note.color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(10),
-
-            title: Text(
-              note.title,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.getTextColor(note.color),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    note.content,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.getTextColor(note.color).withOpacity(0.8),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (note.tags != null && note.tags!.isNotEmpty) SizedBox(height: 12),
-                  buildTagsRow(context, note),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+ 
 
   void _openNote(BuildContext context, NoteModel note) {
     BannerAd? myBannerEditNote = BannerAd(
