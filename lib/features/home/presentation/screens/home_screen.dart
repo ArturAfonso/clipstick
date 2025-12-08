@@ -13,6 +13,8 @@ import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
 import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
+import 'package:clipstick/features/home/presentation/widgets/build_tagsrow_widget.dart';
+import 'package:clipstick/features/home/presentation/widgets/buildgride_notes_card.dart';
 import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
 import 'package:clipstick/features/home/presentation/widgets/empty_state_widget.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
@@ -827,7 +829,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSimpleGridView(BuildContext context, {required List<NoteModel> notesFromDb}) {
     final generatedChildren = List.generate(
       notesFromDb.length,
-      (index) => _buildGridNoteCard(context, notesFromDb[index]),
+      (index) => buildGridNoteCard(context, note: notesFromDb[index], 
+      isNoteSelected: _isNoteSelected(notesFromDb[index].id),
+       onTap: () {
+        if (_isSelectionMode) {
+          _toggleNoteSelection(notesFromDb[index].id);
+          HapticFeedback.selectionClick();
+        } else {
+          _openNote(context, notesFromDb[index]);
+        }
+      }
+       
+       ),
     );
 
     return Padding(
@@ -1100,7 +1113,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     final generatedChildren = List.generate(
       tratedNotes.length,
-      (index) => _buildGridNoteCard(context, tratedNotes[index]),
+      (index) => buildGridNoteCard(
+        context, 
+        note: tratedNotes[index], 
+        isNoteSelected: _isNoteSelected( tratedNotes[index].id), 
+        onTap: () {
+        if (_isSelectionMode) {
+          _toggleNoteSelection(tratedNotes[index].id);
+          HapticFeedback.selectionClick();
+        } else {
+          _openNote(context, tratedNotes[index]);
+        }
+      }
+        ),
     );
 
     return ReorderableBuilder(
@@ -1320,160 +1345,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGridNoteCard(BuildContext context, NoteModel note) {
-    final isSelected = _isNoteSelected(note.id);
+  
 
-    return GestureDetector(
-      key: Key(note.id),
-      onTap: () {
-        if (_isSelectionMode) {
-          _toggleNoteSelection(note.id);
-          HapticFeedback.selectionClick();
-        } else {
-          _openNote(context, note);
-        }
-      },
-
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 3),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 12,
-                    spreadRadius: 3,
-                  ),
-                ]
-              : [],
-        ),
-
-        child: Card(
-          margin: EdgeInsets.zero,
-          color: note.color,
-          elevation: isSelected ? 4 : 2,
-          shadowColor: Theme.of(context).colorScheme.shadow,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (isSelected)
-                      Container(
-                        padding: EdgeInsets.all(4),
-                        margin: EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
-                        child: Icon(Icons.check, size: 14, color: Theme.of(context).colorScheme.onPrimary),
-                      ),
-
-                    Expanded(
-                      child: Text(
-                        note.title,
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.getTextColor(note.color),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Expanded(
-                  child: Text(
-                    note.content,
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.getTextColor(note.color)),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Visibility(
-                  visible: note.tags != null && note.tags!.isNotEmpty,
-                  child: Column(children: [SizedBox(height: 8), _buildTagsRow(context, note)]),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTagsRow(BuildContext context, NoteModel note) {
-    if (note.tags == null || note.tags!.isEmpty) {
-      return SizedBox(height: 20);
-    }
-
-    return BlocBuilder<TagsCubit, TagsState>(
-      builder: (context, tagState) {
-        List<String> tagNames = [];
-        if (tagState is TagsLoaded) {
-          tagNames = note.tags!.map((tagId) {
-            final tag = tagState.tags.firstWhere(
-              (t) => t.id == tagId,
-              orElse: () => TagModel(id: tagId, name: 'Tag', createdAt: DateTime.now(), updatedAt: DateTime.now()),
-            );
-            return tag.name;
-          }).toList();
-        }
-
-        return Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: [
-            ...tagNames.take(2).map((tagName) {
-              return Container(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), width: 0.5),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(MdiIcons.tagOutline, size: 10, color: AppColors.getTextColor(note.color).withOpacity(0.6)),
-                    SizedBox(width: 3),
-                    Text(
-                      tagName,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.getTextColor(note.color).withOpacity(0.7),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            if (tagNames.length > 2)
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '+${tagNames.length - 2}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontSize: 9,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
+  
 
   Widget _buildListNoteCard(BuildContext context, NoteModel note, bool isSelected, {Key? key}) {
     final cardElevation = isSelected ? 6.0 : 2.0;
@@ -1525,7 +1399,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (note.tags != null && note.tags!.isNotEmpty) SizedBox(height: 12),
-                  _buildTagsRow(context, note),
+                  buildTagsRow(context, note),
                 ],
               ),
             ),
