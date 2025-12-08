@@ -12,6 +12,7 @@ import 'package:clipstick/data/models/tag_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
+import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
 import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
@@ -27,6 +28,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:reorderables/reorderables.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'package:flutter_reorderable_grid_view/widgets/widgets.dart';
@@ -51,6 +53,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _gridViewKey = GlobalKey();
+
+  GlobalKey keyButton1 = GlobalKey();
+    //TutorialCoachMark? tutorialCoachMark;
 
   final Set<String> _selectedNoteIds = {};
   bool _isDragging = false;
@@ -102,6 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _myBannerHome.load();
+   // _showTutorial();
   }
 
   @override
@@ -110,6 +116,68 @@ class _HomeScreenState extends State<HomeScreen> {
     _myBannerHome.dispose();
     super.dispose();
   }
+
+  /* void _showTutorial() {
+    tutorialCoachMark = TutorialCoachMark(
+      targets: _createTargets(),
+      colorShadow: Colors.black,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      textSkip: "PULAR",
+      onSkip: () {
+        return true;
+      },
+      onFinish: () {
+        print("Tutorial da Home finalizado");
+      },
+    );
+    
+    tutorialCoachMark!.show(context: context);
+  } */
+
+ /*  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+
+    // Target para o botão do Drawer
+    targets.add(
+      TargetFocus(
+        identify: "drawer-key",
+        keyTarget: keyButton1,
+        alignSkip: Alignment.topLeft,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Container(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      "Menu",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Toque aqui para abrir o menu lateral com opções adicionais.",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+
+    return targets;
+  } */
 
   bool get _isSelectionMode => _selectedNoteIds.isNotEmpty;
 
@@ -195,27 +263,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(kToolbarHeight),
-          child: SafeArea(
-            child: Material(
-              elevation: 0.5,
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, animation) {
-                  return ScaleTransition(
-                    scale: animation,
-                    alignment: Alignment.center,
-                    child: FadeTransition(opacity: animation, child: child),
-                  );
-                },
-                child: _isSelectionMode ? _buildSelectionAppBar(context) : _buildNormalAppBar(context),
-              ),
-            ),
+        appBar: HomeAppbar(
+          keyButton1: keyButton1,
+          isSelectionMode: _isSelectionMode, 
+          buildContext: context,
+          selectedNoteIds: _selectedNoteIds,
+          onClearSelection: _clearSelection,
+          togglePinSelectedNotes: _togglePinSelectedNotes,
+          showTagSelectionDialog: _showTagSelectionDialog,
+          changeColorOfSelectedNotes: _changeColorOfSelectedNotes,
+          showDeleteConfirmationDialog: _deleteSelectedNotes,
+          duplicateSelectedNotes: _duplicateSelectedNotes,
+          shareSelectedNotes: _shareSelectedNotes,
           ),
-        ),
 
         drawer: _buildDrawer(context),
 
@@ -281,160 +341,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNormalAppBar(BuildContext context) {
-    return AppBar(
-      elevation: 10,
-      key: ValueKey('normal_appbar'),
-      leading: Builder(
-        builder: (context) => IconButton(
-          style: IconButton.styleFrom(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: EdgeInsets.all(8),
-          ),
-          icon: Icon(Icons.auto_awesome_mosaic_outlined, color: Theme.of(context).colorScheme.onSecondary),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
-      ),
-      title: Text('Minhas notas', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.bold)),
-      actions: [
-        BlocBuilder<ViewModeCubit, ViewModeState>(
-          builder: (context, state) {
-            return AnimatedSwitcher(
-              duration: Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) {
-                return RotationTransition(
-                  turns: animation,
-                  child: FadeTransition(opacity: animation, child: child),
-                );
-              },
-              child: IconButton(
-                key: ValueKey(state.isGridView),
-                icon: Icon(
-                  state.isGridView ? Icons.view_list : Icons.grid_view,
-                  color: Theme.of(context).colorScheme.onSecondary,
-                ),
-                onPressed: () {
-                  context.read<ViewModeCubit>().toggleViewMode();
-                },
-                tooltip: state.isGridView ? 'Visualização em Lista' : 'Visualização em Grade',
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: EdgeInsets.all(8),
-                ),
-              ),
-            );
-          },
-        ),
+  
 
-        SizedBox(width: 8),
-      ],
-    );
-  }
-
-  Widget _buildSelectionAppBar(BuildContext context) {
-    final noteState = context.read<HomeCubit>().state;
-    if (noteState is! HomeLoaded) return Container();
-
-    final notes = noteState.notes;
-    final allPinned = _selectedNoteIds.every((id) => notes.firstWhere((n) => n.id == id).isPinned);
-
-    return AppBar(
-      elevation: 10,
-      key: ValueKey('selection_appbar'),
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      surfaceTintColor: Theme.of(context).colorScheme.primary,
-      leading: IconButton(
-        icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onPrimaryContainer),
-        onPressed: _clearSelection,
-        tooltip: 'Cancelar seleção',
-      ),
-      title: Text(
-        '${_selectedNoteIds.length} selecionada${_selectedNoteIds.length > 1 ? 's' : ''}',
-        style: AppTextStyles.bodyLarge.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(
-            allPinned ? Icons.push_pin : Icons.push_pin_outlined,
-            color: Theme.of(context).colorScheme.surface,
-          ),
-          onPressed: _togglePinSelectedNotes,
-          tooltip: allPinned ? 'Desfixar' : 'Fixar',
-        ),
-
-        IconButton(
-          icon: Icon(MdiIcons.tagOutline, color: Theme.of(context).colorScheme.surface),
-          onPressed: _showTagSelectionDialog,
-          tooltip: 'Adicionar marcadores',
-        ),
-
-        IconButton(
-          icon: Icon(Icons.palette_outlined),
-          color: Theme.of(context).colorScheme.surface,
-          onPressed: _changeColorOfSelectedNotes,
-          tooltip: 'Alterar cor',
-        ),
-
-        IconButton(
-          icon: Icon(FontAwesomeIcons.trashCan, size: 20),
-          color: Theme.of(context).colorScheme.surface,
-          onPressed: () => _showDeleteConfirmationDialog(context),
-          tooltip: 'Excluir selecionadas',
-        ),
-
-        PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.secondary),
-          color: Theme.of(context).colorScheme.onSecondary,
-          tooltip: 'Mais opções',
-          onSelected: (value) {
-            switch (value) {
-              case 'copy':
-                _duplicateSelectedNotes();
-                break;
-              case 'share':
-                _shareSelectedNotes();
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'copy',
-              child: Row(
-                children: [
-                  Icon(Icons.content_copy, size: 20, color: Theme.of(context).colorScheme.onPrimary),
-                  SizedBox(width: 12),
-                  Text(
-                    'Fazer cópia',
-                    style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onPrimary),
-                  ),
-                ],
-              ),
-            ),
-
-            PopupMenuItem(
-              value: 'share',
-              child: Row(
-                children: [
-                  Icon(Icons.share, size: 20, color: Theme.of(context).colorScheme.onPrimary),
-                  SizedBox(width: 12),
-                  Text(
-                    'Compartilhar',
-                    style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onPrimary),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        SizedBox(width: 8),
-      ],
-    );
-  }
+  
 
   Future<void> _duplicateSelectedNotes() async {
     if (_selectedNoteIds.isEmpty) return;
