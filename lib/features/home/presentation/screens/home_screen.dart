@@ -273,9 +273,10 @@ class _HomeScreenState extends State<HomeScreen> {
           togglePinSelectedNotes: _togglePinSelectedNotes,
           showTagSelectionDialog: _showTagSelectionDialog,
           changeColorOfSelectedNotes: _changeColorOfSelectedNotes,
-          showDeleteConfirmationDialog: _deleteSelectedNotes,
+          showDeleteConfirmationDialog: () => _showDeleteConfirmationDialog(context),
           duplicateSelectedNotes: _duplicateSelectedNotes,
           shareSelectedNotes: _shareSelectedNotes,
+          
           ),
 
         drawer: _buildDrawer(context),
