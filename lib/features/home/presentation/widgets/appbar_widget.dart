@@ -20,8 +20,9 @@ class HomeAppbar extends StatelessWidget implements PreferredSizeWidget {
     required this.showDeleteConfirmationDialog,
     required this.duplicateSelectedNotes,
     required this.shareSelectedNotes,
-    required this.keyButton1,
-  }) : _isSelectionMode = isSelectionMode,
+    required GlobalKey<State<StatefulWidget>> viewModeKey,
+    required GlobalKey<State<StatefulWidget>> drawerKey,
+  }) : _viewModeKey = viewModeKey, _drawerKey = drawerKey, _isSelectionMode = isSelectionMode,
        _selectedNoteIds = selectedNoteIds;
 
   final bool _isSelectionMode;
@@ -34,7 +35,8 @@ class HomeAppbar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback showDeleteConfirmationDialog;
   final VoidCallback duplicateSelectedNotes;
   final VoidCallback shareSelectedNotes;
-   final GlobalKey keyButton1 ;
+   final GlobalKey _viewModeKey ;
+   final GlobalKey _drawerKey ;
 
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
@@ -179,7 +181,9 @@ class HomeAppbar extends StatelessWidget implements PreferredSizeWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: EdgeInsets.all(8),
           ),
-          icon: Icon(Icons.auto_awesome_mosaic_outlined, color: Theme.of(context).colorScheme.onSecondary),
+          icon: Icon(
+            key: _drawerKey,
+            Icons.auto_awesome_mosaic_outlined, color: Theme.of(context).colorScheme.onSecondary),
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
@@ -188,7 +192,7 @@ class HomeAppbar extends StatelessWidget implements PreferredSizeWidget {
         BlocBuilder<ViewModeCubit, ViewModeState>(
           builder: (context, state) {
             return AnimatedSwitcher(
-                 key: keyButton1,
+                 key: _viewModeKey,
               duration: Duration(milliseconds: 300),
               transitionBuilder: (child, animation) {
                 return RotationTransition(

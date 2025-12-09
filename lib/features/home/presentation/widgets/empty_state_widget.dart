@@ -8,7 +8,7 @@ import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart'
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-Widget buildEmptyState(BuildContext context, ViewModeState state, VoidCallback ontap) {
+Widget buildEmptyState(BuildContext context, ViewModeState state, VoidCallback ontap, GlobalKey addButtonKey) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -30,6 +30,7 @@ Widget buildEmptyState(BuildContext context, ViewModeState state, VoidCallback o
           ),
           SizedBox(height: 32),
           ElevatedButton.icon(
+            key: addButtonKey,
             onPressed: () {
               ontap();
             },

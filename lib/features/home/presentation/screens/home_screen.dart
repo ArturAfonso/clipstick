@@ -6,6 +6,7 @@ import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
+import 'package:clipstick/features/home/presentation/tutorial/home_tutorial_controller.dart';
 import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/build_drawer_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/buildgride_notes_card.dart';
@@ -39,10 +40,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+   final HomeTutorialController _tutorialController = HomeTutorialController();
   final GlobalKey _gridViewKey = GlobalKey();
 
-  GlobalKey keyButton1 = GlobalKey();
-    //TutorialCoachMark? tutorialCoachMark;
+  
+
+  // Suas GlobalKeys existentes
+  final GlobalKey _drawerKey = GlobalKey();
+  final GlobalKey _addButtonKey = GlobalKey();
+  final GlobalKey _viewModeKey = GlobalKey();
 
   final Set<String> _selectedNoteIds = {};
   bool _isDragging = false;
@@ -94,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _myBannerHome.load();
-   // _showTutorial();
+   _checkAndShowTutorial();
   }
 
   @override
@@ -104,67 +110,25 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /* void _showTutorial() {
-    tutorialCoachMark = TutorialCoachMark(
-      targets: _createTargets(),
-      colorShadow: Colors.black,
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      textSkip: "PULAR",
-      onSkip: () {
-        return true;
-      },
-      onFinish: () {
-        print("Tutorial da Home finalizado");
-      },
-    );
+   Future<void> _checkAndShowTutorial() async {
+    final shouldShow = await _tutorialController.shouldShowTutorial();
     
-    tutorialCoachMark!.show(context: context);
-  } */
+    if (shouldShow) {
+      // Aguarda o frame ser renderizado antes de mostrar o tutorial
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _tutorialController.showTutorial(
+          context: context,
+          drawerKey: _drawerKey,
+          addButtonKey: _addButtonKey,
+          viewModeKey: _viewModeKey,
+          onFinish: () {
+            debugPrint("Tutorial concluído!");
+          },
+        );
+      });
+    }
+  }
 
- /*  List<TargetFocus> _createTargets() {
-    List<TargetFocus> targets = [];
-
-    // Target para o botão do Drawer
-    targets.add(
-      TargetFocus(
-        identify: "drawer-key",
-        keyTarget: keyButton1,
-        alignSkip: Alignment.topLeft,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Container(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      "Menu",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20.0,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Toque aqui para abrir o menu lateral com opções adicionais.",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-
-    return targets;
-  } */
 
   bool get _isSelectionMode => _selectedNoteIds.isNotEmpty;
 
@@ -251,7 +215,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         appBar: HomeAppbar(
-          keyButton1: keyButton1,
+          viewModeKey: _viewModeKey,
+          drawerKey: _drawerKey,
           isSelectionMode: _isSelectionMode, 
           buildContext: context,
           selectedNoteIds: _selectedNoteIds,
@@ -771,7 +736,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNotesView(BuildContext context, ViewModeState state, {required List<NoteModel> notesFromDb}) {
     if (notesFromDb.isEmpty) {
-      return buildEmptyState(context, state, () => _showCreateNoteSheet(context));
+      return buildEmptyState(context, state, () => _showCreateNoteSheet(context), _addButtonKey);
     }
 
     return state.isGridView
