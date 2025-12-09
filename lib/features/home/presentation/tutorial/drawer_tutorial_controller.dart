@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'home_tutorial_targets.dart';
+import 'drawer_tutorial_targets.dart';
 
-class HomeTutorialController {
-  static const String _tutorialCompletedKey = 'home_tutorial_completed';
+class DrawerTutorialController {
+  static const String _tutorialCompletedKey = 'drawer_tutorial_completed';
 
   TutorialCoachMark? _tutorialCoachMark;
 
   /// Verifica se o tutorial já foi exibido
   Future<bool> shouldShowTutorial() async {
     final prefs = await SharedPreferences.getInstance();
-  return !(prefs.getBool(_tutorialCompletedKey) ?? false);
+    return !(prefs.getBool(_tutorialCompletedKey) ?? false);
    
   }
 
   /// Marca o tutorial como concluído
   Future<void> markTutorialAsCompleted() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_tutorialCompletedKey, true);
+   await prefs.setBool(_tutorialCompletedKey, true);
   }
 
   /// Reseta o tutorial (útil para testes ou configurações)
@@ -27,18 +27,20 @@ class HomeTutorialController {
     await prefs.remove(_tutorialCompletedKey);
   }
 
-  /// Inicia o tutorial
+  /// Inicia o tutorial do Drawer
   void showTutorial({
     required BuildContext context,
-    required GlobalKey drawerKey,
-    required GlobalKey addButtonKey,
-    required GlobalKey viewModeKey,
+    required GlobalKey tagsListKey,
+    required GlobalKey createTagKey,
+    required GlobalKey themeToggleKey,
+    required GlobalKey backupRestoreKey,
     VoidCallback? onFinish,
   }) {
-    final targets = HomeTutorialTargets.createTargets(
-      drawerKey: drawerKey,
-      addButtonKey: addButtonKey,
-      viewModeKey: viewModeKey,
+    final targets = DrawerTutorialTargets.createTargets(
+      tagsListKey: tagsListKey,
+      createTagKey: createTagKey,
+      themeToggleKey: themeToggleKey,
+      backupRestoreKey: backupRestoreKey,
     );
 
     _tutorialCoachMark = TutorialCoachMark(
@@ -53,7 +55,7 @@ class HomeTutorialController {
       },
       onFinish: () {
         markTutorialAsCompleted();
-        debugPrint("Tutorial da Home finalizado");
+        debugPrint("Tutorial do Drawer finalizado");
         onFinish?.call();
       },
     );

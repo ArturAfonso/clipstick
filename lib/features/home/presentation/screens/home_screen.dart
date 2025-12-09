@@ -8,7 +8,7 @@ import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
 import 'package:clipstick/features/home/presentation/tutorial/home_tutorial_controller.dart';
 import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
-import 'package:clipstick/features/home/presentation/widgets/build_drawer_widget.dart';
+import 'package:clipstick/features/home/presentation/widgets/home_drawer_wiedget.dart';
 import 'package:clipstick/features/home/presentation/widgets/buildgride_notes_card.dart';
 import 'package:clipstick/features/home/presentation/widgets/buildlist_notes_card_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
           
           ),
 
-        drawer: buildDrawer(context),
+        drawer: HomeDrawer(),
 
         body: Column(
           children: [

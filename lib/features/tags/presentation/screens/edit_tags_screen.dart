@@ -138,9 +138,9 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
 
              
 
-              Future.delayed(Duration(milliseconds: 400), () {
+            /*   Future.delayed(Duration(milliseconds: 400), () {
                 if (mounted) Get.back();
-              });
+              }); */
               _editingTagId = null;
             },
             child: Text('Excluir', style: TextStyle(color: Theme.of(context).colorScheme.error)),

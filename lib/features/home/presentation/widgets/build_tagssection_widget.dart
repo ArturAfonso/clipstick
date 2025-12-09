@@ -9,7 +9,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 import '../../../tags/presentation/cubit/tags_cubit.dart';
 
-Widget buildTagsSection(BuildContext context) {
+Widget buildTagsSection(BuildContext context, {required GlobalKey createTagKey,required GlobalKey tagsListKey}) {
     final ScrollController tagsScrollController = ScrollController();
     return BlocBuilder<TagsCubit, TagsState>(
       builder: (context, tagState) {
@@ -24,6 +24,7 @@ Widget buildTagsSection(BuildContext context) {
           final hasTags = tags.isNotEmpty;
 
           return Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
@@ -33,12 +34,17 @@ Widget buildTagsSection(BuildContext context) {
                   children: [
                     Icon(MdiIcons.tagOutline),
                     SizedBox(width: 10),
-                    Text(
-                      'MARCADORES',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurface,
+                    // ignore: avoid_unnecessary_containers
+                    Container(
+                       key: tagsListKey,
+                      child: Text(
+                        
+                        'MARCADORES',
+                        style: AppTextStyles.bodyLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
                     ),
                   ],
@@ -68,16 +74,20 @@ Widget buildTagsSection(BuildContext context) {
 
               SizedBox(height: 8),
 
+             
               ListTile(
+                
                 leading: Icon(
+                   
                   tags.isEmpty ? MdiIcons.tagPlusOutline : MdiIcons.tagSearchOutline,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 title: Text(
+                   key: createTagKey,
                   !hasTags ? 'Criar Novo Marcador' : 'Gerenciar Marcadores',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: Theme.of(context).colorScheme.onSurface,
-
+                              
                     fontWeight: FontWeight.w600,
                   ),
                 ),
