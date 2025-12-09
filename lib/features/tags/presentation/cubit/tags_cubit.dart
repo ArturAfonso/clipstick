@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:clipstick/core/di/service_locator.dart';
 import 'package:clipstick/data/models/tag_model.dart';
 import 'package:clipstick/data/repositories/tag_repository.dart';

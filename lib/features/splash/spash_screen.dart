@@ -3,7 +3,6 @@
 import 'package:clipstick/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
