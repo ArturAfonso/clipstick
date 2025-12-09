@@ -1,8 +1,5 @@
 
 
-
-
-
 import 'package:clipstick/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 

@@ -1,6 +1,8 @@
 
 
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:clipstick/core/theme/app_text_styles.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
 import 'package:flutter/material.dart';

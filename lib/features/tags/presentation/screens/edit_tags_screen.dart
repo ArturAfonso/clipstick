@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
