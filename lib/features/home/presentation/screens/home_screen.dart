@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
    Future<void> _checkAndShowTutorial() async {
     final shouldShow = await _tutorialController.shouldShowTutorial();
     
-    if (shouldShow) {
+    if (true) {
       // Aguarda o frame ser renderizado antes de mostrar o tutorial
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _tutorialController.showTutorial(

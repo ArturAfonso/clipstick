@@ -52,6 +52,7 @@ dependencies:
   # flutter_native_splash: ^2.4.7
   video_player: ^2.6.0
   tutorial_coach_mark: ^1.2.11
+  lottie: ^3.3.2
   
   
 

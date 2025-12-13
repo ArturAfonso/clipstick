@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class DrawerTutorialTargets {
@@ -28,7 +29,7 @@ class DrawerTutorialTargets {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children:  [
-                  SizedBox(height: Get.size.height / 3),
+                  SizedBox(height: 30),
                   Text(
                     "Marcadores",
                     style: TextStyle(
@@ -67,7 +68,20 @@ class DrawerTutorialTargets {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children:  [
-                  SizedBox(height: Get.size.height / 3),
+                  //SizedBox(height: Get.size.height / 3),
+                Align(
+                  alignment: Alignment.center,
+                  child: Image.asset(
+                    alignment: Alignment.center,
+                      'assets/gerenciar_marcadores.GIF',
+                       //width: 100,
+                      height: Get.size.height / 3,
+                      width: Get.size.width ,
+                      fit: BoxFit.scaleDown,
+                    
+                    ),
+                ),
+                 SizedBox(height: 10),
                   Text(
                     "Criar Novo Marcador",
                     style: TextStyle(

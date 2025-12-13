@@ -27,6 +27,7 @@ class HomeTutorialTargets {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
+                 
                   Text(
                     "Criar Nota",
                     style: TextStyle(
@@ -40,6 +41,7 @@ class HomeTutorialTargets {
                     "Toque aqui para criar uma nova nota rapidamente.",
                     style: TextStyle(color: Colors.white),
                   ),
+                   SizedBox(height: 30),
                 ],
               );
             },

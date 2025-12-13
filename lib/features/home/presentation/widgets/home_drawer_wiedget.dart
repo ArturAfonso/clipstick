@@ -52,7 +52,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
   Future<void> _checkAndShowTutorial() async {
     final shouldShow = await _tutorialController.shouldShowTutorial();
     
-    if (shouldShow) {
+    if (true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _tutorialController.showTutorial(
           context: context,
@@ -132,7 +132,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                   leading: Icon(MdiIcons.databaseArrowUpOutline),
                   title: Text('Fazer Backup Local'),
                   onTap: () {
-                    Navigator.pop(context);
+                   
                     _backupDatabase(context);
                   },
                 ),
@@ -140,7 +140,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                   leading: Icon(MdiIcons.databaseArrowDownOutline),
                   title: Text('Restaurar Backup'),
                   onTap: () {
-                    Navigator.pop(context);
+                   
                     _restoreDatabaseComInstrucao(context);
                   },
                 ),
@@ -166,31 +166,59 @@ class _HomeDrawerState extends State<HomeDrawer> {
   // ========================================
 
   Future<void> _backupDatabase(BuildContext context) async {
+  final navigatorContext = Navigator.of(context, rootNavigator: true).context;
+  
+  try {
     final dbDir = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
     final dbBytes = await dbFile.readAsBytes();
 
+    // Gera nome com data legível
+final now = DateTime.now();
+final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}h${now.minute.toString().padLeft(2, '0')}';
+final fileName = 'clipstick_backup_$dateStr.sqlite';
+
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Salvar backup do ClipStick',
-      fileName: 'clipstick_backup.sqlite',
+      fileName: fileName, // Nome único com timestamp
       type: FileType.custom,
       allowedExtensions: ['sqlite'],
       bytes: dbBytes,
     );
 
-    await sl<AppDatabase>().close();
+    if (outputPath == null) {
+      debugPrint('Backup cancelado pelo usuário');
+      return;
+    }
 
-    showLoadingDialog(context, message: 'Realizando backup...').then((_) {
-      debugPrint('Backup salvo em: $outputPath');
-      Utils.normalSucess(message: 'Backup salvo em: $outputPath');
-    });
+    if (navigatorContext.mounted) {
+      showLoadingDialog(navigatorContext, message: 'Realizando backup...');
+    }
 
     await Future.delayed(Duration(seconds: 2));
 
-    await cleanupServiceLocator();
-    await setupServiceLocator();
-    Restart.restartApp();
+    if (navigatorContext.mounted) {
+      Navigator.of(navigatorContext, rootNavigator: true).pop();
+    }
+
+    debugPrint('Backup salvo em: $outputPath');
+    Utils.normalSucess(message: 'Backup realizado com sucesso!');
+
+  } catch (e, stack) {
+    debugPrint('Erro ao realizar backup: $e\n$stack');
+    
+    if (navigatorContext.mounted) {
+      Navigator.of(navigatorContext, rootNavigator: true).pop();
+    }
+    
+    Utils.normalException(message: "Erro ao realizar backup: ${e.toString()}");
+  } finally {
+    // Descomente quando estiver pronto para produção
+    // await cleanupServiceLocator();
+    // await setupServiceLocator();
+    // Restart.restartApp();
   }
+}
 
   Future<void> _restoreDatabaseComInstrucao(BuildContext context) async {
     final bool? continuar = await showDialog<bool>(
