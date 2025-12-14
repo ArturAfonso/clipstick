@@ -1,6 +1,8 @@
 import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
+import 'package:clipstick/features/home/presentation/tutorial/first_note_tutorial_controller.dart';
+import 'package:clipstick/features/home/presentation/tutorial/first_note_tutorial_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
@@ -61,6 +63,16 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
       if (result) {
         Get.back();
         Utils.normalSucess(title: 'Nota Criada', message: '${_titleController.text} foi criada com sucesso! 📝');
+       final tutorialController = FirstNoteTutorialController();
+final shouldShow = await tutorialController.shouldShowTutorial();
+
+
+        if (shouldShow) {
+  final result = await Get.to(() => FirstNoteTutorialScreen());
+  if (result == true) {
+    await tutorialController.markTutorialAsCompleted();
+  }
+}
       } else {
         Utils.normalException(title: 'Erro', message: 'Não foi possível criar a nota. Tente novamente mais tarde.');  
       }

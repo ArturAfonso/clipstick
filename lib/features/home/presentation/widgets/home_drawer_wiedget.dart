@@ -52,7 +52,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
   Future<void> _checkAndShowTutorial() async {
     final shouldShow = await _tutorialController.shouldShowTutorial();
     
-    if (true) {
+    if (shouldShow) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _tutorialController.showTutorial(
           context: context,
