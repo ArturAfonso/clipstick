@@ -261,11 +261,11 @@ class _HomeScreenState extends State<HomeScreen> {
             
             ],
           ),
-          bottomNavigationBar: SizedBox(
+          bottomNavigationBar:  AppConfig.getAdmobBannerUnitId() != '' ? SizedBox(
             width: _myBannerHome.size.width.toDouble(),
             height: _myBannerHome.size.height.toDouble(),
             child: AdWidget(ad: _myBannerHome),
-          ),
+          ) : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           floatingActionButton: _isSelectionMode
               ? null
@@ -1355,7 +1355,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (selectedColor != null) {
-      final count = _selectedNoteIds.length;
+     // final count = _selectedNoteIds.length;
 
       final updatedNotes = selectedNotes
           .map(

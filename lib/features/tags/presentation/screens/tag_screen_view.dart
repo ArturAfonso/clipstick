@@ -270,13 +270,11 @@ class _TagViewScreenState extends State<TagViewScreen> {
             );
           },
         ),
-        bottomNavigationBar: /* myBannerTagScreenView == null
-            ? SizedBox.shrink()
-            : */ SizedBox(
+        bottomNavigationBar:  AppConfig.getAdmobBannerUnitId() != '' ? SizedBox(
                 width: myBannerTagScreenView.size.width.toDouble(),
                 height: myBannerTagScreenView.size.height.toDouble(),
                 child: AdWidget(ad: myBannerTagScreenView),
-              ),
+              ) : null,
       ),
     );
   }
