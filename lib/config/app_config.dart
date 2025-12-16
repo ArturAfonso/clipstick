@@ -64,7 +64,18 @@ class AppConfig {
     if (Platform.isIOS) return admobInterstitialUnitIdIos;
     return admobInterstitialUnitIdAndroid;
   }
-}
+
+   // GIFs do tutorial
+  static String get tutorialGifReorder =>
+      dotenv.env['TUTORIAL_GIF_REORDER'] ?? '';
+  static String get tutorialGifTags =>
+      dotenv.env['TUTORIAL_GIF_TAGS'] ?? '';
+  static String get tutorialGifPin =>
+      dotenv.env['TUTORIAL_GIF_PIN'] ?? '';
+  static String get tutorialGifSetTag =>
+      dotenv.env['TUTORIAL_GIF_SETTAG'] ?? '';
+  
+  }
 
 
 

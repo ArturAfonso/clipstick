@@ -85,14 +85,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     HapticFeedback.mediumImpact();
 
-    final count = _selectedNoteIds.length;
+    //final count = _selectedNoteIds.length;
 
-    Utils.normalSucess(
+  /*   Utils.normalSucess(
       title: count > 1
           ? (allPinned ? 'Notas Desfixadas' : 'Notas Fixadas')
           : (allPinned ? 'Nota Desfixada' : 'Nota Fixada'),
       message: '$count nota${count > 1 ? 's' : ''} ${allPinned ? 'desfixada' : 'fixada'}${count > 1 ? 's' : ''} 📌',
-    );
+    ); */
     _clearSelection();
   }
 
@@ -213,74 +213,77 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
-      child: Scaffold(
-        appBar: HomeAppbar(
-          viewModeKey: _viewModeKey,
-          drawerKey: _drawerKey,
-          isSelectionMode: _isSelectionMode, 
-          buildContext: context,
-          selectedNoteIds: _selectedNoteIds,
-          onClearSelection: _clearSelection,
-          togglePinSelectedNotes: _togglePinSelectedNotes,
-          showTagSelectionDialog: _showTagSelectionDialog,
-          changeColorOfSelectedNotes: _changeColorOfSelectedNotes,
-          showDeleteConfirmationDialog: () => _showDeleteConfirmationDialog(context),
-          duplicateSelectedNotes: _duplicateSelectedNotes,
-          shareSelectedNotes: _shareSelectedNotes,
-          
-          ),
-
-        drawer: HomeDrawer(),
-
-        body: Column(
-          children: [
-            Expanded(
-              child: BlocBuilder<HomeCubit, HomeState>(
-                builder: (context, noteState) {
-                  if (noteState is HomeError) {
-                    return Center(child: Text(noteState.message));
-                  }
-                  if (noteState is HomeLoading) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  List<NoteModel> notesFromDatabase = [];
-                  if (noteState is HomeLoaded) {
-                    notesFromDatabase = noteState.notes;
-                  }
-
-                  return BlocBuilder<ViewModeCubit, ViewModeState>(
-                    builder: (context, state) {
-                      return _buildNotesView(context, state, notesFromDb: notesFromDatabase);
-                    },
-                  );
-                },
-              ),
+      child: SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: HomeAppbar(
+            viewModeKey: _viewModeKey,
+            drawerKey: _drawerKey,
+            isSelectionMode: _isSelectionMode, 
+            buildContext: context,
+            selectedNoteIds: _selectedNoteIds,
+            onClearSelection: _clearSelection,
+            togglePinSelectedNotes: _togglePinSelectedNotes,
+            showTagSelectionDialog: _showTagSelectionDialog,
+            changeColorOfSelectedNotes: _changeColorOfSelectedNotes,
+            showDeleteConfirmationDialog: () => _showDeleteConfirmationDialog(context),
+            duplicateSelectedNotes: _duplicateSelectedNotes,
+            shareSelectedNotes: _shareSelectedNotes,
+            
             ),
-          
-          ],
-        ),
-        bottomNavigationBar: SizedBox(
-          width: _myBannerHome.size.width.toDouble(),
-          height: _myBannerHome.size.height.toDouble(),
-          child: AdWidget(ad: _myBannerHome),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        floatingActionButton: _isSelectionMode
-            ? null
-            : BlocBuilder<HomeCubit, HomeState>(
-                builder: (context, state) {
-                  if (state is HomeLoaded && state.notes.isEmpty) {
-                    return Container();
-                  }
-                  return FloatingActionButton(
-                    onPressed: () {
-                      _showCreateNoteSheet(context);
-                    },
-                    tooltip: 'Criar nova nota',
-                    child: Icon(Icons.add),
-                  );
-                },
+        
+          drawer: HomeDrawer(),
+        
+          body: Column(
+            children: [
+              Expanded(
+                child: BlocBuilder<HomeCubit, HomeState>(
+                  builder: (context, noteState) {
+                    if (noteState is HomeError) {
+                      return Center(child: Text(noteState.message));
+                    }
+                    if (noteState is HomeLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    List<NoteModel> notesFromDatabase = [];
+                    if (noteState is HomeLoaded) {
+                      notesFromDatabase = noteState.notes;
+                    }
+        
+                    return BlocBuilder<ViewModeCubit, ViewModeState>(
+                      builder: (context, state) {
+                        return _buildNotesView(context, state, notesFromDb: notesFromDatabase);
+                      },
+                    );
+                  },
+                ),
               ),
+            
+            ],
+          ),
+          bottomNavigationBar: SizedBox(
+            width: _myBannerHome.size.width.toDouble(),
+            height: _myBannerHome.size.height.toDouble(),
+            child: AdWidget(ad: _myBannerHome),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: _isSelectionMode
+              ? null
+              : BlocBuilder<HomeCubit, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeLoaded && state.notes.isEmpty) {
+                      return Container();
+                    }
+                    return FloatingActionButton(
+                      onPressed: () {
+                        _showCreateNoteSheet(context);
+                      },
+                      tooltip: 'Criar nova nota',
+                      child: Icon(Icons.add),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -372,10 +375,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (result.status == ShareResultStatus.success) {
-        Utils.normalSucess(
+       /*  Utils.normalSucess(
           title: 'Compartilhado!',
           message: '$count nota${count > 1 ? 's' : ''} compartilhada${count > 1 ? 's' : ''} 🔗',
-        );
+        ); */
         _clearSelection();
         HapticFeedback.mediumImpact();
       }
@@ -684,20 +687,20 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
 
     var result = await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
-    final count = _selectedNoteIds.length;
+   // final count = _selectedNoteIds.length;
 
     if (result) {
       if (tagIds.isEmpty) {
-        Utils.normalSucess(
+       /*  Utils.normalSucess(
           title: 'Marcadores Removidos',
           message: '$count nota${count > 1 ? 's' : ''} sem marcadores 🏷️',
-        );
+        ); */
       } else {
-        Utils.normalSucess(
+        /* Utils.normalSucess(
           title: 'Marcadores Aplicados',
           message:
               '${tagIds.length} marcador${tagIds.length > 1 ? 'es' : ''} adicionado${tagIds.length > 1 ? 's' : ''} a $count nota${count > 1 ? 's' : ''} 🏷️',
-        );
+        ); */
       }
     } else {
       Utils.normalException(message: 'Não foi possível aplicar esta ação às notas selecionadas.');
@@ -1374,10 +1377,10 @@ class _HomeScreenState extends State<HomeScreen> {
       var result = await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
       if (result) {
-        Utils.normalSucess(
+      /*   Utils.normalSucess(
           title: count > 1 ? "Cores alteradas" : "Cor alterada",
           message: '$count nota${count > 1 ? 's' : ''} atualizada${count > 1 ? 's' : ''} 🎨',
-        );
+        ); */
       } else {
         Utils.normalException(message: 'Não foi possível aplicar esta ação às notas selecionadas.');
       }

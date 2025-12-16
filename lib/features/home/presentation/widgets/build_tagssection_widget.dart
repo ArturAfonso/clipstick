@@ -28,15 +28,17 @@ Widget buildTagsSection(BuildContext context, {required GlobalKey createTagKey,r
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
+                
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
+                  key: tagsListKey,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Icon(MdiIcons.tagOutline),
                     SizedBox(width: 10),
                     // ignore: avoid_unnecessary_containers
                     Container(
-                       key: tagsListKey,
+                      
                       child: Text(
                         
                         'MARCADORES',

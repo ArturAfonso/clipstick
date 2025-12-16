@@ -31,7 +31,7 @@ class TagViewScreen extends StatefulWidget {
 class _TagViewScreenState extends State<TagViewScreen> {
   late TagModel _currentTag;
 
-  BannerAd? myBannerTagScreenView = BannerAd(
+  final BannerAd myBannerTagScreenView = BannerAd(
     adUnitId: AppConfig.getAdmobBannerUnitId(),
     size: AdSize.banner,
     request: const AdRequest(),
@@ -47,12 +47,12 @@ class _TagViewScreenState extends State<TagViewScreen> {
   void initState() {
     super.initState();
     _currentTag = widget.tag;
-    myBannerTagScreenView?.load();
+    myBannerTagScreenView.load();
   }
 
   @override
   void dispose() {
-    myBannerTagScreenView?.dispose();
+    myBannerTagScreenView.dispose();
     super.dispose();
   }
 
@@ -74,7 +74,7 @@ class _TagViewScreenState extends State<TagViewScreen> {
     );
 
     if (result) {
-      Utils.normalSucess(title: 'Marcador Renomeado', message: '"${widget.tag.name}" → "$newName" ✏️');
+    //  Utils.normalSucess(title: 'Marcador Renomeado', message: '"${widget.tag.name}" → "$newName" ✏️');
       setState(() {
         _currentTag = _currentTag.copyWith(name: newName, updatedAt: DateTime.now());
       });
@@ -151,7 +151,7 @@ class _TagViewScreenState extends State<TagViewScreen> {
     var result = await context.read<TagsCubit>().deleteTag(_currentTag.id, context);
 
     if (result) {
-      Utils.normalSucess(title: 'Marcador Excluído', message: '"${_currentTag.name}" foi removido de todas as notas 🗑️');
+      //Utils.normalSucess(title: 'Marcador Excluído', message: '"${_currentTag.name}" foi removido de todas as notas 🗑️');
     } else {
       Utils.normalException(
         title: 'Erro',
@@ -270,12 +270,12 @@ class _TagViewScreenState extends State<TagViewScreen> {
             );
           },
         ),
-        bottomNavigationBar: myBannerTagScreenView == null
+        bottomNavigationBar: /* myBannerTagScreenView == null
             ? SizedBox.shrink()
-            : SizedBox(
-                width: myBannerTagScreenView!.size.width.toDouble(),
-                height: myBannerTagScreenView!.size.height.toDouble(),
-                child: AdWidget(ad: myBannerTagScreenView!),
+            : */ SizedBox(
+                width: myBannerTagScreenView.size.width.toDouble(),
+                height: myBannerTagScreenView.size.height.toDouble(),
+                child: AdWidget(ad: myBannerTagScreenView),
               ),
       ),
     );

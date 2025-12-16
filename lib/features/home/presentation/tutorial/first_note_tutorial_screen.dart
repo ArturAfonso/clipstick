@@ -1,9 +1,21 @@
+// ignore_for_file: deprecated_member_use
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clipstick/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class FirstNoteTutorialScreen extends StatefulWidget {
-  const FirstNoteTutorialScreen({super.key});
+  final String gifReorder;
+  final String gifSetTag;
+  final String gifPin;
+
+  const FirstNoteTutorialScreen({
+    super.key, 
+  required this.gifReorder, 
+  required this.gifSetTag, 
+  required this.gifPin
+  });
 
   @override
   State<FirstNoteTutorialScreen> createState() => _FirstNoteTutorialScreenState();
@@ -13,20 +25,20 @@ class _FirstNoteTutorialScreenState extends State<FirstNoteTutorialScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<TutorialPage> _pages = [
+  late final List<TutorialPage> _pages = [
     TutorialPage(
-      gifPath: 'assets/reordenar_notas.GIF', 
+      gifPath: widget.gifReorder,
       title: 'Reordenar Notas',
       description: 'Pressione e arraste uma nota para reordená-la na ordem que desejar.',
     ),
     TutorialPage(
-      gifPath: 'assets/setando_marcadores.GIF',
+      gifPath: widget.gifSetTag,
       title: 'Adicionar Marcadores',
       description: 'Ao pressionar por alguns segundos e soltar uma nota, você habilita o modo de seleção e poderá aplicar etiquetas para uma melhor organização. \n(esta aplicação pode ser feita em massa)',
     ),
 
     TutorialPage(
-      gifPath: 'assets/fixnado_notas.GIF',
+      gifPath: widget.gifPin,
       title: 'Fixar Notas',
       description: 'Também no modo de seleção você pode fixar notas,que aparecerão no topo. Selecione quantas desejar e toque no ícone de pin para mantê-las sempre a frente das outras.',
     ), 
@@ -119,9 +131,19 @@ class _FirstNoteTutorialScreenState extends State<FirstNoteTutorialScreen> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(14),
-                            child: Image.asset(
-                              page.gifPath,
-                              fit: BoxFit.contain,
+                            child: CachedNetworkImage(
+                              imageUrl: page.gifPath,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              errorWidget: (context, url, error) => Center(
+                                child: Icon(
+                                  Icons.error,
+                                  color: Colors.red,
+                                  size: 48,
+                                ),
+                              ),
                             ),
                           ),
                         ),

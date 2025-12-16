@@ -42,14 +42,16 @@ class _HomeDrawerState extends State<HomeDrawer> {
   @override
   void initState() {
     super.initState();
-     // Chama o callback quando o widget é construído (drawer aberto)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+     
+  /*   WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onDrawerOpened?.call();
-      _checkAndShowTutorial();
-    });
+      Future.delayed(   Duration(seconds: 1), () {
+        _checkAndShowTutorial();
+      });
+    }); */
   }
 
-  Future<void> _checkAndShowTutorial() async {
+ /*  Future<void> _checkAndShowTutorial() async {
     final shouldShow = await _tutorialController.shouldShowTutorial();
     
     if (shouldShow) {
@@ -66,7 +68,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
         );
       });
     }
-  }
+  } */
 
   @override
   void dispose() {
