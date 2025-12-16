@@ -63,10 +63,10 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
       if (result) {
         Get.back();
 
-        Utils.normalSucess(
+      /*   Utils.normalSucess(
           title: 'Nota Atualizada',
           message: '${_titleController.text} foi atualizada com sucesso! ✏️',
-        );
+        ); */
       } else {
        Utils.normalException(title: 'Erro ao Atualizar', message: 'Não foi possível atualizar esta nota.');
 
@@ -103,173 +103,175 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            margin: EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
               ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Editar nota',
-                          style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: _deleteNote,
-                              tooltip: 'Excluir nota',
-                            ),
-
-                            IconButton(icon: Icon(Icons.close), onPressed: () => Get.back(), tooltip: 'Fechar'),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: 24),
-
-                    Text(
-                      'Título',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
+            ),
+      
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 16,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Editar nota',
+                            style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: _deleteNote,
+                                tooltip: 'Excluir nota',
+                              ),
+      
+                              IconButton(icon: Icon(Icons.close), onPressed: () => Get.back(), tooltip: 'Fechar'),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: InputDecoration(
-                        hintText: 'Digite o título da nota',
-                        filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      ),
-                      style: AppTextStyles.bodyMedium,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Por favor, digite um título';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: 20),
-
-                    Text(
-                      'Conteúdo',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    TextFormField(
-                      controller: _contentController,
-                      decoration: InputDecoration(
-                        hintText: 'Digite o conteúdo da nota',
-                        filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      ),
-                      style: AppTextStyles.bodyMedium,
-                      maxLines: 5,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Por favor, digite o conteúdo';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: 20),
-
-                    Text(
-                      'Cor da nota',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    ColorPickerWidget(
-                      selectedColor: _selectedColor,
-                      onColorSelected: (color) {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                    ),
-
-                    SizedBox(height: 32),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _saveChanges,
-
-                        child: Text(
-                          'Salvar alterações',
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
+      
+                      SizedBox(height: 24),
+      
+                      Text(
+                        'Título',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
-                    ),
-                    SizedBox(height: 16),
-
-                    widget.bannerAd != null
-                        ? Container(
-                            alignment: Alignment.center,
-                            margin: EdgeInsets.only(top: 8),
-                            child: SizedBox(
-                              width: widget.bannerAd!.size.width.toDouble(),
-                              height: widget.bannerAd!.size.height.toDouble(),
-                              child: AdWidget(ad: widget.bannerAd!),
-                            ),
-                          )
-                        : SizedBox.shrink(),
-                  ],
+                      SizedBox(height: 8),
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: InputDecoration(
+                          hintText: 'Digite o título da nota',
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        style: AppTextStyles.bodyMedium,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Por favor, digite um título';
+                          }
+                          return null;
+                        },
+                      ),
+      
+                      SizedBox(height: 20),
+      
+                      Text(
+                        'Conteúdo',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      TextFormField(
+                        controller: _contentController,
+                        decoration: InputDecoration(
+                          hintText: 'Digite o conteúdo da nota',
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        style: AppTextStyles.bodyMedium,
+                        maxLines: 5,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Por favor, digite o conteúdo';
+                          }
+                          return null;
+                        },
+                      ),
+      
+                      SizedBox(height: 20),
+      
+                      Text(
+                        'Cor da nota',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      ColorPickerWidget(
+                        selectedColor: _selectedColor,
+                        onColorSelected: (color) {
+                          setState(() {
+                            _selectedColor = color;
+                          });
+                        },
+                      ),
+      
+                      SizedBox(height: 32),
+      
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _saveChanges,
+      
+                          child: Text(
+                            'Salvar alterações',
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+      
+                      widget.bannerAd != null
+                          ? Container(
+                              alignment: Alignment.center,
+                              margin: EdgeInsets.only(top: 8),
+                              child: SizedBox(
+                                width: widget.bannerAd!.size.width.toDouble(),
+                                height: widget.bannerAd!.size.height.toDouble(),
+                                child: AdWidget(ad: widget.bannerAd!),
+                              ),
+                            )
+                          : SizedBox.shrink(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

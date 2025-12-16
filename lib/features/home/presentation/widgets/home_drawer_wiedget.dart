@@ -19,7 +19,65 @@ import 'package:path_provider/path_provider.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
-Widget buildDrawer(BuildContext context) {
+import '../tutorial/drawer_tutorial_controller.dart';
+
+
+class HomeDrawer extends StatefulWidget {
+  final VoidCallback? onDrawerOpened; 
+  const HomeDrawer({super.key, this.onDrawerOpened});
+
+  @override
+  State<HomeDrawer> createState() => _HomeDrawerState();
+}
+
+class _HomeDrawerState extends State<HomeDrawer> {
+  final DrawerTutorialController _tutorialController = DrawerTutorialController();
+  
+  // GlobalKeys para os targets do tutorial
+  final GlobalKey _tagsListKey = GlobalKey();
+  final GlobalKey _createTagKey = GlobalKey();
+  final GlobalKey _themeToggleKey = GlobalKey();
+  final GlobalKey _backupRestoreKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+     
+  /*   WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onDrawerOpened?.call();
+      Future.delayed(   Duration(seconds: 1), () {
+        _checkAndShowTutorial();
+      });
+    }); */
+  }
+
+ /*  Future<void> _checkAndShowTutorial() async {
+    final shouldShow = await _tutorialController.shouldShowTutorial();
+    
+    if (shouldShow) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _tutorialController.showTutorial(
+          context: context,
+          tagsListKey: _tagsListKey,
+          createTagKey: _createTagKey,
+          themeToggleKey: _themeToggleKey,
+          backupRestoreKey: _backupRestoreKey,
+          onFinish: () {
+            debugPrint("Tutorial do Drawer concluído!");
+          },
+        );
+      });
+    }
+  } */
+
+  @override
+  void dispose() {
+    _tutorialController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -46,7 +104,6 @@ Widget buildDrawer(BuildContext context) {
                       'Suas notas organizadas',
                       style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
-                    
                   ],
                 ),
               ],
@@ -54,57 +111,45 @@ Widget buildDrawer(BuildContext context) {
           ),
           Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
 
-          buildTagsSection(context),
+          // Target 1: Lista de Marcadores (envolve a seção de tags)
+          Container(
+           
+            child: buildTagsSection(context, createTagKey: _createTagKey, tagsListKey: _tagsListKey ),
+          ),
 
           Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.3)),
 
-          ThemeToggleButton(),
-          //funcionalidade sera implementada no futuro
-          /* ListTile(
-            leading: Icon(Icons.settings_outlined),
-            title: Text('Configurações'),
-            onTap: () {
-              Navigator.pop(context);
-              },
-          ), */
-          //funcionalidade sera implementada no futuro
-          ListTile(
-            leading: Icon(MdiIcons.databaseArrowUpOutline),
-            title: Text('Fazer Backup Local'),
-            onTap: () {
-              Navigator.pop(context);
-              backupDatabase(context);
-             
-            },
-          ),
-          ListTile(
-            leading: Icon(MdiIcons.databaseArrowDownOutline),
-            title: Text('Restaurar Backup'),
-            onTap: () {
-              Navigator.pop(context);
-              restoreDatabaseComInstrucao(context);
-              
-            },
+          // Target 3: Toggle de Tema
+          Container(
+            key: _themeToggleKey,
+            child: ThemeToggleButton(),
           ),
 
-          //funcionalidade sera implementada no futuro
-          /*  ListTile(
-            leading: Icon(Icons.login_outlined),
-            title: Text('Entrar'),
-            onTap: () {
-              Navigator.pop(context);
-             
-            },
-          ), */
-          //funcionalidade sera implementada no futuro
-          /* ListTile(
-            leading: Icon(Icons.person_add_outlined),
-            title: Text('Cadastrar'),
-            onTap: () {
-              Navigator.pop(context);
-              
-            },
-          ), */
+          // Target 4: Backup & Restore (mesma key para ambos)
+          Container(
+            key: _backupRestoreKey,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(MdiIcons.databaseArrowUpOutline),
+                  title: Text('Fazer Backup Local'),
+                  onTap: () {
+                   
+                    _backupDatabase(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(MdiIcons.databaseArrowDownOutline),
+                  title: Text('Restaurar Backup'),
+                  onTap: () {
+                   
+                    _restoreDatabaseComInstrucao(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+
           ListTile(
             leading: Icon(Icons.info_outline),
             title: Text('Sobre'),
@@ -116,42 +161,68 @@ Widget buildDrawer(BuildContext context) {
         ],
       ),
     );
-
-
-    
   }
 
+  // ========================================
+  // MÉTODOS AUXILIARES (mantém como está)
+  // ========================================
 
-  Future<void> backupDatabase(BuildContext context) async {
+  Future<void> _backupDatabase(BuildContext context) async {
+  final navigatorContext = Navigator.of(context, rootNavigator: true).context;
+  
+  try {
     final dbDir = await getApplicationDocumentsDirectory();
     final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
     final dbBytes = await dbFile.readAsBytes();
 
+    // Gera nome com data legível
+final now = DateTime.now();
+final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}h${now.minute.toString().padLeft(2, '0')}';
+final fileName = 'clipstick_backup_$dateStr.sqlite';
+
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: 'Salvar backup do ClipStick',
-      fileName: 'clipstick_backup.sqlite',
+      fileName: fileName, // Nome único com timestamp
       type: FileType.custom,
       allowedExtensions: ['sqlite'],
       bytes: dbBytes,
     );
 
-    await sl<AppDatabase>().close();
+    if (outputPath == null) {
+      debugPrint('Backup cancelado pelo usuário');
+      return;
+    }
 
-    showLoadingDialog(context, message: 'Realizando backup...').then((_) {
-      debugPrint('Backup salvo em: $outputPath');
-      Utils.normalSucess(message: 'Backup salvo em: $outputPath');
-    });
+    if (navigatorContext.mounted) {
+      showLoadingDialog(navigatorContext, message: 'Realizando backup...');
+    }
 
     await Future.delayed(Duration(seconds: 2));
 
-    //Navigator.of(context, rootNavigator: true).pop();
+    if (navigatorContext.mounted) {
+      Navigator.of(navigatorContext, rootNavigator: true).pop();
+    }
 
-    await cleanupServiceLocator();
-    await setupServiceLocator();
-    Restart.restartApp();
+    debugPrint('Backup salvo em: $outputPath');
+    Utils.normalSucess(message: 'Backup realizado com sucesso!');
+
+  } catch (e, stack) {
+    debugPrint('Erro ao realizar backup: $e\n$stack');
+    
+    if (navigatorContext.mounted) {
+      Navigator.of(navigatorContext, rootNavigator: true).pop();
+    }
+    
+    Utils.normalException(message: "Erro ao realizar backup: ${e.toString()}");
+  } finally {
+    // Descomente quando estiver pronto para produção
+    // await cleanupServiceLocator();
+    // await setupServiceLocator();
+    // Restart.restartApp();
   }
+}
 
-    Future<void> restoreDatabaseComInstrucao(BuildContext context) async {
+  Future<void> _restoreDatabaseComInstrucao(BuildContext context) async {
     final bool? continuar = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -198,10 +269,10 @@ Widget buildDrawer(BuildContext context) {
 
     if (continuar != true) return;
 
-    await restoreDatabase(context);
+    await _restoreDatabase(context);
   }
 
-  Future<void> restoreDatabase(BuildContext context) async {
+  Future<void> _restoreDatabase(BuildContext context) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -221,7 +292,7 @@ Widget buildDrawer(BuildContext context) {
         return;
       }
 
-      bool isValid = await isValidBackupSchema(backupFile);
+      bool isValid = await _isValidBackupSchema(backupFile);
       if (!isValid) {
         Utils.normalException(message: "Arquivo de backup inválido ou incompatível com esta versão do app.");
         return;
@@ -233,11 +304,9 @@ Widget buildDrawer(BuildContext context) {
 
       await Future.delayed(Duration(seconds: 1));
 
-      // Copia o arquivo para o diretório do app
       final dbDir = await getApplicationDocumentsDirectory();
       final dbFile = File(p.join(dbDir.path, 'clipstick.sqlite'));
 
-      // Copia o backup para o local do banco
       await backupFile.copy(dbFile.path);
 
       if (context.mounted) {
@@ -245,7 +314,6 @@ Widget buildDrawer(BuildContext context) {
       }
 
       debugPrint('Banco restaurado com sucesso!');
-     
       Utils.normalSucess(message: 'Banco restaurado com sucesso!');
 
       await cleanupServiceLocator();
@@ -260,7 +328,6 @@ Widget buildDrawer(BuildContext context) {
       Utils.normalException(message: "Erro ao restaurar backup: ${e.toString()}");
     }
   }
-
 
   Future<void> showLoadingDialog(BuildContext context, {String? message}) async {
     return showDialog(
@@ -283,8 +350,7 @@ Widget buildDrawer(BuildContext context) {
     );
   }
 
-
-   void _showAboutDialog(BuildContext context) {
+  void _showAboutDialog(BuildContext context) {
     showAboutDialog(
       context: context,
       applicationName: 'ClipStick',
@@ -300,7 +366,6 @@ Widget buildDrawer(BuildContext context) {
     );
   }
 
-  
   Widget _itemInstrucao(String numero, String texto) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,13 +387,11 @@ Widget buildDrawer(BuildContext context) {
     );
   }
 
-  Future<bool> isValidBackupSchema(File backupFile) async {
-    // Copia para um local temporário
+  Future<bool> _isValidBackupSchema(File backupFile) async {
     final tempDir = await getTemporaryDirectory();
     final tempDbFile = File('${tempDir.path}/temp_restore_check.sqlite');
     await backupFile.copy(tempDbFile.path);
 
-    // Abre conexão direta
     final db = sqlite3.sqlite3.open(tempDbFile.path);
 
     try {
@@ -348,3 +411,4 @@ Widget buildDrawer(BuildContext context) {
       await tempDbFile.delete();
     }
   }
+}

@@ -6,8 +6,9 @@ import 'package:clipstick/data/models/note_model.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
 import 'package:clipstick/features/home/presentation/cubit/view_mode_cubit.dart';
+import 'package:clipstick/features/home/presentation/tutorial/home_tutorial_controller.dart';
 import 'package:clipstick/features/home/presentation/widgets/appbar_widget.dart';
-import 'package:clipstick/features/home/presentation/widgets/build_drawer_widget.dart';
+import 'package:clipstick/features/home/presentation/widgets/home_drawer_wiedget.dart';
 import 'package:clipstick/features/home/presentation/widgets/buildgride_notes_card.dart';
 import 'package:clipstick/features/home/presentation/widgets/buildlist_notes_card_widget.dart';
 import 'package:clipstick/features/home/presentation/widgets/color_picker_dialog.dart';
@@ -39,10 +40,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+   final HomeTutorialController _tutorialController = HomeTutorialController();
   final GlobalKey _gridViewKey = GlobalKey();
 
-  GlobalKey keyButton1 = GlobalKey();
-    //TutorialCoachMark? tutorialCoachMark;
+  
+
+  // Suas GlobalKeys existentes
+  final GlobalKey _drawerKey = GlobalKey();
+  final GlobalKey _addButtonKey = GlobalKey();
+  final GlobalKey _viewModeKey = GlobalKey();
 
   final Set<String> _selectedNoteIds = {};
   bool _isDragging = false;
@@ -79,14 +85,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     HapticFeedback.mediumImpact();
 
-    final count = _selectedNoteIds.length;
+    //final count = _selectedNoteIds.length;
 
-    Utils.normalSucess(
+  /*   Utils.normalSucess(
       title: count > 1
           ? (allPinned ? 'Notas Desfixadas' : 'Notas Fixadas')
           : (allPinned ? 'Nota Desfixada' : 'Nota Fixada'),
       message: '$count nota${count > 1 ? 's' : ''} ${allPinned ? 'desfixada' : 'fixada'}${count > 1 ? 's' : ''} 📌',
-    );
+    ); */
     _clearSelection();
   }
 
@@ -94,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _myBannerHome.load();
-   // _showTutorial();
+   _checkAndShowTutorial();
   }
 
   @override
@@ -104,67 +110,25 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /* void _showTutorial() {
-    tutorialCoachMark = TutorialCoachMark(
-      targets: _createTargets(),
-      colorShadow: Colors.black,
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      textSkip: "PULAR",
-      onSkip: () {
-        return true;
-      },
-      onFinish: () {
-        print("Tutorial da Home finalizado");
-      },
-    );
+   Future<void> _checkAndShowTutorial() async {
+    final shouldShow = await _tutorialController.shouldShowTutorial();
     
-    tutorialCoachMark!.show(context: context);
-  } */
+    if (shouldShow) {
+     
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _tutorialController.showTutorial(
+          context: context,
+          drawerKey: _drawerKey,
+          addButtonKey: _addButtonKey,
+          viewModeKey: _viewModeKey,
+          onFinish: () {
+            debugPrint("Tutorial concluído!");
+          },
+        );
+      });
+    }
+  }
 
- /*  List<TargetFocus> _createTargets() {
-    List<TargetFocus> targets = [];
-
-    // Target para o botão do Drawer
-    targets.add(
-      TargetFocus(
-        identify: "drawer-key",
-        keyTarget: keyButton1,
-        alignSkip: Alignment.topLeft,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) {
-              return Container(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      "Menu",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20.0,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "Toque aqui para abrir o menu lateral com opções adicionais.",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-
-
-    return targets;
-  } */
 
   bool get _isSelectionMode => _selectedNoteIds.isNotEmpty;
 
@@ -249,73 +213,77 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
-      child: Scaffold(
-        appBar: HomeAppbar(
-          keyButton1: keyButton1,
-          isSelectionMode: _isSelectionMode, 
-          buildContext: context,
-          selectedNoteIds: _selectedNoteIds,
-          onClearSelection: _clearSelection,
-          togglePinSelectedNotes: _togglePinSelectedNotes,
-          showTagSelectionDialog: _showTagSelectionDialog,
-          changeColorOfSelectedNotes: _changeColorOfSelectedNotes,
-          showDeleteConfirmationDialog: () => _showDeleteConfirmationDialog(context),
-          duplicateSelectedNotes: _duplicateSelectedNotes,
-          shareSelectedNotes: _shareSelectedNotes,
-          
-          ),
-
-        drawer: buildDrawer(context),
-
-        body: Column(
-          children: [
-            Expanded(
-              child: BlocBuilder<HomeCubit, HomeState>(
-                builder: (context, noteState) {
-                  if (noteState is HomeError) {
-                    return Center(child: Text(noteState.message));
-                  }
-                  if (noteState is HomeLoading) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  List<NoteModel> notesFromDatabase = [];
-                  if (noteState is HomeLoaded) {
-                    notesFromDatabase = noteState.notes;
-                  }
-
-                  return BlocBuilder<ViewModeCubit, ViewModeState>(
-                    builder: (context, state) {
-                      return _buildNotesView(context, state, notesFromDb: notesFromDatabase);
-                    },
-                  );
-                },
-              ),
+      child: SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: HomeAppbar(
+            viewModeKey: _viewModeKey,
+            drawerKey: _drawerKey,
+            isSelectionMode: _isSelectionMode, 
+            buildContext: context,
+            selectedNoteIds: _selectedNoteIds,
+            onClearSelection: _clearSelection,
+            togglePinSelectedNotes: _togglePinSelectedNotes,
+            showTagSelectionDialog: _showTagSelectionDialog,
+            changeColorOfSelectedNotes: _changeColorOfSelectedNotes,
+            showDeleteConfirmationDialog: () => _showDeleteConfirmationDialog(context),
+            duplicateSelectedNotes: _duplicateSelectedNotes,
+            shareSelectedNotes: _shareSelectedNotes,
+            
             ),
-          
-          ],
-        ),
-        bottomNavigationBar: SizedBox(
-          width: _myBannerHome.size.width.toDouble(),
-          height: _myBannerHome.size.height.toDouble(),
-          child: AdWidget(ad: _myBannerHome),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        floatingActionButton: _isSelectionMode
-            ? null
-            : BlocBuilder<HomeCubit, HomeState>(
-                builder: (context, state) {
-                  if (state is HomeLoaded && state.notes.isEmpty) {
-                    return Container();
-                  }
-                  return FloatingActionButton(
-                    onPressed: () {
-                      _showCreateNoteSheet(context);
-                    },
-                    tooltip: 'Criar nova nota',
-                    child: Icon(Icons.add),
-                  );
-                },
+        
+          drawer: HomeDrawer(),
+        
+          body: Column(
+            children: [
+              Expanded(
+                child: BlocBuilder<HomeCubit, HomeState>(
+                  builder: (context, noteState) {
+                    if (noteState is HomeError) {
+                      return Center(child: Text(noteState.message));
+                    }
+                    if (noteState is HomeLoading) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    List<NoteModel> notesFromDatabase = [];
+                    if (noteState is HomeLoaded) {
+                      notesFromDatabase = noteState.notes;
+                    }
+        
+                    return BlocBuilder<ViewModeCubit, ViewModeState>(
+                      builder: (context, state) {
+                        return _buildNotesView(context, state, notesFromDb: notesFromDatabase);
+                      },
+                    );
+                  },
+                ),
               ),
+            
+            ],
+          ),
+          bottomNavigationBar: SizedBox(
+            width: _myBannerHome.size.width.toDouble(),
+            height: _myBannerHome.size.height.toDouble(),
+            child: AdWidget(ad: _myBannerHome),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: _isSelectionMode
+              ? null
+              : BlocBuilder<HomeCubit, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeLoaded && state.notes.isEmpty) {
+                      return Container();
+                    }
+                    return FloatingActionButton(
+                      onPressed: () {
+                        _showCreateNoteSheet(context);
+                      },
+                      tooltip: 'Criar nova nota',
+                      child: Icon(Icons.add),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -407,10 +375,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (result.status == ShareResultStatus.success) {
-        Utils.normalSucess(
+       /*  Utils.normalSucess(
           title: 'Compartilhado!',
           message: '$count nota${count > 1 ? 's' : ''} compartilhada${count > 1 ? 's' : ''} 🔗',
-        );
+        ); */
         _clearSelection();
         HapticFeedback.mediumImpact();
       }
@@ -719,20 +687,20 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
 
     var result = await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
-    final count = _selectedNoteIds.length;
+   // final count = _selectedNoteIds.length;
 
     if (result) {
       if (tagIds.isEmpty) {
-        Utils.normalSucess(
+       /*  Utils.normalSucess(
           title: 'Marcadores Removidos',
           message: '$count nota${count > 1 ? 's' : ''} sem marcadores 🏷️',
-        );
+        ); */
       } else {
-        Utils.normalSucess(
+        /* Utils.normalSucess(
           title: 'Marcadores Aplicados',
           message:
               '${tagIds.length} marcador${tagIds.length > 1 ? 'es' : ''} adicionado${tagIds.length > 1 ? 's' : ''} a $count nota${count > 1 ? 's' : ''} 🏷️',
-        );
+        ); */
       }
     } else {
       Utils.normalException(message: 'Não foi possível aplicar esta ação às notas selecionadas.');
@@ -771,7 +739,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNotesView(BuildContext context, ViewModeState state, {required List<NoteModel> notesFromDb}) {
     if (notesFromDb.isEmpty) {
-      return buildEmptyState(context, state, () => _showCreateNoteSheet(context));
+      return buildEmptyState(context, state, () => _showCreateNoteSheet(context), _addButtonKey);
     }
 
     return state.isGridView
@@ -1409,10 +1377,10 @@ class _HomeScreenState extends State<HomeScreen> {
       var result = await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
 
       if (result) {
-        Utils.normalSucess(
+      /*   Utils.normalSucess(
           title: count > 1 ? "Cores alteradas" : "Cor alterada",
           message: '$count nota${count > 1 ? 's' : ''} atualizada${count > 1 ? 's' : ''} 🎨',
-        );
+        ); */
       } else {
         Utils.normalException(message: 'Não foi possível aplicar esta ação às notas selecionadas.');
       }
