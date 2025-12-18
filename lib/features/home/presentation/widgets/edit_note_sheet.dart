@@ -1,9 +1,12 @@
 import 'package:clipstick/core/utils/utillity.dart';
 import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/note_model.dart';
 import 'color_picker_widget.dart';
@@ -13,7 +16,9 @@ class EditNoteSheet extends StatefulWidget {
   final NoteModel note;
   final BannerAd? bannerAd;
 
-  const EditNoteSheet({super.key, required this.note, this.bannerAd});
+
+  const EditNoteSheet({super.key, required this.note,
+   this.bannerAd, });
 
   @override
   State<EditNoteSheet> createState() => _EditNoteSheetState();
@@ -44,6 +49,86 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
     _contentController.dispose();
     super.dispose();
   }
+
+  Future<void> _openLinksInContent() async {
+  final content = _contentController.text;
+  
+  // Regex simples para detectar URLs
+  final urlRegex = RegExp(
+    r'https?://[^\s]+',
+    caseSensitive: false,
+  );
+  
+  final matches = urlRegex.allMatches(content);
+  
+  if (matches.isEmpty) {
+    Utils.normalException(
+      title: 'Nenhum link encontrado',
+      message: 'Não há links nesta nota.',
+    );
+    return;
+  }
+  
+  // Se houver apenas um link, abre diretamente
+  if (matches.length == 1) {
+    final url = matches.first.group(0)!;
+    final uri = Uri.parse(url);
+    
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      Utils.normalException(
+        title: 'Erro',
+        message: 'Não foi possível abrir o link',
+      );
+    }
+    return;
+  }
+  
+  // Se houver múltiplos links, mostra um diálogo para escolher
+  Get.dialog(
+    AlertDialog(
+      title: Text('Escolha um link para abrir'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: matches.map((match) {
+            final url = match.group(0)!;
+            return ListTile(
+              title: Text(
+                url,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  decoration: TextDecoration.underline,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () async {
+                Get.back();
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  Utils.normalException(
+                    title: 'Erro',
+                    message: 'Não foi possível abrir o link',
+                  );
+                }
+              },
+            );
+          }).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: Text('Cancelar'),
+        ),
+      ],
+    ),
+  );
+}
 
   Future<void> _saveChanges() async {
     if (_formKey.currentState!.validate()) {
@@ -101,6 +186,45 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
     );
   }
 
+  void _copyContentToClipboard() async {
+  final content = _contentController.text;
+  if (content.trim().isEmpty) return;
+
+  await Clipboard.setData(ClipboardData(text: content));
+  Utils.normalSucess(
+    title: 'Conteúdo copiado!',
+    message: 'O conteúdo da nota foi copiado para a área de transferência.',
+  );
+}
+
+
+   void _shareNote(NoteModel note) async {
+  final StringBuffer textToShare = StringBuffer();
+  
+  if (note.title.isNotEmpty) {
+    textToShare.write('${note.title}: ');
+  }
+  textToShare.write(note.content);
+
+  HapticFeedback.selectionClick();
+
+  try {
+    final result = await Share.share(
+      textToShare.toString(),
+      subject: 'ClipStick - ${note.title}',
+    );
+
+    if (result.status == ShareResultStatus.success) {
+      HapticFeedback.mediumImpact();
+    }
+  } catch (e) {
+    Utils.normalException(
+      title: 'Erro ao Compartilhar',
+      message: 'Não foi possível compartilhar a nota.',
+    );
+    HapticFeedback.mediumImpact();
+  }
+}
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -144,6 +268,9 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
                           ),
                           Row(
                             children: [
+                                      
+                                IconButton(icon: Icon(Icons.share_outlined), 
+                                onPressed: () => _shareNote(widget.note), tooltip: 'Compartilhar'),
                               IconButton(
                                 icon: Icon(Icons.delete_outline, color: Colors.red),
                                 onPressed: _deleteNote,
@@ -189,12 +316,30 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
       
                       SizedBox(height: 20),
       
-                      Text(
-                        'Conteúdo',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Conteúdo',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                               IconButton(
+      icon: Icon(Icons.link),
+      onPressed: _openLinksInContent,
+      tooltip: 'Abrir links',
+    ),
+                               IconButton(icon: Icon(Icons.copy_outlined),
+                                onPressed: _copyContentToClipboard, tooltip: 'Fechar'),
+
+                        
+                            ],
+                          )
+                        ],
                       ),
                       SizedBox(height: 8),
                       TextFormField(

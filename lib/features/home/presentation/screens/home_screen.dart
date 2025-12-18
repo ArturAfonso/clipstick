@@ -1283,7 +1283,11 @@ class _HomeScreenState extends State<HomeScreen> {
             initialChildSize: 0.75,
             minChildSize: 0.5,
             maxChildSize: 0.95,
-            builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote),
+            builder: (context, scrollController) => EditNoteSheet(
+              note: note, bannerAd: myBannerEditNote,
+            
+              
+              ),
           ),
         )
         .then((result) {

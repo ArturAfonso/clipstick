@@ -26,7 +26,11 @@ class TagViewScreen extends StatefulWidget {
 
   @override
   State<TagViewScreen> createState() => _TagViewScreenState();
+
+  
 }
+
+
 
 class _TagViewScreenState extends State<TagViewScreen> {
   late TagModel _currentTag;
@@ -339,6 +343,8 @@ class _TagViewScreenState extends State<TagViewScreen> {
     );
   }
 
+  
+
   void _openNote(BuildContext context, NoteModel note) {
     BannerAd? myBannerEditNote = BannerAd(
       adUnitId: AppConfig.getAdmobBannerUnitId(),
@@ -359,7 +365,10 @@ class _TagViewScreenState extends State<TagViewScreen> {
             initialChildSize: 0.75,
             minChildSize: 0.5,
             maxChildSize: 0.95,
-            builder: (context, scrollController) => EditNoteSheet(note: note, bannerAd: myBannerEditNote),
+            builder: (context, scrollController) => EditNoteSheet(
+              note: note, bannerAd: myBannerEditNote, 
+              
+           ),
           ),
         )
         .then((result) {
