@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+static Color getTextColor(Color backgroundColor) {
+    final luminance = backgroundColor.computeLuminance();
+    return luminance > 0.5 ? Colors.black : Colors.white;
+  }
+
+
   // ============================================
-  // 🌞 LIGHT THEME - BASEADO NO FIGMA CSS
+  // 🌞 LIGHT THEME - BASEADO NO FIGMA 
   // ============================================
   
   // Core Colors (HSL convertido para HEX)
@@ -51,7 +57,7 @@ class AppColors {
   static const Color lightSidebarBorder = Color(0xFFE5E7EB); // --sidebar-border: 220 13% 91%
 
   // ============================================
-  // 🌙 DARK THEME - BASEADO NO FIGMA CSS
+  // 🌙 DARK THEME - BASEADO NO FIGMA 
   // ============================================
   
   // Core Colors (HSL convertido para HEX)
@@ -96,4 +102,32 @@ class AppColors {
   static const Color darkSidebarAccent = Color(0xFF374151); // --sidebar-accent: 240 3.7% 15.9%
   static const Color darkSidebarAccentForeground = Color(0xFFF9FAFB); // --sidebar-accent-foreground: 240 4.8% 95.9%
   static const Color darkSidebarBorder = Color(0xFF374151); // --sidebar-border: 240 3.7% 15.9%
+
+
+  /* Notification colors - Light mode (subtle & elegant) */
+    static  Color lightSuccess= hsl(142,50,92);
+     static  Color lightSuccessForeground= hsl(142,60,30);
+    static  Color lightError= hsl(0,50,92);
+    static  Color lightErrorForeground= hsl(0,60,40);
+    static  Color lightInfo= hsl(210,50,92);
+    static  Color lightInfoForeground= hsl(210,60,35);
+    static  Color lightWarning= hsl(38,50,92);
+    static  Color lightWarningForeground= hsl(38,60,35);
+
+
+     /* Notification colors - Dark mode (subtle & elegant) */
+    static  Color darkSuccess= hsl(142,35,20);
+    static  Color darkSuccessForeground= hsl(142,50,75);
+    static  Color darkError= hsl(0,35,20);
+    static  Color darkErrorForeground= hsl(0,55,75);
+    static  Color darkInfo= hsl(210,30,20);
+    static  Color darkInfoForeground= hsl(210,50,75);
+    static  Color darkWarning= hsl(38,35,20);
+    static  Color darkWarningForeground= hsl(38,55,75);
+
+
+
+    static Color hsl(double h, double s, double l) {
+    return HSLColor.fromAHSL(1.0, h, s / 100, l / 100).toColor();
+  }
 }

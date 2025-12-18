@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+// ignore_for_file: deprecated_member_use
+ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
@@ -15,37 +16,52 @@ class AppTheme {
     brightness: Brightness.light,
     
     // Color Scheme - EXATAMENTE DO FIGMA
-    colorScheme: const ColorScheme.light(
+    colorScheme:  ColorScheme.light(
       brightness: Brightness.light,
       
-      // 🎯 CORES PRINCIPAIS DO FIGMA
-      primary: AppColors.lightPrimary, // #2D3748 (primary)
-      onPrimary: AppColors.lightPrimaryForeground, // #FFFFFF
+       primary: hsl(220, 15, 20), // --primary - preto
+      onPrimary: hsl(0, 0, 100), // --primary-foreground - branco
+
       
-      secondary: AppColors.lightSecondary, // #E2E8F0 (secondary)
-      onSecondary: AppColors.lightSecondaryForeground, // #2D3748
+      secondary: hsl(210, 15, 92), // --secondary - branco
+      onSecondary: hsl(220, 15, 20), // --secondary-foreground  - preto
+
+      tertiary: hsl(45, 100, 65), // Usando --accent como Tertiary - amarelo
+      onTertiary: hsl(220, 15, 20), // --accent-foreground - preto
       
-      surface: AppColors.lightCard, // #FFFFFF (card)
-      onSurface: AppColors.lightForeground, // #2D3748
+       error: hsl(0, 85, 60), // --destructive - vermelho
+      onError: hsl(0, 0, 100), // --destructive-foreground- branco
+
       
-      error: AppColors.lightDestructive, // #EF4444
-      onError: AppColors.lightDestructiveForeground, // #FFFFFF
+       surface: hsl(0, 0, 100), // --card  - branco
+      onSurface: hsl(220, 15, 20), // --card-foreground - preto
+
       
-      outline: AppColors.lightBorder, // #D1D5DB
-      outlineVariant: AppColors.lightMuted, // #F1F5F9
+     
+
+      outline: hsl(210, 15, 88), // --border - cinza
+ surfaceContainerHighest: hsl(210, 15, 95), // --input / --muted - cinza claro
+      onSurfaceVariant: hsl(220, 10, 50), // --muted-foreground - cinza escuro
+
       
-      // 🎨 CORES ESPECIAIS
-      surfaceContainerHighest: AppColors.lightMuted, // #F1F5F9 (muted)
-      onSurfaceVariant: AppColors.lightMutedForeground, // #64748B (muted-foreground)
       
-      tertiary: AppColors.lightAccent, // #F6D55C (accent)
-      onTertiary: AppColors.lightAccentForeground, // #2D3748
+     
+    
+    ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: hsl(220, 15, 20), // --primary - preto claro
+        foregroundColor: hsl(210, 20, 95), // --primary (Branco)  
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
     ),
     
-    // App Bar Theme - CLEAN E SIMPLES
     appBarTheme: AppBarTheme(
       backgroundColor: AppColors.lightCard, // #FFFFFF
-      foregroundColor: AppColors.lightForeground, // #2D3748
+      foregroundColor: AppColors.darkBackground, // #2D3748
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 1,
@@ -69,10 +85,8 @@ class AppTheme {
       ),
     ),
     
-    // Scaffold Background
     scaffoldBackgroundColor: AppColors.lightBackground, // #FAFBFC
     
-    // Card Theme
     cardTheme: CardThemeData(
       color: AppColors.lightCard,
       elevation: 2,
@@ -82,13 +96,14 @@ class AppTheme {
       ),
     ),
     
-    // FloatingActionButton Theme
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: AppColors.lightAccent, // #F6D55C (accent)
       foregroundColor: AppColors.lightAccentForeground, // #2D3748
       elevation: 4,
       shape: const CircleBorder(),
     ),
+
+   
   );
   
   // ============================================
@@ -100,51 +115,47 @@ class AppTheme {
     brightness: Brightness.dark,
     
     // Color Scheme - EXATAMENTE DO FIGMA
-    colorScheme: const ColorScheme.dark(
+    colorScheme:  ColorScheme.dark(
       brightness: Brightness.dark,
+       primary: hsl(210, 20, 95), // --primary (Branco no dark mode)
+      onPrimary: hsl(220, 20, 12), // --primary-foreground preto
       
-      // 🎯 CORES PRINCIPAIS DO FIGMA
-      primary: AppColors.darkPrimary, // #F1F5F9 (primary)
-      onPrimary: AppColors.darkPrimaryForeground, // #1E293B
+      secondary: hsl(220, 15, 20), // --secondary - preto claro
+      onSecondary: hsl(210, 20, 95), // --secondary-foreground - branco
       
-      secondary: AppColors.darkSecondary, // #475569 (secondary)
-      onSecondary: AppColors.darkSecondaryForeground, // #F1F5F9
+      tertiary: hsl(45, 95, 60), // --accent - amarelo
+      onTertiary: hsl(220, 20, 12), // --accent-foreground - preto
       
-      surface: AppColors.darkCard, // #334155 (card)
-      onSurface: AppColors.darkForeground, // #F1F5F9
+      error: hsl(0, 75, 55), // --destructive
+      onError: hsl(210, 20, 95), // --destructive-foreground
       
-      error: AppColors.darkDestructive, // #DC2626
-      onError: AppColors.darkDestructiveForeground, // #F1F5F9
-      
-      outline: AppColors.darkBorder, // #475569
-      outlineVariant: AppColors.darkMuted, // #475569
-      
-      // 🎨 CORES ESPECIAIS
-      surfaceContainerHighest: AppColors.darkMuted, // #475569 (muted)
-      onSurfaceVariant: AppColors.darkMutedForeground, // #94A3B8 (muted-foreground)
-      
-      tertiary: AppColors.darkAccent, // #EAB308 (accent)
-      onTertiary: AppColors.darkAccentForeground, // #1E293B
+      surface: hsl(220, 18, 15), // --card  - preto escuro
+      onSurface: hsl(210, 20, 95), // --card-foreground  - branco
+
+      outline: hsl(220, 15, 22), // --border - cinza escuro
+      surfaceContainerHighest: hsl(220, 15, 20), // --input / --muted - preto claro
+      onSurfaceVariant: hsl(215, 15, 65), // --muted-foreground - cinza claro
     ),
+
     
-    // App Bar Theme - CLEAN E SIMPLES
+    
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.darkCard, // #334155
-      foregroundColor: AppColors.darkForeground, // #F1F5F9
-      surfaceTintColor: Colors.transparent,
+      backgroundColor: hsl(220, 15, 20), // --input / --muted - preto claro
+      foregroundColor: hsl(210, 20, 95), // --secondary-foreground - branco
+      surfaceTintColor: hsl(220, 15, 20), // --input / --muted - preto claro
       elevation: 0,
       scrolledUnderElevation: 1,
       centerTitle: false,
       titleTextStyle: AppTextStyles.headingMedium.copyWith(
-        color: AppColors.darkForeground,
+        color:  hsl(210, 20, 95), // --secondary-foreground - branco
         fontWeight: FontWeight.w600,
       ),
       iconTheme: IconThemeData(
-        color: AppColors.darkMutedForeground, // #94A3B8 (cinza claro)
+        color:   hsl(210, 20, 95), // --secondary-foreground - branco
         size: 24,
       ),
       actionsIconTheme: IconThemeData(
-        color: AppColors.darkMutedForeground, // #94A3B8 (cinza claro)
+        color:  hsl(210, 20, 95), // --secondary-foreground - branco
         size: 24,
       ),
       systemOverlayStyle: const SystemUiOverlayStyle(
@@ -154,10 +165,10 @@ class AppTheme {
       ),
     ),
     
-    // Scaffold Background
-    scaffoldBackgroundColor: AppColors.darkBackground, // #1E293B
+   
+    scaffoldBackgroundColor: hsl(220, 18, 15), //  - preto escuro
     
-    // Card Theme
+  
     cardTheme: CardThemeData(
       color: AppColors.darkCard,
       elevation: 2,
@@ -167,12 +178,29 @@ class AppTheme {
       ),
     ),
     
-    // FloatingActionButton Theme
+
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: AppColors.darkAccent, // #EAB308 (accent)
-      foregroundColor: AppColors.darkAccentForeground, // #1E293B
+      backgroundColor: hsl(45, 95, 60), // --accent - amarelo
+      foregroundColor: hsl(220, 20, 12), // --accent-foreground - preto
       elevation: 4,
       shape: const CircleBorder(),
     ),
+
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: hsl(210, 20, 95), // --primary (Branco no dark mode)
+        foregroundColor: hsl(220, 20, 12), // --primary-foreground preto
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    ),
   );
-}
+
+  
+  static Color hsl(double h, double s, double l) {
+    return HSLColor.fromAHSL(1.0, h, s / 100, l / 100).toColor();
+  }
+} 
+

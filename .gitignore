@@ -123,6 +123,7 @@ web.config
 .env.development
 .env.test
 .env.*
+!.env.example
 
 # Arquivos de script com possíveis senhas
 deploy.sh

@@ -1,11 +1,20 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:clipstick/core/utils/utillity.dart';
+import 'package:clipstick/features/home/presentation/cubit/home_cubit.dart';
+import 'package:clipstick/features/home/presentation/cubit/home_state.dart';
+import 'package:clipstick/features/tags/presentation/cubit/tags_cubit.dart';
+import 'package:clipstick/features/tags/presentation/cubit/tags_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/tag_model.dart';
 import '../widgets/tag_input_field.dart';
 import '../widgets/tag_item_widget.dart';
+// ignore_for_file: deprecated_member_use
 
 class EditTagsScreen extends StatefulWidget {
   const EditTagsScreen({super.key});
@@ -17,15 +26,12 @@ class EditTagsScreen extends StatefulWidget {
 class _EditTagsScreenState extends State<EditTagsScreen> {
   final TextEditingController _newTagController = TextEditingController();
   final FocusNode _newTagFocusNode = FocusNode();
-  final List<TagModel> _tags = [];
 
-  // 🆕 CONTROLE DE EDIÇÃO ÚNICA
-  String? _editingTagId; // ID do marcador sendo editado
+  String? _editingTagId;
 
   @override
   void initState() {
     super.initState();
-    _loadTags();
   }
 
   @override
@@ -35,200 +41,127 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
     super.dispose();
   }
 
-  // 📥 CARREGAR TAGS (TODO: Implementar persistência)
-  void _loadTags() {
-    // TODO: Carregar do banco de dados
-    // Por enquanto, dados de exemplo
-    setState(() {
-      _tags.addAll([
-        TagModel(
-          id: '1',
-          name: 'Trabalho',
-          createdAt: DateTime.now().subtract(Duration(days: 5)), updatedAt: DateTime.now(),
-        ),
-        TagModel(
-          id: '2',
-          name: 'Pessoal',
-          createdAt: DateTime.now().subtract(Duration(days: 3)), updatedAt: DateTime.now(),
-        ),
-        TagModel(
-          id: '3',
-          name: 'Ideias',
-          createdAt: DateTime.now().subtract(Duration(days: 1)), updatedAt: DateTime.now(),
-        ),
-      ]);
-    });
-  }
-
-  // ➕ CRIAR NOVA TAG
-  void _createTag() {
+  void _createTag(List<TagModel> tags) {
     final tagName = _newTagController.text.trim();
-    
     if (tagName.isEmpty) return;
 
-    // Verifica duplicatas
-    if (_tags.any((tag) => tag.name.toLowerCase() == tagName.toLowerCase())) {
-      Get.snackbar(
-        'Marcador Duplicado',
-        'Já existe um marcador com esse nome',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        colorText: Theme.of(context).colorScheme.onErrorContainer,
-      );
+    if (tags.any((tag) => tag.name.toLowerCase() == tagName.toLowerCase())) {
+      Utils.normalWarning(message: 'Já existe um marcador com esse nome');
       return;
     }
 
-    final newTag = TagModel(
-      id: Uuid().v4(),
-      name: tagName, createdAt: DateTime.now(), updatedAt: DateTime.now(),
-    );
+    final newTag = TagModel(id: Uuid().v4(), name: tagName, createdAt: DateTime.now(), updatedAt: DateTime.now());
 
-    setState(() {
-      _tags.add(newTag);
-      _newTagController.clear();
-    });
-
+    context.read<TagsCubit>().addTag(newTag);
+    _newTagController.clear();
     _newTagFocusNode.unfocus();
     HapticFeedback.mediumImpact();
-
-  /*   Get.snackbar(
-      'Marcador Criado',
-      '"$tagName" foi adicionado aos marcadores 🏷️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
-    ); */
-
-    // TODO: Salvar no banco de dados
   }
 
-
-    // 🆕 INICIAR EDIÇÃO DE TAG
   void _startEditingTag(String tagId) {
     setState(() {
-      _editingTagId = tagId; // ✅ Marca como editando
+      _editingTagId = tagId;
     });
   }
 
-  // 🆕 FINALIZAR EDIÇÃO (SEM SALVAR)
   void _cancelEditingTag() {
     setState(() {
-      _editingTagId = null; // ✅ Desmarca edição
+      _editingTagId = null;
     });
   }
 
-
-  // ✏️ ATUALIZAR TAG
-  void _updateTag(TagModel tag, String newName) {
+  void _updateTag(TagModel tag, String newName, List<TagModel> tags) {
     if (newName.trim().isEmpty) {
-      // Se vazio, apenas cancela edição
       _cancelEditingTag();
       return;
     }
 
-    // Verifica duplicatas (exceto a própria tag)
-    if (_tags.any((t) => 
-      t.id != tag.id && 
-      t.name.toLowerCase() == newName.toLowerCase()
-    )) {
-      Get.snackbar(
-        'Nome Duplicado',
-        'Já existe um marcador com esse nome',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-        colorText: Theme.of(context).colorScheme.onErrorContainer,
-      );
+    if (tags.any((t) => t.id != tag.id && t.name.toLowerCase() == newName.toLowerCase())) {
+      Utils.normalWarning(message: 'Já existe um marcador com esse nome');
       _cancelEditingTag();
       return;
     }
 
-    setState(() {
-      final index = _tags.indexWhere((t) => t.id == tag.id);
-      if (index != -1) {
-        _tags[index] = tag.copyWith(
-          name: newName,
-          updatedAt: DateTime.now(),
-        );
-      }
-      _editingTagId = null; // ✅ Finaliza edição
-    });
-
+    final updatedTag = tag.copyWith(name: newName, updatedAt: DateTime.now());
+    context.read<TagsCubit>().updateTag(updatedTag, context);
+    _editingTagId = null;
     HapticFeedback.lightImpact();
-
-   /*  Get.snackbar(
-      'Marcador Atualizado',
-      '"${tag.name}" → "$newName" ✏️',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: Duration(seconds: 2),
-    ); */
-
-    // TODO: Atualizar no banco de dados
   }
 
-  // 🗑️ DELETAR TAG
   void _deleteTag(TagModel tag) {
-    // Mostra dialog de confirmação
     Get.dialog(
       AlertDialog(
-        title: Text(
-          'Excluir Marcador',
-          style: AppTextStyles.headingSmall,
-        ),
+        title: Text('Excluir Marcador', style: AppTextStyles.headingSmall),
         content: Text(
-          'Tem certeza que deseja excluir o marcador "${tag.name}"?\n\nEsta ação não pode ser desfeita.',
+          'Tem certeza que deseja excluir o marcador "${tag.name}"?\nIsto nao exclui as notas associadas a ele.\n\nEsta ação não pode ser desfeita.',
           style: AppTextStyles.bodyMedium,
         ),
         actions: [
+          TextButton(onPressed: () => Get.back(), child: Text('Cancelar')),
           TextButton(
-            onPressed: () => Get.back(),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
+            onPressed: () async {
               Get.back();
-              
-              setState(() {
-                _tags.removeWhere((t) => t.id == tag.id);
-                _editingTagId = null; // ✅ Limpa edição
-              });
+              final noteState = context.read<HomeCubit>().state;
+              if (noteState is HomeLoaded) {
+                final notesWithTag = noteState.notes
+                    .where((note) => note.tags != null && note.tags!.contains(tag.id))
+                    .toList();
+
+                final updatedNotes = notesWithTag.map((note) {
+                  final newTags = List<String>.from(note.tags ?? []);
+                  newTags.remove(tag.id);
+                  return note.copyWith(tags: newTags, updatedAt: DateTime.now());
+                }).toList();
+
+                if (updatedNotes.isNotEmpty) {
+                  await context.read<HomeCubit>().updateNotesBatch(updatedNotes);
+                }
+              }
+
+              var result = await context.read<TagsCubit>().deleteTag(tag.id, context);
+
+              if (result) {
+                Utils.normalSucess(
+                title: 'Marcador Excluído',
+                message: '"${tag.name}" foi removido de todas as notas 🗑️',
+              );
+              } else {
+                Utils.normalException(
+                  title: 'Erro',
+                  message: 'Não foi possível excluir o marcador. Tente novamente mais tarde.',
+                );  
+              }
 
               HapticFeedback.heavyImpact();
 
-            /*   Get.snackbar(
-                'Marcador Excluído',
-                '"${tag.name}" foi removido 🗑️',
-                snackPosition: SnackPosition.BOTTOM,
-                duration: Duration(seconds: 2),
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                colorText: Theme.of(context).colorScheme.onErrorContainer,
-              ); */
+              Get.back();
 
-              // TODO: Deletar do banco de dados
+             
+
+            /*   Future.delayed(Duration(milliseconds: 400), () {
+                if (mounted) Get.back();
+              }); */
+              _editingTagId = null;
             },
-            child: Text(
-              'Excluir',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+            child: Text('Excluir', style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ),
         ],
       ),
     );
   }
 
-  // ❌ LIMPAR CAMPO DE NOVA TAG
   void _clearNewTag() {
     _newTagController.clear();
     _newTagFocusNode.unfocus();
     setState(() {});
   }
 
-    // 🆕 INTERCEPTAR BOTÃO VOLTAR
   Future<bool> _onWillPop() async {
-    // Se está editando algum marcador, finaliza edição
     if (_editingTagId != null) {
       _cancelEditingTag();
-      return false; // ✅ Não fecha a tela, apenas cancela edição
+      return false;
     }
-    return true; // ✅ Permite voltar
+    return true;
   }
 
   @override
@@ -237,142 +170,131 @@ class _EditTagsScreenState extends State<EditTagsScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        
-        // 📱 APPBAR
+
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.surface,
           elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Get.back(),
-          ),
+          leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Get.back()),
           title: Text(
             'Gerenciar Marcadores',
-            style: AppTextStyles.headingMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+            style: AppTextStyles.headingMedium.copyWith(color: Theme.of(context).colorScheme.onSurface),
           ),
           actions: [
-            // 📊 CONTADOR DE MARCADORES
-            if (_tags.isNotEmpty)
-              Center(
-                child: Container(
-                  margin: EdgeInsets.only(right: 16),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_tags.length}',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+            BlocBuilder<TagsCubit, TagsState>(
+              builder: (context, state) {
+                if (state is TagsLoaded && state.tags.isNotEmpty) {
+                  return Center(
+                    child: Container(
+                      margin: EdgeInsets.only(right: 16),
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${state.tags.length}',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
           ],
         ),
-      
-        // 📝 BODY
-        body: Column(
-          children: [
-            // 🔝 CAMPO DE NOVA TAG (FIXO NO TOPO)
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+        body: BlocBuilder<TagsCubit, TagsState>(
+          builder: (context, state) {
+            if (state is TagsLoading) {
+              return Center(child: CircularProgressIndicator());
+            }
+            if (state is TagsLoaded) {
+              final tags = state.tags;
+              return Column(
                 children: [
-                  Text(
-                    'Novo Marcador',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: Offset(0, 2)),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Novo Marcador',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TagInputField(
+                          controller: _newTagController,
+                          focusNode: _newTagFocusNode,
+                          onSave: () => _createTag(tags),
+                          onClear: _clearNewTag,
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 8),
-                  TagInputField(
-                    controller: _newTagController,
-                    focusNode: _newTagFocusNode,
-                    onSave: _createTag,
-                    onClear: _clearNewTag,
-                  ),
+
+                  Expanded(child: tags.isEmpty ? _buildEmptyState(context) : _buildTagsList(context, tags)),
                 ],
-              ),
-            ),
-      
-            // 📋 LISTA DE TAGS
-            Expanded(
-              child: _tags.isEmpty
-                ? _buildEmptyState(context)
-                : _buildTagsList(context),
-            ),
-          ],
+              );
+            }
+            return _buildEmptyState(context);
+          },
         ),
       ),
     );
   }
 
-   // 📋 LISTA DE MARCADORES
-  Widget _buildTagsList(BuildContext context) {
+  Widget _buildTagsList(BuildContext context, List<TagModel> tags) {
     return ListView.builder(
       padding: EdgeInsets.all(16),
-      itemCount: _tags.length,
+      itemCount: tags.length,
       itemBuilder: (context, index) {
-        final tag = _tags[index];
+        final tag = tags[index];
         return TagItemWidget(
           key: ValueKey(tag.id),
           tag: tag,
-          isEditing: _editingTagId == tag.id, // 🆕 PASSA ESTADO DE EDIÇÃO
-          onStartEditing: () => _startEditingTag(tag.id), // 🆕 CALLBACK
-          onCancelEditing: _cancelEditingTag, // 🆕 CALLBACK
-          onDelete: () => _deleteTag(tag),
-          onUpdate: (newName) => _updateTag(tag, newName),
+          isEditing: _editingTagId == tag.id,
+          onStartEditing: () => _startEditingTag(tag.id),
+          onCancelEditing: _cancelEditingTag,
+          onDelete: () {
+            _deleteTag(tag);
+          },
+          onUpdate: (newName) => _updateTag(tag, newName, tags),
         );
       },
     );
   }
 
-  // 📭 ESTADO VAZIO
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.label_off_outlined,
-            size: 80,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-          ),
+          Icon(Icons.label_off_outlined, size: 80, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
           SizedBox(height: 16),
           Text(
             'Nenhum marcador criado',
-            style: AppTextStyles.headingSmall.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            ),
+            style: AppTextStyles.headingSmall.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
           ),
           SizedBox(height: 8),
           Text(
             'Crie seu primeiro marcador acima',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-            ),
+            style: AppTextStyles.bodyMedium.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
           ),
         ],
       ),
     );
   }
-
-  
 }

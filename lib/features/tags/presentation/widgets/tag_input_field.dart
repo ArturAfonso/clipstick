@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../../core/theme/app_text_styles.dart';
-
+// ignore_for_file: deprecated_member_use
 class TagInputField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -51,7 +50,7 @@ class _TagInputFieldState extends State<TagInputField> {
       ),
       child: Row(
         children: [
-          // ❌ BOTÃO LIMPAR/CANCELAR
+          
           AnimatedSwitcher(
             duration: Duration(milliseconds: 200),
             child: _hasText
@@ -69,7 +68,7 @@ class _TagInputFieldState extends State<TagInputField> {
               : SizedBox(width: 48, key: ValueKey('empty')),
           ),
 
-          // 📝 TEXTFIELD
+          
           Expanded(
             child: TextField(
               controller: widget.controller,
@@ -94,7 +93,7 @@ class _TagInputFieldState extends State<TagInputField> {
             ),
           ),
 
-          // ✅ BOTÃO SALVAR
+          
           AnimatedSwitcher(
             duration: Duration(milliseconds: 200),
             child: _hasText

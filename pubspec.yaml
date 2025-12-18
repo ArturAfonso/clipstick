@@ -16,6 +16,7 @@ dependencies:
 
 
   cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
 
   flutter_bloc: ^8.1.3
   flutter_reorderable_grid_view: ^5.5.2
@@ -27,6 +28,7 @@ dependencies:
 
   
   get: ^4.7.2
+  google_mobile_ads: ^6.0.0
 
   shared_preferences: ^2.2.2
   equatable: ^2.0.7
@@ -38,9 +40,26 @@ dependencies:
   #banco de dados
   drift: ^2.29.0
   sqlite3_flutter_libs: ^0.5.0
+  sqlite3: ^2.4.0
   path_provider: ^2.1.1
   path: ^1.9.0
+  saf: 1.0.4
+  permission_handler: ^12.0.1
   get_it: ^9.0.5
+  font_awesome_flutter: ^10.12.0
+  material_design_icons_flutter: 6.0.7296
+  file_picker: ^10.3.7
+  restart_app: ^1.3.2
+  flutter_linkify: ^6.0.0
+  url_launcher: ^6.2.5
+  # flutter_native_splash: ^2.4.7
+  video_player: ^2.6.0
+  tutorial_coach_mark: ^1.2.11
+  lottie: ^3.3.2
+  
+  
+
+  
   
   
   
@@ -53,6 +72,22 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.10.4
   drift_dev: ^2.29.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  remove_alpha_ios: true
+  image_path: "assets/icon.png"  
+  adaptive_icon_background: "#fbf4e2"
+  adaptive_icon_foreground: "assets/iconforeground.png"  # camada frontal  
+
+# flutter_native_splash:
+#   color: "#FFFFFF"
+#   image: assets/clipstick-logo.png
+#   android_gravity: center
+#   android_12:
+#     image: assets/clipstick-logo.png
 
 
 flutter:
@@ -63,7 +98,13 @@ flutter:
 
   
   assets:
-    - .env
+  #  - .env
+    - assets/
+    - assets/splash_video.mp4
+    - .env.dev
+    - .env.prod
+
+    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

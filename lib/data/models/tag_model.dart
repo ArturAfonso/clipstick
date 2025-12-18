@@ -1,17 +1,5 @@
 import 'dart:convert';
 
-/// 🏷️ MODELO DE TAG (ETIQUETA)
-/// 
-/// Representa uma tag que pode ser associada a múltiplas notas.
-/// 
-/// **Exemplo:**
-/// ```dart
-/// final tag = TagModel(
-///   id: 'tag-trabalho',
-///   name: 'Trabalho',
-///   createdAt: DateTime.now(),
-/// );
-/// ```
 class TagModel {
   final String id;
   final String name;
@@ -25,7 +13,6 @@ class TagModel {
     required this.updatedAt,
   });
 
-  /// 📝 COPIAR COM ALTERAÇÕES
   TagModel copyWith({
     String? id,
     String? name,
@@ -40,7 +27,6 @@ class TagModel {
     );
   }
 
-  /// 🗺️ CONVERTER PARA MAP
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -50,7 +36,6 @@ class TagModel {
     };
   }
 
-  /// 🗺️ CRIAR A PARTIR DE MAP
   factory TagModel.fromMap(Map<String, dynamic> map) {
     return TagModel(
       id: map['id'] as String,
@@ -60,10 +45,8 @@ class TagModel {
     );
   }
 
-  /// 📄 CONVERTER PARA JSON
   String toJson() => json.encode(toMap());
 
-  /// 📄 CRIAR A PARTIR DE JSON
   factory TagModel.fromJson(String source) {
     return TagModel.fromMap(json.decode(source) as Map<String, dynamic>);
   }

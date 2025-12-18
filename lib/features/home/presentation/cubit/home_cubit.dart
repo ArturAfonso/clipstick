@@ -1,35 +1,122 @@
+import 'package:clipstick/core/di/service_locator.dart';
+import 'package:clipstick/data/models/note_model.dart';
+import 'package:clipstick/data/repositories/note_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
-  HomeCubit() : super(HomeInitial());
-  
-  // Métodos para gerenciar estado da home
-  void loadNotes() {
+  final NoteRepository _noteRepository;
+  HomeCubit({NoteRepository? noteRepository})
+    : _noteRepository = noteRepository ?? sl<NoteRepository>(),
+      super(HomeInitial());
+
+  Future<void> loadNotes() async {
     emit(HomeLoading());
-    
     try {
-      // TODO: Carregar notas do repository
-      // List<Note> notes = await notesRepository.getAllNotes();
-      
-      // Por enquanto, simular carregamento
-      Future.delayed(Duration(seconds: 1), () {
-        emit(HomeLoaded(notes: [])); // Lista vazia por enquanto
-      });
+      final notes = await _noteRepository.getAllNotes();
+      emit(HomeLoaded(notes: notes));
     } catch (e) {
       emit(HomeError(message: e.toString()));
     }
   }
-  
+
   void refreshNotes() {
     loadNotes();
   }
-  
-  void searchNotes(String query) {
-    if (state is HomeLoaded) {
-      final currentState = state as HomeLoaded;
-      // TODO: Implementar busca
-      emit(currentState.copyWith(searchQuery: query));
+
+  Future<bool> addNote(NoteModel note) async {
+    emit(HomeLoading());
+    try {
+      await _noteRepository.createNote(note);
+      await loadNotes();
+      return true;
+    } catch (e) {
+      //emit(HomeError(message: e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> addNotesBatch(List<NoteModel> notes) async {
+    emit(HomeLoading());
+    try {
+      await _noteRepository.addNotesBatch(notes);
+      await loadNotes();
+      return true;
+    } catch (e) {
+      //emit(HomeError(message: e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> updateNote(NoteModel note) async {
+    emit(HomeLoading());
+    try {
+      await _noteRepository.updateNote(note);
+      await loadNotes();
+      return true;
+    } catch (e) {
+      //emit(HomeError(message: e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> updateNotesBatch(List<NoteModel> notes) async {
+    emit(HomeLoading());
+    try {
+      await _noteRepository.updateNotesBatch(notes);
+      await loadNotes();
+      return true;
+    } catch (e) {
+      //emit(HomeError(message: e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> deleteNote(String id) async {
+    emit(HomeLoading());
+    try {
+      await _noteRepository.deleteNote(id);
+      await loadNotes();
+      return true;
+    } catch (e) {
+      // emit(HomeError(message: e.toString()));
+      return false;
+    }
+  }
+
+  Future<bool> deleteNotesBatch(List<String> ids) async {
+    emit(HomeLoading());
+    try {
+      await _noteRepository.deleteNotes(ids);
+      await loadNotes();
+      return true;
+    } catch (e) {
+      //emit(HomeError(message: e.toString()));
+      return false;
+    }
+  }
+
+  Future<void> searchNotes(String query) async {
+    emit(HomeLoading());
+    try {
+      final notes = await _noteRepository.searchNotes(query);
+      emit(HomeLoaded(notes: notes));
+    } catch (e) {
+      emit(HomeError(message: e.toString()));
+    }
+  }
+
+  Future<void> reorderNotes(List<NoteModel> reorderedNotes) async {
+    emit(HomeLoading());
+    try {
+      for (int i = 0; i < reorderedNotes.length; i++) {
+        reorderedNotes[i] = reorderedNotes[i].copyWith(position: i);
+      }
+
+      await _noteRepository.updateNotesPositions(reorderedNotes);
+      await loadNotes();
+    } catch (e) {
+      emit(HomeError(message: e.toString()));
     }
   }
 }
