@@ -334,7 +334,7 @@ class _EditNoteSheetState extends State<EditNoteSheet> {
       tooltip: 'Abrir links',
     ),
                                IconButton(icon: Icon(Icons.copy_outlined),
-                                onPressed: _copyContentToClipboard, tooltip: 'Fechar'),
+                                onPressed: _copyContentToClipboard, tooltip: 'Copiar conteúdo'),
 
                         
                             ],
