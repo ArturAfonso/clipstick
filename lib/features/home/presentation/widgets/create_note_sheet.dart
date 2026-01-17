@@ -8,9 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'color_picker_widget.dart';
 import '../../../../core/theme/note_colors_helper.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 // ignore_for_file: deprecated_member_use
 
 class CreateNoteSheet extends StatefulWidget {
@@ -28,6 +30,17 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   late Color _selectedColor;
   bool _isInitialized = false;
 
+   // Speech to text
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _lastWords = '';
+
+  @override
+  initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -42,7 +55,86 @@ class _CreateNoteSheetState extends State<CreateNoteSheet> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _speech.stop();
     super.dispose();
+  }
+
+   Future<void> _startListening() async {
+  // Verifica permissão de microfone
+  var status = await Permission.microphone.status;
+  if (!status.isGranted) {
+    status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      Utils.normalException(
+        title: 'Permissão negada',
+        message: 'É necessário permitir o acesso ao microfone para usar esta função.',
+      );
+      return;
+    }
+  }
+
+  bool available = await _speech.initialize(
+    onStatus: (status) {
+      if (status == 'done' || status == 'notListening') {
+        setState(() => _isListening = false);
+      }
+    },
+    onError: (error) {
+      setState(() => _isListening = false);
+      Utils.normalException(
+        title: 'Erro no reconhecimento',
+        message: 'Não foi possível reconhecer a fala. Tente novamente.',
+      );
+    },
+  );
+
+  if (available) {
+    setState(() {
+      _isListening = true;
+      _lastWords = ''; // Limpa as palavras anteriores
+    });
+    
+    // Guarda a posição inicial do cursor
+    final initialCursorPosition = _contentController.selection.baseOffset == -1 
+        ? _contentController.text.length 
+        : _contentController.selection.baseOffset;
+    final textBeforeCursor = _contentController.text.substring(0, initialCursorPosition);
+    final textAfterCursor = _contentController.text.substring(initialCursorPosition);
+    
+    _speech.listen(
+      onResult: (result) {
+        setState(() {
+          // Atualiza apenas se houver mudança no texto reconhecido
+          if (result.recognizedWords != _lastWords) {
+            _lastWords = result.recognizedWords;
+            
+            // Reconstrói o texto: antes do cursor + texto reconhecido + depois do cursor
+            _contentController.text = textBeforeCursor + _lastWords + textAfterCursor;
+            
+            // Move cursor para depois do texto reconhecido
+            _contentController.selection = TextSelection.fromPosition(
+              TextPosition(offset: textBeforeCursor.length + _lastWords.length),
+            );
+          }
+        });
+      },
+      listenFor: Duration(seconds: 30),
+      pauseFor: Duration(seconds: 3),
+      partialResults: true,
+      localeId: 'pt_BR',
+      cancelOnError: true,
+    );
+  } else {
+    Utils.normalException(
+      title: 'Não disponível',
+      message: 'O reconhecimento de voz não está disponível neste dispositivo.',
+    );
+  }
+}
+
+   void _stopListening() {
+    _speech.stop();
+    setState(() => _isListening = false);
   }
 
   Future<void> _createNote() async {
@@ -162,17 +254,28 @@ final shouldShow = await tutorialController.shouldShowTutorial();
       
                       SizedBox(height: 20),
       
-                      Text(
-                        'Conteúdo',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Conteúdo',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          
+                        ],
                       ),
                       SizedBox(height: 8),
                       TextFormField(
+                        
                         controller: _contentController,
                         decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
+                            onPressed: _isListening ? _stopListening : _startListening,
+                            tooltip: _isListening ? 'Parar de ouvir' : 'Iniciar ditado',
+                          ),
                           hintText: 'Digite o conteúdo da nota',
                           filled: true,
                           fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
