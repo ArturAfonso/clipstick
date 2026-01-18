@@ -3,6 +3,9 @@
 ## 📝 Sobre o Projeto
 ClipStick é um aplicativo Flutter simples e intuitivo para criar e gerenciar notas auto adesivas. As notas são salvas localmente no dispositivo usando SharedPreferences.
 
+![Visão de gride das notas](assets/prints/gridview.jpeg) ![Visão de gride com notas fixadas](assets/prints/gridview_fixadas.jpeg)
+
+
 ## 🚀 Funcionalidades Atuais
 - ✅ Criar notas rapidamente
 - ✅ Salvar notas localmente (SharedPreferences)
